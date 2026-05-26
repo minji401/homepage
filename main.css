@@ -74,6 +74,9 @@ header {
     background-color: white;
     min-width: 1200px;
     width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 0; /* 양 끝단 살짝의 여백 */
 }
 
 /* 메인 내비게이션 */
@@ -245,8 +248,8 @@ header:hover .dropdown {
 .main-visual-row {
     display: flex;
     width: 1400px;         /* 두 박스의 너비(900px + 450px)와 여백을 고려한 고정 너비 */
-    margin: 50px 80px;     /* 하단 공지사항의 margin(50px 80px)과 완전히 일치시켜 정렬 */
-    gap: 40px;             /* 두 박스 사이의 간격 고정 */
+    margin: 50px auto;     /* 하단 공지사항의 margin(50px 80px)과 완전히 일치시켜 정렬 */
+    gap: 60px;             /* 두 박스 사이의 간격 고정 */
 }
 
 .box {
@@ -394,7 +397,7 @@ div h2 {
     justify-content: space-between;
     align-items: flex-start;
     gap: 40px;             /* 상단 메인비주얼 row의 gap과 통일 */
-    margin: 50px 80px;
+    margin: 50px auto;
     width: 1400px;         /* [수정] 상단 .main-visual-row와 총 너비를 똑같이 맞춤 */
 }
 
@@ -566,7 +569,7 @@ div h2 {
 }
 
 .bottom-gallery {
-    margin: 50px 80px;
+    margin: 50px auto;
     width: 1400px;
 }
 
@@ -611,10 +614,6 @@ div h2 {
    ========================================================================== */
 /* .box와 .main-slider가 한 줄에 나오도록 부모 요소가 있다면 정렬해 주거나, 
    여백을 활용해 배치합니다. 여기서는 나란히 배치하기 위해 float나 flex 환경을 보조합니다. */
-.box {
-    float: left; /* 레이아웃 배치를 위해 float 적용 */
-}
-
 .main-slider {
     /* 기존 float: left; 및 margin 제거 */
     flex-shrink: 0;        /* [핵심] 화면이 줄어들어도 절대로 밑으로 밀려나거나 찌그러지지 않음 */
