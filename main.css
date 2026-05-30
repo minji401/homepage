@@ -249,7 +249,7 @@ header:hover .dropdown {
     display: flex;
     width: 1400px;         /* 두 박스의 너비(900px + 450px)와 여백을 고려한 고정 너비 */
     margin: 50px auto;     /* 하단 공지사항의 margin(50px 80px)과 완전히 일치시켜 정렬 */
-    gap: 60px;             /* 두 박스 사이의 간격 고정 */
+    gap: 90px;             /* 두 박스 사이의 간격 고정 */
 }
 
 .box {
@@ -396,7 +396,7 @@ div h2 {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 40px;             /* 상단 메인비주얼 row의 gap과 통일 */
+    gap: 50px;             /* 상단 메인비주얼 row의 gap과 통일 */
     margin: 50px auto;
     width: 1400px;         /* [수정] 상단 .main-visual-row와 총 너비를 똑같이 맞춤 */
 }
@@ -748,4 +748,92 @@ div h2 {
     font-weight: bold;
     color: #333;
     user-select: none;
+}
+
+/* ==========================================================================
+   10. 푸터 (Footer) 영역
+   ========================================================================== */
+.footer {
+    width: 100%;
+    background-color: #2b2b2b; /* 깔끔하고 묵직한 어두운 배경 */
+    color: #a0a0a0;            /* 눈이 편안한 연한 회색 텍스트 */
+    padding: 40px 0 50px 0;
+    margin-top: 100px;         /* 갤러리 영역과의 간격 */
+    font-size: 14px;
+}
+
+/* 본문 레이아웃과 동일하게 1400px 중앙 정렬 */
+.footer-inner {
+    width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* 약관 링크 영역 */
+.footer-links {
+    display: flex;
+    gap: 25px;
+    border-bottom: 1px solid #444; /* 링크 아래 구분선 */
+    padding-bottom: 20px;
+}
+
+.footer-links a {
+    color: #ccc;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #fff; /* 마우스 올렸을 때 흰색으로 밝아짐 */
+}
+
+/* 개인정보처리방침 강조 (보통 포인트 컬러 사용) */
+.footer-links a.highlight {
+    color: #4caf50; /* 요양원 사이트의 녹색 테마와 어울리는 컬러 */
+    font-weight: bold;
+}
+
+/* 로고와 텍스트 정보 가로 배치 */
+.footer-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+}
+
+/* 푸터 로고 스타일링 */
+.footer-logo img {
+    height: 45px;
+    /* 기존 컬러 로고를 푸터에 맞게 흑백+밝게 처리하는 마법의 필터 */
+    filter: grayscale(100%) brightness(200%); 
+    opacity: 0.6;
+}
+
+/* 텍스트 정보 스타일링 */
+.info-text p {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+/* 텍스트 사이사이 구분선(|) 자동 생성 */
+.info-text span {
+    display: inline-block;
+    margin-right: 20px;
+    position: relative;
+}
+
+.info-text span:not(:last-child)::after {
+    content: '|';
+    position: absolute;
+    right: -12px;
+    color: #555;
+    font-size: 12px;
+    top: 2px;
+}
+
+.info-text .copyright {
+    margin-top: 15px;
+    color: #777;
 }
