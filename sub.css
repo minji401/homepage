@@ -1,0 +1,136 @@
+/* ==========================================================================
+   서브 페이지 전용 공통 레이아웃 (Sub Page Base)
+   ========================================================================== */
+
+/* 상단 가로 폭 꽉 차는 서브 비주얼 배너 영역 */
+.sub-visual {
+    width: 100%;
+    min-width: 1200px;
+    height: 220px;
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('img/sub_banner.jpg') no-repeat center center;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.sub-visual-text h2 {
+    color: #ffffff;
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.sub-visual-text p {
+    color: #e0e0e0;
+    font-size: 1.1rem;
+}
+
+/* 서브 페이지 콘텐츠 본문 컨테이너 (사이드바 + 콘텐츠 본문) */
+.sub-container {
+    display: flex;
+    width: 1400px;
+    margin: 60px auto;
+    gap: 50px;
+    align-items: flex-start;
+}
+
+/* ==========================================================================
+   왼쪽 사이드 내비게이션 메뉴 (Aside Sidebar)
+   ========================================================================== */
+.side-menu {
+    width: 250px;
+    flex-shrink: 0;
+    border: 1px solid #eee;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+}
+
+.side-menu h3 {
+    background-color: #2e7d32; /* 사이트 시그니처 초록색 테마 */
+    color: #fff;
+    padding: 22px 20px;
+    font-size: 1.3rem;
+    text-align: center;
+    font-weight: bold;
+}
+
+.side-menu ul {
+    list-style: none;
+}
+
+.side-menu li a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    color: #555;
+    text-decoration: none;
+    font-size: 1.05rem;
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+    transition: all 0.3s ease;
+}
+
+.side-menu li:last-child a {
+    border-bottom: none;
+}
+
+/* 메뉴 마우스 오버 및 현재 활성화 탭 표시 */
+.side-menu li a:hover, 
+.side-menu li.active a {
+    background-color: #f1f8e9;
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+.side-menu li a i {
+    font-size: 0.85rem;
+    color: #ccc;
+    transition: color 0.3s;
+}
+
+.side-menu li a:hover i, 
+.side-menu li.active a i {
+    color: #2e7d32;
+}
+
+/* ==========================================================================
+   우측 세부 콘텐츠 본문 영역 (Main Content)
+   ========================================================================== */
+.sub-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 서브 상단 타이틀 바 및 브레드크럼(경로 표시) */
+.content-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid #333;
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+}
+
+.content-title h2 {
+    font-size: 2rem;
+    color: #333;
+    font-weight: bold;
+}
+
+.breadcrumb {
+    font-size: 0.95rem;
+    color: #777;
+}
+
+.breadcrumb span {
+    color: #666;
+}
+
+.breadcrumb strong {
+    color: #2e7d32;
+    font-weight: bold;
+}

@@ -1,39 +1,39 @@
-/* script.js */
+/* ==========================================================================
+   1. 하단 갤러리 자동 슬라이드 로직 (무한 루프)
+   ========================================================================== */
+const galleryWrapper = document.querySelector('.slide-container .slide-wrapper');
+const galleryItems = document.querySelectorAll('.slide-container .slide-item');
+const galleryItemsToShow = 3; 
+const gallerySlideWidth = 460; 
 
-// --- 1. 자동 사진 슬라이드 로직 ---
-const wrapper = document.querySelector('.slide-wrapper');
-const items = document.querySelectorAll('.slide-item');
-const itemsToShow = 3; // 한 번에 보여줄 사진 수
-const slideWidth = 460; // 이미지 너비 + 간격
-
-// 1. [자동화] 사진 개수에 상관없이 앞의 3장을 복사해서 뒤에 붙이기
-for (let i = 0; i < itemsToShow; i++) {
-    const clone = items[i].cloneNode(true); // 각 아이템 복사
-    wrapper.appendChild(clone); // wrapper의 맨 뒤에 추가
+// 앞의 사진들을 복사해서 뒤에 붙이기
+for (let i = 0; i < galleryItemsToShow; i++) {
+    const clone = galleryItems[i].cloneNode(true);
+    galleryWrapper.appendChild(clone);
 }
 
-let index = 0;
-const totalImages = items.length; // 실제 원본 이미지 개수
+let galleryIndex = 0;
+const galleryTotal = galleryItems.length;
 
-function nextSlide() {
-    index++;
-    
-    wrapper.style.transition = 'transform 0.5s ease';
-    wrapper.style.transform = `translateX(-${index * slideWidth}px)`;
+function nextGallerySlide() {
+    galleryIndex++;
+    galleryWrapper.style.transition = 'transform 0.5s ease';
+    galleryWrapper.style.transform = `translateX(-${galleryIndex * gallerySlideWidth}px)`;
 
-    // 마지막 원본 사진 이후 클론 영역에 도달했을 때
-    if (index === totalImages) {
+    if (galleryIndex === galleryTotal) {
         setTimeout(() => {
-            wrapper.style.transition = 'none'; // 애니메이션 끄고
-            index = 0; // 순식간에 진짜 1번 위치로 이동
-            wrapper.style.transform = `translateX(0px)`;
-        }, 500); 
+            galleryWrapper.style.transition = 'none';
+            galleryIndex = 0;
+            galleryWrapper.style.transform = `translateX(0px)`;
+        }, 500);
     }
 }
+setInterval(nextGallerySlide, 3000);
 
-setInterval(nextSlide, 3000);
 
-// --- 2. 식단표 날짜 변경 로직 ---
+/* ==========================================================================
+   2. 식단표 날짜 변경 로직
+   ========================================================================== */
 const menus = {
     "5월 9일": ["보리밥", "된장찌개", "제육볶음", "콩나물무침", "깍두기"],
     "5월 10일": ["잡곡밥", "쇠고기 미역국", "고등어 구이", "애호박 나물", "포기 김치"],
@@ -45,11 +45,11 @@ const dateDisplay = document.getElementById('current-date');
 const menuList = document.getElementById('menu-list');
 
 document.getElementById('prev-day').addEventListener('click', () => {
-    if(currentDate > 9) { currentDate--; updateDiet(); }
+    if (currentDate > 9) { currentDate--; updateDiet(); }
 });
 
 document.getElementById('next-day').addEventListener('click', () => {
-    if(currentDate < 11) { currentDate++; updateDiet(); }
+    if (currentDate < 11) { currentDate++; updateDiet(); }
 });
 
 function updateDiet() {
@@ -64,10 +64,13 @@ function updateDiet() {
     });
 }
 
-// --- 3. 메인 비주얼 슬라이더 제어 로직 ---
-const sliderWrapper = document.querySelector('.slider-wrapper');
-const sliderItems = document.querySelectorAll('.slider-item');
-const slideTotalIndex = sliderItems.length;
+
+/* ==========================================================================
+   3. 메인 비주얼 슬라이더 제어 로직 (무한 루프 수정본)
+   ========================================================================== */
+const sliderWrapper = document.querySelector('.main-slider .slider-wrapper');
+const sliderItems = document.querySelectorAll('.main-slider .slider-item');
+const slideTotalIndex = sliderItems.length; // 원본 개수 (3)
 
 const btnPrev = document.getElementById('slider-prev');
 const btnNext = document.getElementById('slider-next');
@@ -75,63 +78,89 @@ const btnToggle = document.getElementById('slider-toggle');
 const txtCurrent = document.getElementById('slide-current');
 const txtTotal = document.getElementById('slide-total');
 
+// 무한 루프를 위해 첫 번째 슬라이드를 복사하여 맨 뒤에 추가
+const firstClone = sliderItems[0].cloneNode(true);
+sliderWrapper.appendChild(firstClone);
+
 let slideIndex = 0;
 let sliderTimer = null;
-let isPlaying = true; // 자동 재생 상태 여부 변수
+let isPlaying = true;
+let isTransitioning = false; // 연속 클릭 방지 플래그
 
-// 전체 개수 설정 초기화
 if (txtTotal) txtTotal.textContent = slideTotalIndex;
 
-// 슬라이드 이동 및 번호 업데이트 함수
 function moveMainSlide(pos) {
+    if (isTransitioning) return;
+    isTransitioning = true;
+
     slideIndex = pos;
-    
-    // 범위를 벗어나지 않도록 안전장치 처리
-    if (slideIndex >= slideTotalIndex) slideIndex = 0;
-    if (slideIndex < 0) slideIndex = slideTotalIndex - 1;
-    
-    // 이동 시키기
+    sliderWrapper.style.transition = 'transform 0.5s ease-in-out';
     sliderWrapper.style.transform = `translateX(-${slideIndex * 100}%)`;
-    
-    // 현재 몇 번째 인지 글자 바꾸기 (0부터 시작하므로 +1)
-    txtCurrent.textContent = slideIndex + 1;
+
+    // 텍스트 카운터 업데이트
+    if (slideIndex >= slideTotalIndex) {
+        txtCurrent.textContent = 1;
+    } else if (slideIndex < 0) {
+        txtCurrent.textContent = slideTotalIndex;
+    } else {
+        txtCurrent.textContent = slideIndex + 1;
+    }
 }
 
-// 자동 롤링 시작 함수
+// 애니메이션이 완전히 끝난 후 순간이동 처리 (Transition End 이벤트 활용)
+sliderWrapper.addEventListener('transitionend', () => {
+    isTransitioning = false;
+
+    // 마지막 복사본(4번째)에 도달했을 때 -> 진짜 1번째로 순간이동
+    if (slideIndex >= slideTotalIndex) {
+        sliderWrapper.style.transition = 'none';
+        slideIndex = 0;
+        sliderWrapper.style.transform = `translateX(0%)`;
+    }
+    // 1번째 이전(왼쪽 복사본 생략형 처리)으로 갈 때 -> 진짜 마지막으로 순간이동
+    if (slideIndex < 0) {
+        sliderWrapper.style.transition = 'none';
+        slideIndex = slideTotalIndex - 1;
+        sliderWrapper.style.transform = `translateX(-${slideIndex * 100}%)`;
+    }
+});
+
+// 자동 롤링 제어
 function startSliderTimer() {
-    sliderTimer = setInterval(() => {
-        moveMainSlide(slideIndex + 1);
-    }, 3000); // 3초마다 다음 사진으로 이동
+    if (!sliderTimer) {
+        sliderTimer = setInterval(() => { moveMainSlide(slideIndex + 1); }, 3000);
+    }
 }
 
-// 자동 롤링 정지 함수
 function stopSliderTimer() {
     clearInterval(sliderTimer);
+    sliderTimer = null;
 }
 
-// 다음 / 이전 버튼 이벤트 걸기
+// 버튼 이벤트
 btnNext.addEventListener('click', () => {
+    if (isPlaying) stopSliderTimer();
     moveMainSlide(slideIndex + 1);
+    if (isPlaying) startSliderTimer();
 });
 
 btnPrev.addEventListener('click', () => {
+    if (isPlaying) stopSliderTimer();
     moveMainSlide(slideIndex - 1);
+    if (isPlaying) startSliderTimer();
 });
 
-// 중앙 일시정지 및 재생 버튼 (토글 기능)
 btnToggle.addEventListener('click', () => {
     if (isPlaying) {
-        // 재생 중일 때 누르면 -> 멈춤
         stopSliderTimer();
-        btnToggle.innerHTML = '<i class="fas fa-play"></i>'; // 아이콘 재생 모양으로 변경
+        btnToggle.innerHTML = '<i class="fas fa-play"></i>';
         isPlaying = false;
     } else {
-        // 멈춰있을 때 누르면 -> 다시 재생
         startSliderTimer();
-        btnToggle.innerHTML = '<i class="fas fa-pause"></i>'; // 아이콘 일시정지 모양으로 변경
+        btnToggle.innerHTML = '<i class="fas fa-pause"></i>';
         isPlaying = true;
     }
 });
 
-// 페이지가 로드되면 최초로 자동 롤링 실행 시작
+// 최초 실행
 startSliderTimer();

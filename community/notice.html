@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>공지사항 | 햇살나눔요양원</title>
+    <!-- 공통 영역(탑바, 헤더, 푸터)을 적용하기 위해 불러옴 -->
+    <link rel="stylesheet" href="../main.css" type="text/css">
+    <!-- 서브 영역(서브배너, 사이드바, 본문정렬)을 적용하기 위해 불러옴 -->
+    <link rel="stylesheet" href="../sub.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<!-- 1. 최상단 영역 (기존 유지) -->
+<div class="top-bar">
+    <div class="user-menu">
+        <a href="#">로그인</a>
+        <a href="#">회원가입</a>
+    </div>
+</div>
+
+<!-- 2. 로고 및 상단 우측 (기존 유지) -->
+<div class="head">
+    <div class="logo">
+        <a href="../main.html"><img src="../img/logo.png" alt="홈페이지 로고"></a>
+    </div>
+    <div class="header-right">
+        <div class="search-bar">
+            <a href="#"><i class="fas fa-search"> 검색</i></a>
+        </div>
+        <div class="sp">
+            <button class="all-menu-btn" title="전체 메뉴">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <span>전체메뉴</span>
+        </div>
+    </div>
+</div>
+
+<!-- 3. 메인 내비게이션 (기존 유지) -->
+<header>
+    <nav class="main-nav">
+        <ul>
+            <li><a href="../about/about.html">요양원 소개</a>
+            <ul class="dropdown">
+                <li><a href="../about/about.html">인사말</a></li>
+                <li><a href="../about/facility.html">시설안내</a></li>
+                <li><a href="../about/location.html">오시는 길</a></li>
+                <li><a href="../about/organization.html">조직도</a></li>
+            </ul></li>
+
+            <li><a href="../services/main.html">서비스 안내</a>
+            <ul class="dropdown">
+                <li><a href="../services/main.html">주요 서비스</a></li>
+                <li><a href="../services/monthly.html">월간 프로그램</a></li>
+            </ul></li>
+
+            <li><a href="../admission/procedure.html">입소 안내</a>
+            <ul class="dropdown">
+                <li><a href="../admission/procedure.html">입소 절차</a></li>
+                <li><a href="../admission/fees.html">이용료 안내</a></li>
+                <li><a href="../admission/post_admission.html">입소 후 안내</a></li>
+                <li><a href="../admission/tour.html">시설견학신청</a></li>
+            </ul></li>
+
+            <li><a href="../volunteer/intro.html">자원봉사</a>
+            <ul class="dropdown">
+                <li><a href="../volunteer/intro.html">봉사 활동 소개</a></li>
+                <li><a href="../volunteer/application.html">봉사 신청</a></li>
+            </ul></li>
+
+            <li><a href="notice.html">알림마당</a>
+            <ul class="dropdown">
+                <li><a href="notice.html">공지사항</a></li>
+                <li><a href="gallery.html">포토 갤러리</a></li>
+                <li><a href="menu.html">주간 식단표</a></li>
+                <li><a href="faq.html">자주 묻는 질문</a></li>
+                <li><a href="inquiry.html">문의하기</a></li>
+            </ul></li>
+        </ul>
+    </nav>
+</header>
+
+<!-- 4. 서브 페이지 배너 (너비는 꽉 채우고 높이는 짧게) -->
+<div class="sub-visual">
+    <div class="sub-visual-text">
+        <h2>공지사항</h2>
+        <p>햇살나눔요양원의 다양한 소식을 전해드립니다.</p>
+    </div>
+</div>
+
+<!-- 5. 본문 영역 (좌측 메뉴 + 우측 공지사항) -->
+<div class="sub-container">
+    
+    <!-- 5-1. 왼쪽 사이드 메뉴 -->
+    <aside class="side-menu">
+        <h3>알림마당</h3>
+        <ul>
+            <li class="active"><a href="notice.html">공지사항 <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="gallery.html">포토 갤러리 <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="menu.html">주간 식단표 <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="faq.html">자주 묻는 질문 <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="inquiry.html">문의하기 <i class="fas fa-chevron-right"></i></a></li>
+        </ul>
+    </aside>
+
+    <!-- 5-2. 오른쪽 세부사항 및 공지사항 본문 -->
+    <main class="sub-content">
+        <div class="content-title">
+            <div class="breadcrumb">
+                <span><i class="fas fa-home"></i> Home</span> &gt; <span>알림마당</span> &gt; <strong>공지사항</strong>
+            </div>
+        </div>
+
+        <!-- 여기에 실제 공지사항 게시판 테이블이나 내용을 추가하시면 됩니다 -->
+        <div class="notice-board-wrap">
+            <p style="text-align: center; padding: 50px 0; color: #888; border: 1px dashed #ddd; border-radius: 10px;">
+                이곳에 공지사항 리스트 테이블 또는 세부 내용이 들어갈 예정입니다.
+            </p>
+        </div>
+    </main>
+
+</div>
+
+<!-- 6. 푸터 영역 (기존 유지) -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="#" class="highlight">개인정보처리방침</a>
+            <a href="#">이용약관</a>
+            <a href="#">이메일무단수집거부</a>
+            <a href="#">찾아오시는 길</a>
+        </div>
+        <div class="footer-info">
+            <div class="footer-logo">
+                <img src="../img/logo.png" alt="하단 로고">
+            </div>
+            <div class="info-text">
+                <p>
+                    <span>주소 : 대구광역시 OO구 OO로 123</span>
+                    <span>대표자 : 홍길동</span>
+                    <span>사업자등록번호 : 123-45-67890</span>
+                </p>
+                <p>
+                    <span>대표전화 : 053-123-4567</span>
+                    <span>팩스 : 053-123-4568</span>
+                    <span>이메일 : info@example.com</span>
+                </p>
+                <p class="copyright">
+                    COPYRIGHT © 2026 OO요양원. ALL RIGHTS RESERVED.
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
