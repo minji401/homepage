@@ -5,7 +5,10 @@
     <title>홈페이지</title>
     <link rel="stylesheet" href="main.css" type="text/css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <!-- Google Fonts: Noto Serif KR 불러오기 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -42,75 +45,81 @@
             <li><a href="about/about.html">요양원 소개</a>
             <ul class="dropdown">
                 <li><a href="about/about.html">인사말</a></li>
-                <li><a href="about/facility.html">시설안내</a></li>
+                <li><a href="about/facility.html">시설 둘러보기</a></li>
                 <li><a href="about/location.html">오시는 길</a></li>
-                <li><a href="about/organization.html">조직도</a></li>
+                <li><a href="about/organization.html">조직 및 종사자 안내</a></li>
+                <li><a href="about/partners.html">협력기관</a></li>
             </ul></li>
 
             <li><a href="services/main.html">서비스 안내</a>
             <ul class="dropdown">
-                <li><a href="services/main.html">주요 서비스</a></li>
-                <li><a href="services/monthly.html">월간 프로그램</a></li>
+                <li><a href="services/nighttime.html">주야간보호</a></li>
+                <li><a href="services/nursing.html">요양원</a></li>
+                <li><a href="services/home_visit.html">방문요양</a></li>
+                <li><a href="services/home_bath.html">방문목욕</a></li>
+                <li><a href="services/dementia.html">치매·재활 특화 프로그램</a></li>
+                <li><a href="services/monthly.html">맞춤형 케어 일정표</a></li>
             </ul></li>
 
-            <li><a href="admission/procedure.html">입소 안내</a>
+            <li><a href="admission/procedure.html">이용 방법</a>
             <ul class="dropdown">
-                <li><a href="admission/procedure.html">입소 절차</a></li>
-                <li><a href="admission/fees.html">이용료 안내</a></li>
-                <li><a href="admission/post_admission.html">입소 후 안내</a></li>
-                <li><a href="admission/tour.html">시설견학신청</a></li>
+                <li><a href="admission/procedure.html">서비스 이용 절차</a></li>
+                <li><a href="admission/fees.html">이용 요금 및 급여 안내</a></li>
+                <li><a href="admission/period.html">장기요양등급 신청 안내</a></li>
+                <li><a href="admission/tour.html">시설 방문/견학 신청</a></li>
+                <li><a href="admission/requirements.html">입소 준비물 및 유의사항</a></li>
             </ul></li>
 
-            <li><a href="volunteer/intro.html">자원봉사</a>
+            <li><a href="volunteer/intro.html">사랑나눔</a>
             <ul class="dropdown">
-                <li><a href="volunteer/intro.html">봉사 활동 소개</a></li>
-                <li><a href="volunteer/application.html">봉사 신청</a></li>
+                <li><a href="volunteer/intro.html">자원봉사</a></li>
+                <li><a href="volunteer/application.html">후원</a></li>
             </ul></li>
 
-            <li><a href="community/notice.html">알림마당</a>
+            <li><a href="community/notice.html">요양원 소식</a>
             <ul class="dropdown">
                 <li><a href="community/notice.html">공지사항</a></li>
-                <li><a href="community/gallery.html">포토 갤러리</a></li>
+                <li><a href="community/gallery.html">활동 갤러리</a></li>
                 <li><a href="community/menu.html">주간 식단표</a></li>
                 <li><a href="community/faq.html">자주 묻는 질문</a></li>
-                <li><a href="community/inquiry.html">문의하기</a></li>
+                <li><a href="community/inquiry.html">1:1 상담 및 문의</a></li>
             </ul></li>
         </ul>
     </nav>
-
-
 </header>
+
 <div class="main-visual-row">
     <div class="box">
         <div>
             <h1><span>따스한 손길</span>로 전하는 <span>사랑</span>, <br><span>헤리움재활실버케어</span>이 함께합니다.</h1>
         </div>
 
+        <!-- 퀵 아이콘 이미지를 FontAwesome 아이콘으로 변경 -->
         <div class="quick-icons">
             <div class="menu-item">
-                <img src="img/입소안내.png" alt="입소안내">
+                <i class="fa-solid fa-house" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
                 <span>입소안내</span>
             </div>
             <div class="menu-item">
-                <img src="img/입소대기.png" alt="입소대기안내">
+                <i class="fa-regular fa-calendar-check" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
                 <span>입소대기안내</span>
             </div>
             <div class="menu-item">
-                <img src="img/문의상담.png" alt="문의상담">
+                <i class="fa-regular fa-comments" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
                 <span>문의상담</span>
             </div>
             <div class="menu-item">
-                <img src="img/오시는길.png" alt="오시는길">
+                <i class="fa-solid fa-signs-post" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
                 <span>오시는길</span>
             </div>
         </div>
 
-
         <div>
-            <h2>054 - 338 - 9010</h2><img src="img/call.png" alt="전화 아이콘" class="call">
+            <h2 style="font-family: 'Noto Serif KR', serif; font-weight: 700; position: absolute; top: 347px; left:150px;">054 - 338 - 9010</h2>
+            <!-- 전화 이미지를 아이콘으로 변경 -->
+            <i class="fa-solid fa-phone call" style="font-size: 50px; color: #b38b4d; position:relative; left:690px; top:355px; z-index: 30; background: white; padding: 20px; border-radius: 50%;"></i>
         </div>
 
-        <img src="img/c.png" alt="캐릭터" class="char-img">
         <div class="box2"></div>
     </div>
 
@@ -135,11 +144,11 @@
     </div>
 </div>
 
-
 <div class="middle-content">
     <div class="notice-section">
         <div class="section-header">
-            <h3><img src="img/notice.png" alt="공지 아이콘" class="notice-icon"> 공지사항</h3>
+            <!-- 공지사항 이미지를 새싹 아이콘으로 변경 -->
+            <h3><i class="fa-solid fa-seedling notice-icon" style="color: #b38b4d; margin-right: 6px; font-size: 25px;"></i> <div class="section-title" style="display: inline-block; position: relative; left: -20px; top: 10px;">공지사항</div></h3>
             <div class="notice-btn"><a href="community/notice.html"><i class="fas fa-plus"></i> 더보기</a></div>
         </div>
         <div class="notice-container">
@@ -157,7 +166,8 @@
 
     <div class="diet-section">
         <div class="section-header">
-            <h3>오늘의 식단</h3>
+            <!-- 식단 항목에 수저 아이콘 추가 -->
+            <h3><i class="fa-solid fa-utensils" style="color: #b38b4d; margin-right: 6px;"></i> 오늘의 식단</h3>
             <div class="notice-btn">
                 <a href="community/menu.html"><i class="fas fa-plus"></i> 더보기</a>
             </div>
@@ -181,25 +191,25 @@
         </div>
     </div>
 
+    <!-- 4개 그리드 상자 내부에 아이콘 배치 -->
     <div class="service-grid-section">
         <div class="grid-container">
             <div class="grid-item">
-                <div class="item-img-box"></div>
+                <div class="item-img-box"><i class="fas fa-hands-helping" style="font-size: 25px; color: #b38b4d;"></i></div>
                 <span class="item-text">보훈 요양 서비스</span>
             </div>
             <div class="grid-item">
-                <div class="item-img-box"></div>
+                <div class="item-img-box"><i class="fa-solid fa-clipboard-list" style="font-size: 25px; color: #b38b4d;"></i></div>
                 <span class="item-text">입소 안내 가이드</span>
             </div>
             <div class="grid-item">
-                <div class="item-img-box"></div>
+                <div class="item-img-box"><i class="fa-solid fa-brain" style="font-size: 25px; color: #b38b4d;"></i></div>
                 <span class="item-text">치매 특화 프로그램</span>
             </div>
             <div class="grid-item">
-                <div class="item-img-box"></div>
+                <div class="item-img-box"><i class="fa-solid fa-person-walking-with-cane" style="font-size: 25px; color: #b38b4d;"></i></div>
                 <span class="item-text">재활 치료 센터</span>
             </div>
-            
         </div>
     </div>
 </div>
@@ -234,7 +244,7 @@
         
         <div class="footer-info">
             <div class="footer-logo">
-                <img src="img/logo.png" alt="하단 로고">
+                <img src="img/logo2.png" alt="하단 로고">
             </div>
             <div class="info-text">
                 <p>
@@ -246,9 +256,6 @@
                     <span>대표전화 : 054-334-9986</span>
                     <span>팩스 : 054-334-9985</span>
                     <span>이메일 : info@example.com</span>
-                </p>
-                <p class="copyright">
-                    COPYRIGHT © 2026 헤리움재활실버케어. ALL RIGHTS RESERVED.
                 </p>
             </div>
         </div>

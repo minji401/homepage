@@ -67,10 +67,10 @@ header::after {
     background-color: #fff; border-top: 1px solid #eee; box-shadow: 0 10px 15px rgba(0,0,0,0.05);
     transition: height 0.3s; z-index: -1;
 }
-header:hover::after { height: 240px; }
+header:hover::after { height: 280px; }
 header:hover .dropdown { display: block; }
 .dropdown {
-    display: none; position: absolute; top: 155%; left: 0; width: 100%; min-height: 235px;
+    display: none; position: absolute; top: 155%; left: 0; width: 100%; min-height: 280px;
     padding: 10px 0; list-style: none; z-index: 10; transition: background-color 0.3s, color 0.3s;
     border-right: 1px solid #eee; border-left: 1px solid #eee;
 }
@@ -102,12 +102,10 @@ header:hover .dropdown { display: block; }
 .quick-icons .menu-item { position: relative; }
 .quick-icons .menu-item:not(:last-child)::after { content: ""; position: absolute; right: -45px; top: 50%; transform: translateY(-50%); width: 1px; height: 40px; background-color: #ccc; }
 .box > div > div > img { width: 80px; height: auto; }
-.box2 { width: 800px; height: 100px; background-color: rgb(159, 167, 102); margin: 50px 80px; border-radius: 0px 40px; position: absolute; bottom: -51px; left: -80px; }
-div h1 { position: absolute; top: 60px; left: 230px; width: 500px; color: #333; font-size: 2.2rem; font-weight: 400; letter-spacing: 1px; line-height: 1.3; z-index: 25; }
+.box2 { width: 800px; height: 100px; background-color: #b38b4d; margin: 50px 80px; border-radius: 0px 40px; position: absolute; bottom: -51px; left: -80px; }
+div h1 { position: absolute; top: 60px; left: 230px; width: 5000px; color: #333; font-size: 2.2rem; font-weight: 400; letter-spacing: 1px; line-height: 1.3; z-index: 25; }
 div h1 span { font-weight: 1000; font-size:2.3rem; color:rgb(159, 167, 102); font-family: 'Gmarket Sans', sans-serif; }
 div h2 { position: absolute; top: 360px; left:160px; color: white; font-size: 4.3rem; z-index: 20; }
-.call { position: absolute; top: 350px; left:630px; width: 18%; height: auto; z-index: 30; }
-.char-img { position: absolute; bottom: -110px; left: -130px; width: 40%; height: auto; z-index: 10; }
 
 /* ==========================================================================
    7. 중간 콘텐츠 (Notice & Diet Table - 공통 공정 헤더 포함)
@@ -120,7 +118,7 @@ div h2 { position: absolute; top: 360px; left:160px; color: white; font-size: 4.
 
 /* 공통 헤더 양 끝 정렬 클래스 (갤러리 타이틀 영역에도 함께 사용됨) */
 .section-header { display: flex; justify-content: space-between; align-items: center; height: 50px; margin-bottom: 15px; font-size: 1.6rem; font-weight: bold; }
-.section-header h3 { font-size: 1.6rem; font-weight: bold; margin: 0; }
+.section-header h3 { font-size: 1.6rem; font-weight: bold; margin: 0;}
 .diet-section .section-header h3 { margin-top: 16px; }
 
 .notice-container, .diet-card { width: 600px; height: 320px; background-color: white; border: 1px solid #eee; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -169,7 +167,6 @@ div h2 { position: absolute; top: 360px; left:160px; color: white; font-size: 4.
 .slider-btn:hover { color: #fff; }
 
 /* ==========================================================================
-   10. 서비스 메뉴 그리드 (메인 전용)
    ========================================================================== */
 .service-grid-section { width: 400px; flex-shrink: 0; margin-top: 60px; }
 .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; width: 100%; }
@@ -182,14 +179,14 @@ div h2 { position: absolute; top: 360px; left:160px; color: white; font-size: 4.
 /* ==========================================================================
    11. 푸터 영역 (Footer - 공통)
    ========================================================================== */
-.footer { width: 100%; background-color: #2b2b2b; color: #a0a0a0; padding: 40px 0 50px 0; margin-top: 100px; font-size: 14px; }
+.footer { width: 100%; background-color: #444444; color: #a0a0a0; padding: 40px 0 50px 0; margin-top: 100px; font-size: 14px; }
 .footer-inner { width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 25px; }
-.footer-links { display: flex; gap: 25px; border-bottom: 1px solid #444; padding-bottom: 20px; }
+.footer-links { display: flex; gap: 25px; border-bottom: 1px solid #9b9595; padding-bottom: 20px; }
 .footer-links a { color: #ccc; text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
 .footer-links a:hover { color: #fff; }
 .footer-links a.highlight { color: #4caf50; font-weight: bold; }
 .footer-info { display: flex; align-items: flex-start; gap: 40px; }
-.footer-logo img { height: 45px; filter: grayscale(100%) brightness(200%); opacity: 0.6; }
+.footer-logo img { height: 80px; opacity: 0.6;margin-top: -15px;}
 .info-text p { margin-bottom: 8px; line-height: 1.6; }
 .info-text span { display: inline-block; margin-right: 20px; position: relative; }
 .info-text span:not(:last-child)::after { content: '|'; position: absolute; right: -12px; color: #555; font-size: 12px; top: 2px; }
