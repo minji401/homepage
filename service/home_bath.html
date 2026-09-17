@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>방문목욕 | 헤리움 케어센터</title>
+    <!-- 공통 영역(탑바, 헤더, 푸터)을 적용하기 위해 불러옴 -->
+    <link rel="stylesheet" href="../main.css" type="text/css">
+    <!-- 서브 영역(서브배너, 사이드바, 본문정렬)을 적용하기 위해 불러옴 -->
+    <link rel="stylesheet" href="../sub.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<!-- 1. 최상단 영역 (기존 유지) -->
+<div class="top-bar">
+    <div class="user-menu">
+        <a href="../login.html">로그인</a>
+        <a href="../signup.html">회원가입</a>
+    </div>
+</div>
+
+<!-- 상단 로고 및 유틸리티 영역 (흰색 배경 또는 독립된 줄) -->
+<div class="header-top-row">
+    <div class="header-top-inner">
+        <!-- 로고 -->
+        <div class="logo">
+            <a href="../main.html"><img src="../img/logo.png" alt="홈페이지 로고"></a>
+        </div>
+
+        <!-- 우측 검색 & 전체메뉴 -->
+        <div class="header-right">
+            <a href="#" class="js-open-search" aria-expanded="false" aria-controls="searchOverlay"><i class="fas fa-search"> 검색</i></a>
+            <div class="sp">
+                <button class="all-menu-btn" title="전체 메뉴">
+                    <span></span><span></span><span></span>
+                </button>
+                <span>전체메뉴</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. 메인 내비게이션 (기존 유지) -->
+<header>
+    <div class="header-inner">
+        <nav class="main-nav">
+            <ul>
+                <li><a href="../about/about.html">요양원 소개</a>
+                    <ul class="dropdown">
+                        <li><a href="../about/about.html">인사말</a></li>
+                        <li><a href="../about/facility.html">시설 둘러보기</a></li>
+                        <li><a href="../about/location.html">오시는 길</a></li>
+                        <li><a href="../about/organization.html">조직표</a></li>
+                        <li><a href="../about/disclosure.html">경영공시</a></li>
+                        <li><a href="../about/system.html">제도소개</a></li>
+                        <li><a href="../about/partners.html">협력기관</a></li>
+                    </ul>
+                </li>
+                <li><a href="nighttime.html">서비스 안내</a>
+                    <ul class="dropdown">
+                        <li><a href="nighttime.html">주야간보호</a></li>
+                        <li><a href="nursing.html">요양원</a></li>
+                        <li><a href="home_visit.html">가정방문급여</a></li>
+                    </ul>
+                </li>
+                <li><a href="../admission/procedure.html">이용 방법</a>
+                    <ul class="dropdown">
+                        <li><a href="../admission/procedure.html">서비스 이용 절차</a></li>
+                        <li><a href="../admission/fees.html">이용 요금 및 급여 안내</a></li>
+                        <li><a href="../admission/status.html">이용 현황</a></li>
+                        <li><a href="../admission/waitlist.html">대기자 명단</a></li>
+                        <li><a href="../admission/period.html">장기요양등급 신청 안내</a></li>
+                        <li><a href="../admission/tour.html">시설 방문/견학 신청</a></li>
+                        <li><a href="../admission/requirements.html">입소 준비물 및 유의사항</a></li>
+                    </ul>
+                </li>
+                <li><a href="../volunteer/intro.html">사랑나눔</a>
+                    <ul class="dropdown">
+                        <li><a href="../volunteer/intro.html">자원봉사</a></li>
+                        <li><a href="../volunteer/application.html">후원</a></li>
+                    </ul>
+                </li>
+                <li><a href="../community/notice.html">요양원 소식</a>
+                    <ul class="dropdown">
+                        <li><a href="../community/notice.html">공지사항</a></li>
+                        <li><a href="../community/gallery.html">활동 갤러리</a></li>
+                        <li><a href="../community/menu.html">주간 식단표</a></li>
+                        <li><a href="../community/faq.html">자주 묻는 질문</a></li>
+                        <li><a href="../community/inquiry.html">1:1 상담 및 문의</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="search-overlay" id="searchOverlay" hidden>
+        <div class="search-overlay-inner">
+            <form class="search-overlay-form js-search-form" action="../search.html" method="get">
+                <div class="search-overlay-field">
+                    <input type="search" name="q" class="js-overlay-input" placeholder="검색어를 입력해 주세요" autocomplete="off">
+                    <button type="submit" class="search-overlay-submit" aria-label="검색"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="search-recommend">
+                    <strong>추천검색어</strong>
+                    <div class="search-recommend-tags">
+                        <a href="../search.html?q=입소안내">입소안내</a>
+                        <a href="../search.html?q=이용요금">이용요금</a>
+                        <a href="../search.html?q=주야간보호">주야간보호</a>
+                        <a href="../search.html?q=방문요양">방문요양</a>
+                        <a href="../search.html?q=오시는 길">오시는 길</a>
+                        <a href="../search.html?q=자원봉사">자원봉사</a>
+                        <a href="../search.html?q=식단표">식단표</a>
+                    </div>
+                </div>
+            </form>
+            <button type="button" class="search-overlay-close js-close-search" aria-label="검색창 닫기">
+                <i class="fas fa-times"></i>
+                <span>닫기</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- 4. 서브 페이지 배너 (너비는 꽉 채우고 높이는 짧게) -->
+<div class="sub-visual">
+    <div class="sub-visual-text">
+        <h2>방문목욕</h2>
+        <p>방문목욕 서비스를 안내합니다.</p>
+    </div>
+</div>
+
+<!-- 5. 본문 영역 (좌측 메뉴 + 우측 공지사항) -->
+<div class="sub-container">
+    
+    <!-- 5-1. 왼쪽 사이드 메뉴 -->
+        <aside class="side-menu">
+        <h3>서비스 안내</h3>
+        <ul>
+            <li><a href="nighttime.html">주야간보호 <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="nursing.html">요양원 <i class="fas fa-chevron-right"></i></a></li>
+            <li class="active"><a href="home_visit.html">가정방문급여 <i class="fas fa-chevron-right"></i></a></li>
+        </ul>
+    </aside>
+
+    <!-- 5-2. 오른쪽 세부사항 및 공지사항 본문 -->
+    <main class="sub-content">
+        <div class="content-title">
+            <h2>방문목욕</h2>
+            <div class="breadcrumb">
+                <span><i class="fas fa-home"></i> Home</span> &gt; <span>서비스 안내</span> &gt; <strong>방문목욕</strong>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="sub-tabs">
+                <a href="home_visit.html">방문요양</a>
+                <a href="home_bath.html" class="is-active">방문목욕</a>
+            </div>
+            <ul class="dot-list">
+                <li>2인의 요양보호사가 수급자 가정을 방문하여 욕조를 활용한 목욕 서비스를 제공합니다.</li>
+            </ul>
+            <p class="section-label">서비스 내용</p>
+            <table class="page-table">
+                <thead><tr><th>서비스</th><th class="left">내용</th></tr></thead>
+                <tbody>
+                    <tr><td>입욕 준비</td><td class="left">건강상태 측정 후 목욕 여부 결정</td></tr>
+                    <tr><td>욕조로 이동</td><td class="left">욕조로 안전하게 이동</td></tr>
+                    <tr><td>옷 벗기</td><td class="left">목욕 서비스 제공을 위한 탈의</td></tr>
+                    <tr><td>입욕</td><td class="left">입욕과 목욕 서비스 제공 (요양보호사 2명 시행)</td></tr>
+                    <tr><td>이동</td><td class="left">목욕 완료 후, 의복 착용 후 방으로 이동</td></tr>
+                    <tr><td>종결 및 사후관리</td><td class="left">수분 공급과 건강상태 측정 및 휴식</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</div>
+
+<!-- 6. 푸터 영역 (기존 유지) -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="#" class="highlight">개인정보처리방침</a>
+            <a href="#">이용약관</a>
+            <a href="#">이메일무단수집거부</a>
+            <a href="../about/location.html">찾아오시는 길</a>
+        </div>
+        
+        <div class="footer-info">
+            <div class="footer-logo">
+                <img src="../img/logo2.png" alt="하단 로고">
+            </div>
+            <div class="info-text">
+                <p>
+                    <span>주소 : 영천시 역전로 16(완산동 1081-5)</span>
+                    <span>대표자 : 강시중</span>
+                    <span>사업자등록번호 : 123-45-67890</span>
+                </p>
+                <p>
+                    <span>대표전화 : 054-334-9986</span>
+                    <span>팩스 : 054-334-9985</span>
+                    <span>이메일 : info@example.com</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+<script src="../search.js"></script>
+<script src="../auth.js"></script>
+</body>
+</html>

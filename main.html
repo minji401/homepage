@@ -2,9 +2,9 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>홈페이지</title>
+    <title>헤리움 케어센터</title>
     <link rel="stylesheet" href="main.css" type="text/css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <!-- Google Fonts: Noto Serif KR 불러오기 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,121 +14,159 @@
 
 <div class="top-bar">
     <div class="user-menu">
-        <a href="#">로그인</a>
-        <a href="#">회원가입</a>
+        <a href="login.html">로그인</a>
+        <a href="signup.html">회원가입</a>
     </div>
 </div>
 
-<div class="head">
-    <div class="logo">
-        <a href="main.html"><img src="img/logo.png" alt="홈페이지 로고"></a>
-    </div>
-
-    <div class="header-right">
-        <div class="search-bar">
-            <a href="#"><i class="fas fa-search"> 검색</i></a>
+<!-- 상단 로고 및 유틸리티 영역 (흰색 배경 또는 독립된 줄) -->
+<div class="header-top-row">
+    <div class="header-top-inner">
+        <!-- 로고 -->
+        <div class="logo">
+            <a href="main.html"><img src="img/logo.png" alt="홈페이지 로고"></a>
         </div>
-        <div class="sp">
-            <button class="all-menu-btn" title="전체 메뉴">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <span>전체메뉴</span>
+
+        <!-- 우측 검색 & 전체메뉴 -->
+        <div class="header-right">
+            <a href="#" class="js-open-search" aria-expanded="false" aria-controls="searchOverlay"><i class="fas fa-search"> 검색</i></a>
+            <div class="sp">
+                <button class="all-menu-btn" title="전체 메뉴">
+                    <span></span><span></span><span></span>
+                </button>
+                <span>전체메뉴</span>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- 회색 띠 배경이 들어가는 네비게이션 영역 -->
 <header>
-    <nav class="main-nav">
-        <ul>
-            <li><a href="about/about.html">요양원 소개</a>
-            <ul class="dropdown">
-                <li><a href="about/about.html">인사말</a></li>
-                <li><a href="about/facility.html">시설 둘러보기</a></li>
-                <li><a href="about/location.html">오시는 길</a></li>
-                <li><a href="about/organization.html">조직 및 종사자 안내</a></li>
-                <li><a href="about/partners.html">협력기관</a></li>
-            </ul></li>
-
-            <li><a href="services/main.html">서비스 안내</a>
-            <ul class="dropdown">
-                <li><a href="services/nighttime.html">주야간보호</a></li>
-                <li><a href="services/nursing.html">요양원</a></li>
-                <li><a href="services/home_visit.html">방문요양</a></li>
-                <li><a href="services/home_bath.html">방문목욕</a></li>
-                <li><a href="services/dementia.html">치매·재활 특화 프로그램</a></li>
-                <li><a href="services/monthly.html">맞춤형 케어 일정표</a></li>
-            </ul></li>
-
-            <li><a href="admission/procedure.html">이용 방법</a>
-            <ul class="dropdown">
-                <li><a href="admission/procedure.html">서비스 이용 절차</a></li>
-                <li><a href="admission/fees.html">이용 요금 및 급여 안내</a></li>
-                <li><a href="admission/period.html">장기요양등급 신청 안내</a></li>
-                <li><a href="admission/tour.html">시설 방문/견학 신청</a></li>
-                <li><a href="admission/requirements.html">입소 준비물 및 유의사항</a></li>
-            </ul></li>
-
-            <li><a href="volunteer/intro.html">사랑나눔</a>
-            <ul class="dropdown">
-                <li><a href="volunteer/intro.html">자원봉사</a></li>
-                <li><a href="volunteer/application.html">후원</a></li>
-            </ul></li>
-
-            <li><a href="community/notice.html">요양원 소식</a>
-            <ul class="dropdown">
-                <li><a href="community/notice.html">공지사항</a></li>
-                <li><a href="community/gallery.html">활동 갤러리</a></li>
-                <li><a href="community/menu.html">주간 식단표</a></li>
-                <li><a href="community/faq.html">자주 묻는 질문</a></li>
-                <li><a href="community/inquiry.html">1:1 상담 및 문의</a></li>
-            </ul></li>
-        </ul>
-    </nav>
+    <div class="header-inner">
+        <nav class="main-nav">
+            <ul>
+                <li><a href="about/about.html">요양원 소개</a>
+                    <ul class="dropdown">
+                        <li><a href="about/about.html">인사말</a></li>
+                        <li><a href="about/facility.html">시설 둘러보기</a></li>
+                        <li><a href="about/location.html">오시는 길</a></li>
+                        <li><a href="about/organization.html">조직표</a></li>
+                        <li><a href="about/disclosure.html">경영공시</a></li>
+                        <li><a href="about/system.html">제도소개</a></li>
+                        <li><a href="about/partners.html">협력기관</a></li>
+                    </ul>
+                </li>
+                <li><a href="service/nighttime.html">서비스 안내</a>
+                    <ul class="dropdown">
+                        <li><a href="service/nighttime.html">주야간보호</a></li>
+                        <li><a href="service/nursing.html">요양원</a></li>
+                        <li><a href="service/home_visit.html">가정방문급여</a></li>
+                    </ul>
+                </li>
+                <li><a href="admission/procedure.html">이용 방법</a>
+                    <ul class="dropdown">
+                        <li><a href="admission/procedure.html">서비스 이용 절차</a></li>
+                        <li><a href="admission/fees.html">이용 요금 및 급여 안내</a></li>
+                        <li><a href="admission/status.html">이용 현황</a></li>
+                        <li><a href="admission/waitlist.html">대기자 명단</a></li>
+                        <li><a href="admission/period.html">장기요양등급 신청 안내</a></li>
+                        <li><a href="admission/tour.html">시설 방문/견학 신청</a></li>
+                        <li><a href="admission/requirements.html">입소 준비물 및 유의사항</a></li>
+                    </ul>
+                </li>
+                <li><a href="volunteer/intro.html">사랑나눔</a>
+                    <ul class="dropdown">
+                        <li><a href="volunteer/intro.html">자원봉사</a></li>
+                        <li><a href="volunteer/application.html">후원</a></li>
+                    </ul>
+                </li>
+                <li><a href="community/notice.html">요양원 소식</a>
+                    <ul class="dropdown">
+                        <li><a href="community/notice.html">공지사항</a></li>
+                        <li><a href="community/gallery.html">활동 갤러리</a></li>
+                        <li><a href="community/menu.html">주간 식단표</a></li>
+                        <li><a href="community/faq.html">자주 묻는 질문</a></li>
+                        <li><a href="community/inquiry.html">1:1 상담 및 문의</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="search-overlay" id="searchOverlay" hidden>
+        <div class="search-overlay-inner">
+            <form class="search-overlay-form js-search-form" action="search.html" method="get">
+                <div class="search-overlay-field">
+                    <input type="search" name="q" class="js-overlay-input" placeholder="검색어를 입력해 주세요" autocomplete="off">
+                    <button type="submit" class="search-overlay-submit" aria-label="검색"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="search-recommend">
+                    <strong>추천검색어</strong>
+                    <div class="search-recommend-tags">
+                        <a href="search.html?q=입소안내">입소안내</a>
+                        <a href="search.html?q=이용요금">이용요금</a>
+                        <a href="search.html?q=주야간보호">주야간보호</a>
+                        <a href="search.html?q=방문요양">방문요양</a>
+                        <a href="search.html?q=오시는 길">오시는 길</a>
+                        <a href="search.html?q=자원봉사">자원봉사</a>
+                        <a href="search.html?q=식단표">식단표</a>
+                    </div>
+                </div>
+            </form>
+            <button type="button" class="search-overlay-close js-close-search" aria-label="검색창 닫기">
+                <i class="fas fa-times"></i>
+                <span>닫기</span>
+            </button>
+        </div>
+    </div>
 </header>
 
 <div class="main-visual-row">
     <div class="box">
         <div>
-            <h1><span>따스한 손길</span>로 전하는 <span>사랑</span>, <br><span>헤리움재활실버케어</span>이 함께합니다.</h1>
+            <h1>{% if cms.main_headline %}{{ cms.main_headline|safe }}{% else %}<span>따스한 손길</span>로 전하는 <span>사랑</span>, <br><span>헤리움 케어센터</span>가 함께합니다.{% endif %}</h1>
         </div>
 
         <!-- 퀵 아이콘 이미지를 FontAwesome 아이콘으로 변경 -->
         <div class="quick-icons">
-            <div class="menu-item">
-                <i class="fa-solid fa-house" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
-                <span>입소안내</span>
-            </div>
-            <div class="menu-item">
-                <i class="fa-regular fa-calendar-check" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
-                <span>입소대기안내</span>
-            </div>
-            <div class="menu-item">
-                <i class="fa-regular fa-comments" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
-                <span>문의상담</span>
-            </div>
-            <div class="menu-item">
-                <i class="fa-solid fa-signs-post" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
-                <span>오시는길</span>
-            </div>
+            <a href="admission/period.html" class="menu-item">
+                <i class="fa-solid fa-id-card" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
+                <span>등급신청</span>
+            </a>
+            <a href="admission/tour.html" class="menu-item">
+                <i class="fa-solid fa-door-open" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
+                <span>시설견학</span>
+            </a>
+            <a href="community/inquiry.html" class="menu-item">
+                <i class="fa-solid fa-headset" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
+                <span>상담문의</span>
+            </a>
+            <a href="about/location.html" class="menu-item">
+                <i class="fa-solid fa-location-dot" style="font-size: 50px; color: #b38b4d; margin-bottom: 6px;"></i>
+                <span>오시는 길</span>
+            </a>
         </div>
 
         <div>
-            <h2 style="font-family: 'Noto Serif KR', serif; font-weight: 700; position: absolute; top: 347px; left:150px;">054 - 338 - 9010</h2>
+            <h2 style="font-family: 'Noto Serif KR', serif; font-weight: 700; position: absolute; top: 358px; left:350px;">054 - 338 - 9010</h2>
             <!-- 전화 이미지를 아이콘으로 변경 -->
-            <i class="fa-solid fa-phone call" style="font-size: 50px; color: #b38b4d; position:relative; left:690px; top:355px; z-index: 30; background: white; padding: 20px; border-radius: 50%;"></i>
+            <i class="fa-solid fa-phone call" style="font-size: 30px; color: #b38b4d; position:relative; left:780px; top:368px; z-index: 30; background: white; padding: 20px; border-radius: 50%;"></i>
         </div>
 
         <div class="box2"></div>
     </div>
 
     <div class="main-slider">
-        <div class="slider-wrapper">
-            <div class="slider-item"><img src="img/1.jpg" alt="메인 배너 1"></div>
-            <div class="slider-item"><img src="img/2.jpg" alt="메인 배너 2"></div>
-            <div class="slider-item"><img src="img/3.jpg" alt="메인 배너 3"></div>
-        </div>
+            <div class="slider-wrapper">
+                {% if cms_banners %}
+                {% for banner in cms_banners %}
+                <div class="slider-item"><img src="{{ banner.image }}?v={{ img_v }}" alt="{{ banner.title }}"></div>
+                {% endfor %}
+                {% else %}
+                <div class="slider-item"><img src="img/1.jpg" alt="메인 배너 1"></div>
+                <div class="slider-item"><img src="img/2.jpg" alt="메인 배너 2"></div>
+                <div class="slider-item"><img src="img/3.jpg" alt="메인 배너 3"></div>
+                {% endif %}
+            </div>
 
         <div class="slider-controls">
             <div class="slider-counter">
@@ -148,17 +186,25 @@
     <div class="notice-section">
         <div class="section-header">
             <!-- 공지사항 이미지를 새싹 아이콘으로 변경 -->
-            <h3><i class="fa-solid fa-seedling notice-icon" style="color: #b38b4d; margin-right: 6px; font-size: 25px;"></i> <div class="section-title" style="display: inline-block; position: relative; left: -20px; top: 10px;">공지사항</div></h3>
+            <h3>
+                <i class="fa-solid fa-seedling notice-icon" style="color: #b38b4d; margin-right: 10px; font-size: 25px; vertical-align: middle;"></i>
+                <span class="section-title" style="vertical-align: middle;">공지사항</span>
+            </h3>            
             <div class="notice-btn"><a href="community/notice.html"><i class="fas fa-plus"></i> 더보기</a></div>
         </div>
         <div class="notice-container">
             <div class="notice-list">
                 <ul>
-                    <li><a href="#"><p class="title">2024년 6월 프로그램 안내</p><p class="date">2024.06.01</p></a></li>
-                    <li><a href="#"><p class="title">시설 점검 안내</p><p class="date">2024.06.01</p></a></li>
-                    <li><a href="#"><p class="title">자원봉사자 모집 공고</p><p class="date">2024.06.01</p></a></li>
-                    <li><a href="#"><p class="title">입소 절차 변경 안내</p><p class="date">2024.06.01</p></a></li>
-                    <li><a href="#"><p class="title">신규 면회 수칙 안내</p><p class="date">2024.06.01</p></a></li>
+                    {% for notice in cms_notices %}
+                    <li><a href="community/notice.html"><p class="title">{% if notice.is_pinned %}[공지] {% endif %}{{ notice.title }}</p><p class="date">{{ notice.created_at|date:"Y.m.d" }}</p></a></li>
+                    {% empty %}
+                    <li><a href="community/notice.html"><p class="title">2024년 6월 프로그램 안내</p><p class="date">2024.06.01</p></a></li>
+                    <li><a href="community/notice.html"><p class="title">시설 점검 안내</p><p class="date">2024.06.01</p></a></li>
+                    <li><a href="volunteer/intro.html"><p class="title">자원봉사자 모집 공고</p><p class="date">2024.06.01</p></a></li>
+                    {% endfor %}
+                </ul>
+                    <li><a href="admission/procedure.html"><p class="title">입소 절차 변경 안내</p><p class="date">2024.06.01</p></a></li>
+                    <li><a href="admission/requirements.html"><p class="title">신규 면회 수칙 안내</p><p class="date">2024.06.01</p></a></li>
                 </ul>
             </div>
         </div>
@@ -176,7 +222,7 @@
         <div class="diet-card">
             <div class="diet-header">
                 <button id="prev-day" class="date-btn">&lt;</button>
-                <span id="current-date">5월 10일 (일)</span>
+                <span id="current-date">5월 10일</span>
                 <button id="next-day" class="date-btn">&gt;</button>
             </div>
             <div class="diet-menu">
@@ -194,22 +240,22 @@
     <!-- 4개 그리드 상자 내부에 아이콘 배치 -->
     <div class="service-grid-section">
         <div class="grid-container">
-            <div class="grid-item">
-                <div class="item-img-box"><i class="fas fa-hands-helping" style="font-size: 25px; color: #b38b4d;"></i></div>
-                <span class="item-text">보훈 요양 서비스</span>
-            </div>
-            <div class="grid-item">
-                <div class="item-img-box"><i class="fa-solid fa-clipboard-list" style="font-size: 25px; color: #b38b4d;"></i></div>
-                <span class="item-text">입소 안내 가이드</span>
-            </div>
-            <div class="grid-item">
+            <a href="service/nighttime.html" class="grid-item">
+                <div class="item-img-box"><i class="fa-solid fa-cloud-sun" style="font-size: 25px; color: #b38b4d;"></i></div>
+                <span class="item-text">주야간보호</span>
+            </a>
+            <a href="service/home_visit.html" class="grid-item">
+                <div class="item-img-box"><i class="fa-solid fa-house-chimney-user" style="font-size: 25px; color: #b38b4d;"></i></div>
+                <span class="item-text">방문요양</span>
+            </a>
+            <a href="service/dementia.html" class="grid-item">
                 <div class="item-img-box"><i class="fa-solid fa-brain" style="font-size: 25px; color: #b38b4d;"></i></div>
-                <span class="item-text">치매 특화 프로그램</span>
-            </div>
-            <div class="grid-item">
-                <div class="item-img-box"><i class="fa-solid fa-person-walking-with-cane" style="font-size: 25px; color: #b38b4d;"></i></div>
-                <span class="item-text">재활 치료 센터</span>
-            </div>
+                <span class="item-text">치매·재활</span>
+            </a>
+            <a href="admission/procedure.html" class="grid-item">
+                <div class="item-img-box"><i class="fa-solid fa-list-check" style="font-size: 25px; color: #b38b4d;"></i></div>
+                <span class="item-text">이용 절차</span>
+            </a>
         </div>
     </div>
 </div>
@@ -224,11 +270,11 @@
     
     <div class="slide-container">
         <div class="slide-wrapper">
-            <div class="slide-item"><img src="img/gallery1.jpg" alt="1"></div>
-            <div class="slide-item"><img src="img/gallery2.jpg" alt="2"></div>
-            <div class="slide-item"><img src="img/gallery3.jpg" alt="3"></div>
-            <div class="slide-item"><img src="img/gallery4.jpg" alt="4"></div>
-            <div class="slide-item"><img src="img/gallery5.jpg" alt="5"></div>
+            <div class="slide-item"><img src="img/gallery1.jpg?v={{ img_v }}" alt="1"></div>
+            <div class="slide-item"><img src="img/gallery2.jpg?v={{ img_v }}" alt="2"></div>
+            <div class="slide-item"><img src="img/gallery3.png?v={{ img_v }}" alt="3"></div>
+            <div class="slide-item"><img src="img/gallery4.jpg?v={{ img_v }}" alt="4"></div>
+            <div class="slide-item"><img src="img/gallery5.jpg?v={{ img_v }}" alt="5"></div>
         </div>
     </div>
 </div>
@@ -239,7 +285,7 @@
             <a href="#" class="highlight">개인정보처리방침</a>
             <a href="#">이용약관</a>
             <a href="#">이메일무단수집거부</a>
-            <a href="#">찾아오시는 길</a>
+            <a href="about/location.html">찾아오시는 길</a>
         </div>
         
         <div class="footer-info">
@@ -263,5 +309,28 @@
 </footer>
 
 <script src="main.js"></script>
+<script src="search.js"></script>
+<script src="auth.js"></script>
+{% if cms_popup %}
+<div class="site-popup" id="sitePopup">
+    <div class="site-popup-box">
+        <img src="{{ cms_popup.image }}" alt="{{ cms_popup.title }}">
+        <div class="site-popup-foot">
+            <label><input type="checkbox" id="popupHideToday"> 오늘 하루 창 그만 보기</label>
+            <button type="button" class="js-close-popup">CLOSE</button>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    var d = new Date();
+    var today = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    if (localStorage.getItem("herium_popup_hide") === today) {
+        var el = document.getElementById("sitePopup");
+        if (el) el.remove();
+    }
+})();
+</script>
+{% endif %}
 </body>
 </html>

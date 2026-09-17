@@ -1,0 +1,43 @@
+{% extends "staff/base.html" %}
+{% block title %}신청 관리{% endblock %}
+{% block heading %}서비스 및 신청 관리{% endblock %}
+{% block content %}
+<nav class="staff-tabs">
+    <a href="/staff/applications/" class="{% if not kind %}is-on{% endif %}">전체</a>
+    <a href="/staff/applications/?kind=consult" class="{% if kind == 'consult' %}is-on{% endif %}">입소 상담</a>
+    <a href="/staff/applications/?kind=tour" class="{% if kind == 'tour' %}is-on{% endif %}">견학</a>
+    <a href="/staff/applications/?kind=volunteer" class="{% if kind == 'volunteer' %}is-on{% endif %}">자원봉사</a>
+    <a href="/staff/applications/?kind=donate" class="{% if kind == 'donate' %}is-on{% endif %}">후원</a>
+</nav>
+<div class="table-wrap">
+<table class="staff-table">
+    <thead><tr><th>구분</th><th>이름</th><th>연락처</th><th>내용</th><th>상태</th><th>접수일</th><th>처리</th></tr></thead>
+    <tbody>
+    {% for item in items %}
+    <tr>
+        <td>{{ item.get_kind_display }}</td>
+        <td>{{ item.name }}</td>
+        <td>{{ item.phone }}</td>
+        <td>{{ item.title }} {{ item.body|truncatechars:40 }}</td>
+        <td>{{ item.get_status_display }}</td>
+        <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+        <td>
+            <form method="post" action="/staff/applications/{{ item.id }}/">{% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                {% if item.kind == 'volunteer' or item.kind == 'donate' %}
+                <button name="status" value="approved">승인</button>
+                <button name="status" value="rejected" class="danger">반려</button>
+                {% else %}
+                <button name="status" value="waiting">상담 대기</button>
+                <button name="status" value="done">상담 완료</button>
+                {% endif %}
+            </form>
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7">신청 내역이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

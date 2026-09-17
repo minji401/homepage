@@ -54,7 +54,7 @@ document.getElementById('next-day').addEventListener('click', () => {
 
 function updateDiet() {
     const dateStr = `5월 ${currentDate}일`;
-    dateDisplay.innerText = dateStr + (currentDate === 10 ? " (일)" : "");
+    dateDisplay.innerText = dateStr + (currentDate === 10 ? "" : "");
     menuList.innerHTML = "";
     const dayMenu = menus[dateStr] || ["식단 준비 중"];
     dayMenu.forEach(item => {

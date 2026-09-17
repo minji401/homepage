@@ -1,0 +1,88 @@
+{% extends "staff/base.html" %}
+{% block title %}게시판 관리{% endblock %}
+{% block heading %}콘텐츠 및 게시판 관리{% endblock %}
+{% block content %}
+<section class="staff-section">
+    <h2>게시판 생성 및 삭제</h2>
+    <form method="post" class="staff-form-row">{% csrf_token %}
+        <input type="hidden" name="action" value="create">
+        <input name="name" placeholder="게시판명 (예: 이용후기)" required>
+        <input name="slug" placeholder="코드 (예: review)" required>
+        <input name="description" placeholder="설명">
+        <button type="submit">생성</button>
+    </form>
+    <table class="staff-table">
+        <thead><tr><th>게시판</th><th>코드</th><th>글 수</th><th></th></tr></thead>
+        <tbody>
+        {% for board in boards %}
+        <tr>
+            <td>{{ board.name }}</td>
+            <td>{{ board.slug }}</td>
+            <td>{{ board.post_count }}</td>
+            <td>
+                <form method="post" onsubmit="return confirm('게시판과 글을 모두 삭제할까요?')">{% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="id" value="{{ board.id }}">
+                    <button class="danger">삭제</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section class="staff-section">
+    <h2>게시글 관리 <a class="btn" href="/staff/posts/new/">새 글</a></h2>
+    <table class="staff-table">
+        <thead><tr><th>게시판</th><th>제목</th><th>고정</th><th>숨김</th><th>작성일</th><th></th></tr></thead>
+        <tbody>
+        {% for post in posts %}
+        <tr>
+            <td>{{ post.board.name }}</td>
+            <td>{{ post.title }}</td>
+            <td>{% if post.is_pinned %}공지{% else %}-{% endif %}</td>
+            <td>{% if post.is_hidden %}숨김{% else %}공개{% endif %}</td>
+            <td>{{ post.created_at|date:"Y-m-d" }}</td>
+            <td class="actions">
+                <a class="btn-line" href="/staff/posts/{{ post.id }}/edit/">수정</a>
+                <form method="post" action="/staff/posts/{{ post.id }}/">{% csrf_token %}
+                    <button name="action" value="pin">고정 전환</button>
+                    <button name="action" value="hide">숨김 전환</button>
+                    <button name="action" value="delete" class="danger" onclick="return confirm('삭제할까요?')">삭제</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">게시글이 없습니다.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section class="staff-section">
+    <h2>댓글 관리</h2>
+    <table class="staff-table">
+        <thead><tr><th>게시글</th><th>작성자</th><th>내용</th><th></th></tr></thead>
+        <tbody>
+        {% for c in comments %}
+        <tr>
+            <td>{{ c.post.title }}</td>
+            <td>{{ c.author_name }}</td>
+            <td>
+                <form method="post" action="/staff/comments/{{ c.id }}/" class="comment-edit">{% csrf_token %}
+                    <input name="body" value="{{ c.body }}">
+                    <button name="action" value="edit">수정</button>
+                    <button name="action" value="hide">{% if c.is_hidden %}공개{% else %}숨김{% endif %}</button>
+                    <button name="action" value="delete" class="danger">삭제</button>
+                </form>
+            </td>
+            <td>{% if c.is_hidden %}숨김{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">댓글이 없습니다.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

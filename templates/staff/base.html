@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}관리자{% endblock %} | 헤리움 케어센터</title>
+    <link rel="stylesheet" href="/staff.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<div class="staff-shell">
+    <aside class="staff-side">
+        <a class="staff-brand" href="/staff/">헤리움 관리자</a>
+        <nav>
+            <a href="/staff/" class="{% if request.path == '/staff/' %}is-on{% endif %}"><i class="fa-solid fa-chart-line"></i> 대시보드</a>
+            <p class="staff-group">콘텐츠 관리</p>
+            <a href="/staff/posts/notice/" class="{% if slug == 'notice' or '/posts/notice/' in request.path %}is-on{% endif %}">공지사항</a>
+            <a href="/staff/posts/menu/" class="{% if slug == 'menu' or '/posts/menu/' in request.path %}is-on{% endif %}">식단표</a>
+            <a href="/staff/posts/gallery/" class="{% if slug == 'gallery' or '/posts/gallery/' in request.path %}is-on{% endif %}">갤러리</a>
+            <p class="staff-group">정보 관리</p>
+            <a href="/staff/members/" class="{% if '/members/' in request.path %}is-on{% endif %}">회원 관리</a>
+            <a href="/staff/applications/" class="{% if '/applications/' in request.path %}is-on{% endif %}">신청 관리</a>
+            <p class="staff-group">사이트 설정</p>
+            <a href="/staff/content/" class="{% if '/content/' in request.path %}is-on{% endif %}">메인·소개·팝업</a>
+            <a href="/staff/insights/" class="{% if '/insights/' in request.path %}is-on{% endif %}">검색·통계</a>
+        </nav>
+    </aside>
+    <div class="staff-main">
+        <header class="staff-top">
+            <h1>{% block heading %}관리자{% endblock %}</h1>
+            <div class="staff-user">
+                <a class="btn-site" href="/main.html" target="_blank" rel="noopener">내 사이트 보기</a>
+                <span>{{ request.user.profile.name|default:request.user.username }} 관리자</span>
+                <form method="post" action="/accounts/logout/" class="inline">
+                    {% csrf_token %}
+                    <button type="submit">로그아웃</button>
+                </form>
+            </div>
+        </header>
+        {% if messages %}
+        <ul class="staff-flash" hidden>
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </div>
+</div>
+<div id="staffToast" class="staff-toast" hidden></div>
+<script src="/staff.js"></script>
+</body>
+</html>

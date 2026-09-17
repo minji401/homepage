@@ -1,0 +1,67 @@
+{% extends "staff/base.html" %}
+{% block title %}{{ board.name }}{% endblock %}
+{% block heading %}{{ board.name }} 관리{% endblock %}
+{% block content %}
+<div class="toolbar">
+    <form class="staff-search" method="get">
+        <input type="search" name="q" value="{{ q }}" placeholder="제목, 내용 검색">
+        <select name="sort" onchange="this.form.submit()">
+            <option value="-created_at" {% if sort == "-created_at" %}selected{% endif %}>등록일 최신순</option>
+            <option value="created_at" {% if sort == "created_at" %}selected{% endif %}>등록일 오래된순</option>
+            <option value="title" {% if sort == "title" %}selected{% endif %}>제목순</option>
+        </select>
+        <button type="submit">검색</button>
+    </form>
+    <a class="btn" href="/staff/posts/{{ slug }}/new/">새 글 등록</a>
+</div>
+
+<form method="post" action="/staff/posts/{{ slug }}/bulk/" id="bulkForm">{% csrf_token %}
+    <div class="bulk-bar">
+        <label><input type="checkbox" id="checkAll"> 전체 선택</label>
+        <select name="bulk" required>
+            <option value="">일괄 처리</option>
+            <option value="show">공개</option>
+            <option value="hide">숨김</option>
+            <option value="pin">상단 고정</option>
+            <option value="unpin">고정 해제</option>
+            <option value="delete">삭제</option>
+        </select>
+        <button type="submit" class="danger">적용</button>
+    </div>
+    <div class="table-wrap">
+    <table class="staff-table">
+        <thead>
+            <tr>
+                <th style="width:36px"></th>
+                <th>제목</th>
+                {% if meta.has_category %}<th>분류</th>{% endif %}
+                {% if meta.has_image %}<th>이미지</th>{% endif %}
+                <th>상태</th>
+                <th>등록일</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for post in posts %}
+        <tr>
+            <td><input type="checkbox" name="ids" value="{{ post.id }}"></td>
+            <td>
+                {% if post.is_pinned %}<span class="tag">공지</span>{% endif %}
+                <a href="/staff/posts/{{ post.id }}/edit/">{{ post.title }}</a>
+            </td>
+            {% if meta.has_category %}<td>{% if post.category == "night" %}주야간보호{% elif post.category == "home" %}가정방문급여{% elif post.category == "nursing" %}요양원{% else %}-{% endif %}</td>{% endif %}
+            {% if meta.has_image %}<td>{% if post.image %}<img class="thumb" src="{{ post.image }}" alt="">{% else %}-{% endif %}</td>{% endif %}
+            <td>{% if post.is_hidden %}숨김{% else %}공개{% endif %}</td>
+            <td>{{ post.created_at|date:"Y-m-d H:i" }}</td>
+            <td class="actions">
+                <a class="btn-line" href="/staff/posts/{{ post.id }}/edit/">수정</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">등록된 콘텐츠가 없습니다.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</form>
+{% endblock %}

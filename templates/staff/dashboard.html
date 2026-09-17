@@ -1,0 +1,64 @@
+{% extends "staff/base.html" %}
+{% block title %}대시보드{% endblock %}
+{% block heading %}운영 현황{% endblock %}
+{% block content %}
+<div class="staff-cards">
+    <div class="staff-card"><span>정상 회원</span><strong>{{ member_count }}</strong><em>전체 {{ member_total }}명</em></div>
+    <div class="staff-card"><span>이번 주 가입</span><strong>{{ new_week }}</strong></div>
+    <div class="staff-card"><span>대기 신청</span><strong>{{ waiting_count }}</strong></div>
+    <div class="staff-card"><span>오늘 방문</span><strong>{{ today_visits }}</strong></div>
+</div>
+<div class="dash-grid">
+    <section class="dash-box">
+        <h2>콘텐츠 최신 등록 <small>공지 {{ notice_count }} · 식단 {{ menu_count }} · 갤러리 {{ gallery_count }}</small></h2>
+        <div class="dash-cols">
+            <div>
+                <h3><a href="/staff/posts/notice/">공지사항</a></h3>
+                <ul>
+                    {% for item in latest_notices %}
+                    <li><a href="/staff/posts/{{ item.id }}/edit/">{{ item.title }}</a><span>{{ item.created_at|date:"m.d" }}</span></li>
+                    {% empty %}<li class="empty">등록된 글이 없습니다.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div>
+                <h3><a href="/staff/posts/menu/">식단표</a></h3>
+                <ul>
+                    {% for item in latest_menus %}
+                    <li><a href="/staff/posts/{{ item.id }}/edit/">{{ item.title }}</a><span>{{ item.created_at|date:"m.d" }}</span></li>
+                    {% empty %}<li class="empty">등록된 글이 없습니다.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div>
+                <h3><a href="/staff/posts/gallery/">갤러리</a></h3>
+                <ul>
+                    {% for item in latest_gallery %}
+                    <li><a href="/staff/posts/{{ item.id }}/edit/">{{ item.title }}</a><span>{{ item.created_at|date:"m.d" }}</span></li>
+                    {% empty %}<li class="empty">등록된 글이 없습니다.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </section>
+    <section class="dash-box">
+        <h2>최근 가입 회원</h2>
+        <div class="table-wrap">
+        <table class="staff-table">
+            <thead><tr><th>이름</th><th>아이디</th><th>권한</th><th>가입일</th></tr></thead>
+            <tbody>
+            {% for u in recent_members %}
+            <tr>
+                <td><a href="/staff/members/{{ u.id }}/">{{ u.profile.name|default:u.username }}</a></td>
+                <td>{{ u.username }}</td>
+                <td>{{ u.profile.get_role_display|default:"일반 회원" }}</td>
+                <td>{{ u.date_joined|date:"Y-m-d" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <p class="staff-help"><a href="/staff/members/">회원 전체 보기</a></p>
+    </section>
+</div>
+{% endblock %}

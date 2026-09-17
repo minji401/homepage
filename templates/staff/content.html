@@ -1,0 +1,76 @@
+{% extends "staff/base.html" %}
+{% block title %}사이트 설정{% endblock %}
+{% block heading %}메인·소개·팝업{% endblock %}
+{% block content %}
+<section class="staff-section">
+    <h2>메인 팝업</h2>
+    <p class="staff-help">컴퓨터에서 안내 이미지를 올리면 메인 화면에 팝업으로 보여 줍니다. 주소 입력은 필요 없습니다.</p>
+    <form method="post" class="staff-form" enctype="multipart/form-data">{% csrf_token %}
+        <input type="hidden" name="section" value="popup">
+        <label>관리용 제목 <input name="title" value="{{ popup.title|default:'안내' }}" placeholder="예: 입소 대기 안내"></label>
+        <label>팝업 이미지
+            <input type="file" name="image" accept="image/*" class="js-image-input" data-preview="#popupPreview">
+        </label>
+        <div class="preview-wrap">
+            <img id="popupPreview" class="preview-img" src="{{ popup.image|default:'' }}" alt="팝업 미리보기" {% if not popup.image %}hidden{% endif %}>
+        </div>
+        <label class="check"><input type="checkbox" name="is_active" {% if popup.is_active %}checked{% endif %}> 메인에 표시</label>
+        <div class="form-actions">
+            <button type="submit">팝업 저장</button>
+        </div>
+    </form>
+</section>
+
+<section class="staff-section">
+    <h2>메인 배너</h2>
+    <p class="staff-help">메인 슬라이드에 쓰일 사진을 컴퓨터에서 바로 올립니다.</p>
+    {% for banner in banners %}
+    <form method="post" class="staff-media-card" enctype="multipart/form-data">{% csrf_token %}
+        <input type="hidden" name="section" value="banner">
+        <input type="hidden" name="id" value="{{ banner.id }}">
+        <img class="preview-img" id="bannerPreview{{ banner.id }}" src="{{ banner.image }}" alt="{{ banner.title }}">
+        <div class="staff-media-fields">
+            <label>제목 <input name="title" value="{{ banner.title }}"></label>
+            <label>새 이미지 <input type="file" name="image_file" accept="image/*" class="js-image-input" data-preview="#bannerPreview{{ banner.id }}"></label>
+            <label>순서 <input name="sort_order" type="number" value="{{ banner.sort_order }}"></label>
+            <label class="check"><input type="checkbox" name="is_active" {% if banner.is_active %}checked{% endif %}> 사용</label>
+            <div class="form-actions">
+                <button type="submit">저장</button>
+            </div>
+        </div>
+    </form>
+    <form method="post" class="inline banner-delete">{% csrf_token %}
+        <input type="hidden" name="section" value="banner_delete">
+        <input type="hidden" name="id" value="{{ banner.id }}">
+        <button type="submit" class="danger" data-confirm="이 배너를 삭제할까요?">삭제</button>
+    </form>
+    {% empty %}
+    <p class="staff-help">등록된 배너가 없습니다.</p>
+    {% endfor %}
+
+    <h3 class="staff-subhead">배너 추가</h3>
+    <form method="post" class="staff-form" enctype="multipart/form-data">{% csrf_token %}
+        <input type="hidden" name="section" value="banner_add">
+        <label>제목 <input name="title" placeholder="메인 배너"></label>
+        <label>이미지 파일 <input type="file" name="image_file" accept="image/*" required></label>
+        <label>순서 <input name="sort_order" type="number" value="{{ banners|length|add:1 }}"></label>
+        <div class="form-actions">
+            <button type="submit">배너 추가</button>
+        </div>
+    </form>
+</section>
+
+<section class="staff-section">
+    <h2>주요 텍스트</h2>
+    {% for item in contents %}
+    <form method="post" class="staff-form">{% csrf_token %}
+        <input type="hidden" name="section" value="text">
+        <input type="hidden" name="id" value="{{ item.id }}">
+        <label>{{ item.label }}
+            <textarea name="body" rows="5">{{ item.body }}</textarea>
+        </label>
+        <button type="submit">저장</button>
+    </form>
+    {% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>요양원 | 헤리움 케어센터</title>
+    <!-- 공통 영역(탑바, 헤더, 푸터)을 적용하기 위해 불러옴 -->
+    <link rel="stylesheet" href="../main.css" type="text/css">
+    <!-- 서브 영역(서브배너, 사이드바, 본문정렬)을 적용하기 위해 불러옴 -->
+    <link rel="stylesheet" href="../sub.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<!-- 1. 최상단 영역 (기존 유지) -->
+<div class="top-bar">
+    <div class="user-menu">
+        <a href="../login.html">로그인</a>
+        <a href="../signup.html">회원가입</a>
+    </div>
+</div>
+
+<!-- 상단 로고 및 유틸리티 영역 (흰색 배경 또는 독립된 줄) -->
+<div class="header-top-row">
+    <div class="header-top-inner">
+        <!-- 로고 -->
+        <div class="logo">
+            <a href="../main.html"><img src="../img/logo.png" alt="홈페이지 로고"></a>
+        </div>
+
+        <!-- 우측 검색 & 전체메뉴 -->
+        <div class="header-right">
+            <a href="#" class="js-open-search" aria-expanded="false" aria-controls="searchOverlay"><i class="fas fa-search"> 검색</i></a>
+            <div class="sp">
+                <button class="all-menu-btn" title="전체 메뉴">
+                    <span></span><span></span><span></span>
+                </button>
+                <span>전체메뉴</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. 메인 내비게이션 (기존 유지) -->
+<header>
+    <div class="header-inner">
+        <nav class="main-nav">
+            <ul>
+                <li><a href="../about/about.html">요양원 소개</a>
+                    <ul class="dropdown">
+                        <li><a href="../about/about.html">인사말</a></li>
+                        <li><a href="../about/facility.html">시설 둘러보기</a></li>
+                        <li><a href="../about/location.html">오시는 길</a></li>
+                        <li><a href="../about/organization.html">조직표</a></li>
+                        <li><a href="../about/disclosure.html">경영공시</a></li>
+                        <li><a href="../about/system.html">제도소개</a></li>
+                        <li><a href="../about/partners.html">협력기관</a></li>
+                    </ul>
+                </li>
+                <li><a href="nighttime.html">서비스 안내</a>
+                    <ul class="dropdown">
+                        <li><a href="nighttime.html">주야간보호</a></li>
+                        <li><a href="nursing.html">요양원</a></li>
+                        <li><a href="home_visit.html">가정방문급여</a></li>
+                    </ul>
+                </li>
+                <li><a href="../admission/procedure.html">이용 방법</a>
+                    <ul class="dropdown">
+                        <li><a href="../admission/procedure.html">서비스 이용 절차</a></li>
+                        <li><a href="../admission/fees.html">이용 요금 및 급여 안내</a></li>
+                        <li><a href="../admission/status.html">이용 현황</a></li>
+                        <li><a href="../admission/waitlist.html">대기자 명단</a></li>
+                        <li><a href="../admission/period.html">장기요양등급 신청 안내</a></li>
+                        <li><a href="../admission/tour.html">시설 방문/견학 신청</a></li>
+                        <li><a href="../admission/requirements.html">입소 준비물 및 유의사항</a></li>
+                    </ul>
+                </li>
+                <li><a href="../volunteer/intro.html">사랑나눔</a>
+                    <ul class="dropdown">
+                        <li><a href="../volunteer/intro.html">자원봉사</a></li>
+                        <li><a href="../volunteer/application.html">후원</a></li>
+                    </ul>
+                </li>
+                <li><a href="../community/notice.html">요양원 소식</a>
+                    <ul class="dropdown">
+                        <li><a href="../community/notice.html">공지사항</a></li>
+                        <li><a href="../community/gallery.html">활동 갤러리</a></li>
+                        <li><a href="../community/menu.html">주간 식단표</a></li>
+                        <li><a href="../community/faq.html">자주 묻는 질문</a></li>
+                        <li><a href="../community/inquiry.html">1:1 상담 및 문의</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="search-overlay" id="searchOverlay" hidden>
+        <div class="search-overlay-inner">
+            <form class="search-overlay-form js-search-form" action="../search.html" method="get">
+                <div class="search-overlay-field">
+                    <input type="search" name="q" class="js-overlay-input" placeholder="검색어를 입력해 주세요" autocomplete="off">
+                    <button type="submit" class="search-overlay-submit" aria-label="검색"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="search-recommend">
+                    <strong>추천검색어</strong>
+                    <div class="search-recommend-tags">
+                        <a href="../search.html?q=입소안내">입소안내</a>
+                        <a href="../search.html?q=이용요금">이용요금</a>
+                        <a href="../search.html?q=주야간보호">주야간보호</a>
+                        <a href="../search.html?q=방문요양">방문요양</a>
+                        <a href="../search.html?q=오시는 길">오시는 길</a>
+                        <a href="../search.html?q=자원봉사">자원봉사</a>
+                        <a href="../search.html?q=식단표">식단표</a>
+                    </div>
+                </div>
+            </form>
+            <button type="button" class="search-overlay-close js-close-search" aria-label="검색창 닫기">
+                <i class="fas fa-times"></i>
+                <span>닫기</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- 4. 서브 페이지 배너 (너비는 꽉 채우고 높이는 짧게) -->
+<div class="sub-visual">
+    <div class="sub-visual-text">
+        <h2>요양원</h2>
+        <p>요양원 입소 서비스를 안내합니다.</p>
+    </div>
+</div>
+
+<!-- 5. 본문 영역 (좌측 메뉴 + 우측 공지사항) -->
+<div class="sub-container">
+    
+    <!-- 5-1. 왼쪽 사이드 메뉴 -->
+        <aside class="side-menu">
+        <h3>서비스 안내</h3>
+        <ul>
+            <li><a href="nighttime.html">주야간보호 <i class="fas fa-chevron-right"></i></a></li>
+            <li class="active"><a href="nursing.html">요양원 <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="home_visit.html">가정방문급여 <i class="fas fa-chevron-right"></i></a></li>
+        </ul>
+    </aside>
+
+    <!-- 5-2. 오른쪽 세부사항 및 공지사항 본문 -->
+    <main class="sub-content">
+        <div class="content-title">
+            <h2>요양원</h2>
+            <div class="breadcrumb">
+                <span><i class="fas fa-home"></i> Home</span> &gt; <span>서비스 안내</span> &gt; <strong>요양원</strong>
+            </div>
+        </div>
+
+        <div class="page-body">
+            <div class="sub-tabs">
+                <button type="button" class="is-active" data-tab="custom">맞춤형 케어</button>
+                <button type="button" data-tab="dementia">치매전담형</button>
+                <button type="button" data-tab="daily">일일 생활 시간표</button>
+                <button type="button" data-tab="month">월간 프로그램</button>
+            </div>
+
+            <div class="tab-panel is-active" id="tab-custom">
+                <p class="page-lead">맞춤형 케어는 신체·인지 기능에 따라 5종의 유닛으로 배정하고, 4개 영역 프로그램과 11개 부문 서비스를 조합해 개인별 케어 포인트를 정합니다. (예시 구성)</p>
+                <div class="kp-box">
+                    <div><i class="fa-regular fa-circle"></i><span><strong>5 Unit</strong><br>신체·인지 기능에 따른 5종 유닛</span></div>
+                    <div><i class="fa-regular fa-circle"></i><span><strong>4 Program</strong><br>4개 영역 프로그램</span></div>
+                    <div><i class="fa-regular fa-circle"></i><span><strong>11 Services</strong><br>11개 부문 서비스</span></div>
+                    <div><i class="fa-regular fa-circle"></i><span><strong>70 Keypoint</strong><br>개인별 케어 포인트</span></div>
+                </div>
+
+                <p class="section-label">유닛 (5 Unit)</p>
+                <div class="wheel-wrap">
+                    <div class="pie pie-5">
+                        <div class="pie-labels">
+                            <b>기능회복형</b>
+                            <b>전문간호형</b>
+                            <b>관계회복형</b>
+                            <b>인지향상형</b>
+                            <b>치매전담형</b>
+                        </div>
+                        <span class="hub">5 UNIT</span>
+                    </div>
+                </div>
+                <ul class="unit-desc">
+                    <li><strong>인지향상형</strong>경도 변화 및 인지 향상을 목표로 하는 유닛</li>
+                    <li><strong>관계회복형</strong>입소 후 소통과 관계 강화, 인지기능 유지를 돕는 유닛</li>
+                    <li><strong>기능회복형</strong>신체기능의 악화를 막고 잔존 기능을 유지하는 유닛</li>
+                    <li><strong>치매전담형</strong>치매 어르신을 위한 전담 프로그램 유닛</li>
+                    <li><strong>전문간호형</strong>의료·간호 필요가 높은 어르신을 위한 유닛</li>
+                </ul>
+
+                <p class="section-label">프로그램 (4 Program)</p>
+                <p>신체·인지 기능을 기준으로 특성화한 4개 영역 프로그램입니다.</p>
+                <div class="program-wheel">
+                    <div class="program-side">
+                        <h4>생활지원</h4>
+                        <ul><li>일상지원 서비스</li><li>신체지원 서비스</li><li>영양급식 서비스</li></ul>
+                        <h4>가족지원 및 특화</h4>
+                        <ul><li>가족지원 서비스</li><li>특화 서비스</li><li>임종돌봄 서비스</li></ul>
+                    </div>
+                    <div class="pie pie-4"><span class="hub">4 Types<br>PROGRAM</span></div>
+                    <div class="program-side">
+                        <h4>기능유지 및 증진</h4>
+                        <ul><li>건강증진 서비스</li><li>기능회복 서비스</li><li>인지향상 서비스</li></ul>
+                        <h4>여가 및 정서</h4>
+                        <ul><li>여가지원 서비스</li><li>정서지원 서비스</li></ul>
+                    </div>
+                </div>
+
+                <p class="section-label">서비스 (11 Services)</p>
+                <div class="svc-groups">
+                    <div class="svc-group g1">
+                        <h4><i></i>일상지원서비스</h4>
+                        <ul><li>위생관리</li><li>세탁물관리</li><li>실내환경관리</li><li>기호품관리</li><li>쓰레기배출</li><li>안전관리</li></ul>
+                    </div>
+                    <div class="svc-group g1">
+                        <h4><i></i>신체지원서비스</h4>
+                        <ul><li>세면 및 손발톱</li><li>이미용관리</li><li>구강위생관리</li><li>두발관리</li><li>회음부관리</li><li>목욕관리</li><li>배설관리</li><li>식사보조</li><li>옷 갈아입히기</li><li>체위변경</li><li>수면관리</li><li>이동보조</li></ul>
+                    </div>
+                    <div class="svc-group g1">
+                        <h4><i></i>영양급식서비스</h4>
+                        <ul><li>식이제공</li><li>간식</li><li>식이평가</li><li>위생관리</li></ul>
+                    </div>
+                    <div class="svc-group g2">
+                        <h4><i></i>건강증진서비스</h4>
+                        <ul><li>건강사정·상담</li><li>배설간호</li><li>통증간호</li><li>영양간호</li><li>예방·진료 연계</li><li>피부·투약·호흡 간호</li><li>욕창 간호 및 치료</li><li>응급지원</li><li>임종간호</li></ul>
+                    </div>
+                    <div class="svc-group g2">
+                        <h4><i></i>기능회복서비스</h4>
+                        <ul><li>관절운동</li><li>전기자극치료</li><li>온열치료</li><li>마사지</li><li>작업치료</li><li>기능회복훈련</li></ul>
+                    </div>
+                    <div class="svc-group g2">
+                        <h4><i></i>인지향상서비스</h4>
+                        <ul><li>노인인지치료</li><li>원예치료</li><li>음악치료</li><li>다감각중재치료</li></ul>
+                    </div>
+                    <div class="svc-group g3">
+                        <h4><i></i>여가지원서비스</h4>
+                        <ul><li>놀이 및 산책</li><li>취미활동</li><li>생신잔치</li><li>요리교실</li><li>미용활동</li><li>실버체조</li><li>지역사회 행사 참여</li><li>특별공연</li></ul>
+                    </div>
+                    <div class="svc-group g3">
+                        <h4><i></i>정서지원서비스</h4>
+                        <ul><li>두피·발 마사지</li><li>아로마요법</li><li>족욕</li><li>종교활동</li><li>특별행사</li></ul>
+                    </div>
+                    <div class="svc-group g4">
+                        <h4><i></i>가족지원·특화·임종</h4>
+                        <ul><li>개인·가족 상담</li><li>가족초청행사</li><li>가정통신</li><li>만족도조사</li><li>노노케어</li><li>비약물요법</li><li>임종·가족 돌봄</li></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-panel" id="tab-dementia">
+                <p class="section-label">일상생활 프로그램</p>
+                <ul class="dot-list">
+                    <li>건강 및 위생관리, 운동, 산책, 일상생활 활동 등을 매일 제공합니다.</li>
+                    <li>목욕, 사회적응훈련은 주 1회 이상 제공합니다.</li>
+                    <li>가족교육 및 가족 참여 프로그램을 월 1회 이상 제공하고, 반기 1회 가족이 직접 참여하는 프로그램을 운영합니다.</li>
+                </ul>
+                <p class="section-label">주간 인지 시간표 (예시)</p>
+                <table class="page-table week-table">
+                    <thead>
+                        <tr><th>구분</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th><th>일</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>오전</th>
+                            <td>현실인식훈련<br>10:30~11:00<br>건강체조<br>10:30~11:30</td>
+                            <td>현실인식훈련<br>10:30~11:00</td>
+                            <td>현실인식훈련<br>10:30~11:00<br>미술활동<br>10:30~11:30</td>
+                            <td>현실인식훈련<br>10:30~11:00<br>작업교실<br>10:30~11:30</td>
+                            <td>현실인식훈련<br>10:30~11:00<br>건강체조<br>10:30~11:30</td>
+                            <td>현실인식훈련<br>10:30~11:00</td>
+                            <td>현실인식훈련<br>10:30~11:00</td>
+                        </tr>
+                        <tr>
+                            <th>오후</th>
+                            <td>레크리에이션<br>15:00~16:00</td>
+                            <td>작업교실<br>15:00~16:00<br>다도교실<br>15:00~16:00</td>
+                            <td>현실인식훈련<br>15:00~15:30<br>미술활동<br>15:00~16:00</td>
+                            <td>다도교실<br>15:00~16:00<br>현실인식훈련<br>15:00~15:30</td>
+                            <td>레크리에이션<br>15:00~16:00<br>현실인식훈련<br>15:00~15:30</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="section-label">인지기능 향상 프로그램</p>
+                <ul class="dot-list">
+                    <li><strong>인지훈련</strong> 지남력, 집중력, 기억력과 문제해결력 등 저하된 인지기능을 키우기 위한 활동</li>
+                    <li><strong>신체활동</strong> 규칙적이고 적절한 신체활동으로 정서적 안정과 진행성 증상 감소에 도움</li>
+                    <li><strong>인지자극활동</strong> 활동 능력과 흥미를 고려한 다양한 활동</li>
+                    <li><strong>현실인식훈련</strong> 현재 자신과 주변 환경에 대한 기본 지식을 인식하도록 훈련</li>
+                    <li><strong>음악활동</strong> 음악적 관계를 통해 심신 건강과 사회성 증진</li>
+                    <li><strong>감각활동</strong> 다양한 감각을 제공하는 활동</li>
+                    <li><strong>회상활동</strong> 함께 참여하며 기억·상호관계·공감을 촉진</li>
+                </ul>
+            </div>
+
+            <div class="tab-panel" id="tab-daily">
+                <table class="page-table">
+                    <thead><tr><th>시간</th><th>내용</th></tr></thead>
+                    <tbody>
+                        <tr><td>06:00~07:00</td><td class="left">기상 및 식사 준비</td></tr>
+                        <tr><td>07:00~08:30</td><td class="left">아침 식사 및 개인위생</td></tr>
+                        <tr><td>08:30~10:00</td><td class="left">기본 건강체크 및 투약, 건강체조</td></tr>
+                        <tr><td>10:00~12:00</td><td class="left">인지·프로그램</td></tr>
+                        <tr><td>12:00~13:00</td><td class="left">점심 식사 및 개인위생, 투약</td></tr>
+                        <tr><td>13:00~14:00</td><td class="left">개인 활동</td></tr>
+                        <tr><td>14:00~17:00</td><td class="left">인지·프로그램</td></tr>
+                        <tr><td>17:00~18:00</td><td class="left">개인 활동</td></tr>
+                        <tr><td>18:00~20:00</td><td class="left">저녁 식사 및 개인위생, 투약</td></tr>
+                        <tr><td>20:00~21:00</td><td class="left">자유시간 (음악 감상, TV 시청 등)</td></tr>
+                        <tr><td>21:00~</td><td class="left">취침</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tab-panel" id="tab-month">
+                <table class="page-table board-table">
+                    <thead>
+                        <tr><th>번호</th><th>제목</th><th>작성자</th><th>작성일</th><th>조회</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>12</td><td class="left"><a href="#">2026년 9월 프로그램 시간표</a></td><td>복지팀</td><td>2026-09-01</td><td>133</td></tr>
+                        <tr><td>11</td><td class="left"><a href="#">2026년 8월 프로그램 시간표</a></td><td>복지팀</td><td>2026-07-31</td><td>61</td></tr>
+                        <tr><td>10</td><td class="left"><a href="#">2026년 7월 프로그램 시간표</a></td><td>복지팀</td><td>2026-07-02</td><td>65</td></tr>
+                        <tr><td>9</td><td class="left"><a href="#">2026년 6월 프로그램 시간표</a></td><td>복지팀</td><td>2026-05-30</td><td>74</td></tr>
+                        <tr><td>8</td><td class="left"><a href="#">2026년 5월 프로그램 시간표</a></td><td>복지팀</td><td>2026-05-19</td><td>56</td></tr>
+                        <tr><td>7</td><td class="left"><a href="#">2026년 4월 프로그램 시간표</a></td><td>복지팀</td><td>2026-04-01</td><td>104</td></tr>
+                    </tbody>
+                </table>
+                <p class="page-note">게시글은 예시입니다. 실제 월간표로 교체하시면 됩니다.</p>
+            </div>
+        </div>
+    </main>
+
+</div>
+
+<!-- 6. 푸터 영역 (기존 유지) -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="#" class="highlight">개인정보처리방침</a>
+            <a href="#">이용약관</a>
+            <a href="#">이메일무단수집거부</a>
+            <a href="../about/location.html">찾아오시는 길</a>
+        </div>
+        
+        <div class="footer-info">
+            <div class="footer-logo">
+                <img src="../img/logo2.png" alt="하단 로고">
+            </div>
+            <div class="info-text">
+                <p>
+                    <span>주소 : 영천시 역전로 16(완산동 1081-5)</span>
+                    <span>대표자 : 강시중</span>
+                    <span>사업자등록번호 : 123-45-67890</span>
+                </p>
+                <p>
+                    <span>대표전화 : 054-334-9986</span>
+                    <span>팩스 : 054-334-9985</span>
+                    <span>이메일 : info@example.com</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+<script src="../search.js"></script>
+<script src="../auth.js"></script>
+<script src="../page.js"></script>
+</body>
+</html>

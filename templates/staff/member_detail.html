@@ -1,0 +1,48 @@
+{% extends "staff/base.html" %}
+{% block title %}회원 상세{% endblock %}
+{% block heading %}회원 상세{% endblock %}
+{% block content %}
+<section class="dash-box">
+    <div class="table-wrap">
+    <table class="staff-table">
+        <tr><th>아이디</th><td>{{ u.username }}</td></tr>
+        <tr><th>이름</th><td>{{ u.profile.name|default:"-" }}</td></tr>
+        <tr><th>연락처</th><td>{{ u.profile.phone|default:"-" }}</td></tr>
+        <tr><th>이메일</th><td>{{ u.email|default:"-" }}</td></tr>
+        <tr><th>권한</th><td>{{ u.profile.get_role_display|default:"일반 회원" }}</td></tr>
+        <tr><th>상태</th><td>{{ u.profile.get_status_display|default:"정상" }}</td></tr>
+        <tr><th>가입일</th><td>{{ u.date_joined|date:"Y-m-d H:i" }}</td></tr>
+        <tr><th>최근 로그인</th><td>{{ u.last_login|date:"Y-m-d H:i"|default:"-" }}</td></tr>
+    </table>
+    </div>
+</section>
+<div class="form-actions">
+    <form method="post">{% csrf_token %}
+        <input type="hidden" name="next" value="/staff/members/{{ u.id }}/">
+        {% if u.profile.status == "suspended" %}
+        <button name="action" value="restore">복구</button>
+        {% elif u.profile.status != "withdrawn" %}
+        <button name="action" value="suspend">정지</button>
+        {% endif %}
+        {% if u.profile.status != "withdrawn" %}
+        <button name="action" value="withdraw" class="danger" data-confirm="강제 탈퇴 처리할까요?">탈퇴</button>
+        {% endif %}
+        {% if u.profile.role == "admin" or u.is_staff %}
+        <button name="action" value="remove_admin">관리자 권한 회수</button>
+        {% else %}
+        <button name="action" value="make_admin">관리자 권한 부여</button>
+        {% endif %}
+    </form>
+    {% if u.profile.status != "withdrawn" and u.profile.role != "admin" %}
+    <form method="post" class="inline">{% csrf_token %}
+        <input type="hidden" name="next" value="/staff/members/{{ u.id }}/">
+        <input type="hidden" name="action" value="set_role">
+        <select name="role" onchange="this.form.submit()">
+            <option value="member" {% if u.profile.role == "member" %}selected{% endif %}>일반 회원</option>
+            <option value="guardian" {% if u.profile.role == "guardian" %}selected{% endif %}>보호자</option>
+        </select>
+    </form>
+    {% endif %}
+    <a class="btn-line" href="/staff/members/">목록</a>
+</div>
+{% endblock %}

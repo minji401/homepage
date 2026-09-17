@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인 | 헤리움 케어센터</title>
+    <link rel="stylesheet" href="main.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="user-menu">
+        <a href="login.html">로그인</a>
+        <a href="signup.html">회원가입</a>
+    </div>
+</div>
+
+<div class="header-top-row">
+    <div class="header-top-inner">
+        <div class="logo">
+            <a href="main.html"><img src="img/logo.png" alt="홈페이지 로고"></a>
+        </div>
+        <div class="header-right">
+            <a href="#" class="js-open-search" aria-expanded="false" aria-controls="searchOverlay"><i class="fas fa-search"> 검색</i></a>
+            <div class="sp">
+                <button class="all-menu-btn" title="전체 메뉴">
+                    <span></span><span></span><span></span>
+                </button>
+                <span>전체메뉴</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<header>
+    <div class="header-inner">
+        <nav class="main-nav">
+            <ul>
+                <li><a href="about/about.html">요양원 소개</a>
+                    <ul class="dropdown">
+                        <li><a href="about/about.html">인사말</a></li>
+                        <li><a href="about/facility.html">시설 둘러보기</a></li>
+                        <li><a href="about/location.html">오시는 길</a></li>
+                        <li><a href="about/organization.html">조직표</a></li>
+                        <li><a href="about/disclosure.html">경영공시</a></li>
+                        <li><a href="about/system.html">제도소개</a></li>
+                        <li><a href="about/partners.html">협력기관</a></li>
+                    </ul>
+                </li>
+                <li><a href="service/nighttime.html">서비스 안내</a>
+                    <ul class="dropdown">
+                        <li><a href="service/nighttime.html">주야간보호</a></li>
+                        <li><a href="service/nursing.html">요양원</a></li>
+                        <li><a href="service/home_visit.html">가정방문급여</a></li>
+                    </ul>
+                </li>
+                <li><a href="admission/procedure.html">이용 방법</a>
+                    <ul class="dropdown">
+                        <li><a href="admission/procedure.html">서비스 이용 절차</a></li>
+                        <li><a href="admission/fees.html">이용 요금 및 급여 안내</a></li>
+                        <li><a href="admission/status.html">이용 현황</a></li>
+                        <li><a href="admission/waitlist.html">대기자 명단</a></li>
+                        <li><a href="admission/period.html">장기요양등급 신청 안내</a></li>
+                        <li><a href="admission/tour.html">시설 방문/견학 신청</a></li>
+                        <li><a href="admission/requirements.html">입소 준비물 및 유의사항</a></li>
+                    </ul>
+                </li>
+                <li><a href="volunteer/intro.html">사랑나눔</a>
+                    <ul class="dropdown">
+                        <li><a href="volunteer/intro.html">자원봉사</a></li>
+                        <li><a href="volunteer/application.html">후원</a></li>
+                    </ul>
+                </li>
+                <li><a href="community/notice.html">요양원 소식</a>
+                    <ul class="dropdown">
+                        <li><a href="community/notice.html">공지사항</a></li>
+                        <li><a href="community/gallery.html">활동 갤러리</a></li>
+                        <li><a href="community/menu.html">주간 식단표</a></li>
+                        <li><a href="community/faq.html">자주 묻는 질문</a></li>
+                        <li><a href="community/inquiry.html">1:1 상담 및 문의</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="search-overlay" id="searchOverlay" hidden>
+        <div class="search-overlay-inner">
+            <form class="search-overlay-form js-search-form" action="search.html" method="get">
+                <div class="search-overlay-field">
+                    <input type="search" name="q" class="js-overlay-input" placeholder="검색어를 입력해 주세요" autocomplete="off">
+                    <button type="submit" class="search-overlay-submit" aria-label="검색"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="search-recommend">
+                    <strong>추천검색어</strong>
+                    <div class="search-recommend-tags">
+                        <a href="search.html?q=입소안내">입소안내</a>
+                        <a href="search.html?q=이용요금">이용요금</a>
+                        <a href="search.html?q=주야간보호">주야간보호</a>
+                        <a href="search.html?q=방문요양">방문요양</a>
+                        <a href="search.html?q=오시는 길">오시는 길</a>
+                        <a href="search.html?q=자원봉사">자원봉사</a>
+                        <a href="search.html?q=식단표">식단표</a>
+                    </div>
+                </div>
+            </form>
+            <button type="button" class="search-overlay-close js-close-search" aria-label="검색창 닫기">
+                <i class="fas fa-times"></i>
+                <span>닫기</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="auth-wrap">
+    <div class="auth-inner">
+        <section class="auth-hero">
+            <span class="eyebrow">헤리움 케어센터</span>
+            <h1>안전하고 편안한 <span>헤리움 케어센터</span></h1>
+            <p>어르신께 따뜻한 하루를 선물합니다.<br>보호자 로그인 후 상담·면회 안내를 이용하세요.</p>
+        </section>
+
+        <section class="auth-card">
+            <h2>로그인</h2>
+            <div class="auth-message" id="authMessage"></div>
+            <form id="loginForm" autocomplete="on">
+                <div class="auth-field">
+                    <label for="loginId">아이디</label>
+                    <div class="auth-input">
+                        <i class="fas fa-user field-icon"></i>
+                        <input type="text" id="loginId" name="id" placeholder="아이디 또는 휴대폰 번호">
+                    </div>
+                </div>
+                <div class="auth-field">
+                    <label for="loginPw">비밀번호</label>
+                    <div class="auth-input">
+                        <i class="fas fa-lock field-icon"></i>
+                        <input type="password" id="loginPw" name="password" placeholder="비밀번호를 입력해 주세요">
+                        <button type="button" class="toggle-pw" aria-label="비밀번호 보기"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <button type="submit" class="auth-submit">로그인</button>
+            </form>
+
+            <nav class="auth-links">
+                <a href="signup.html">회원가입</a>
+                <a href="find-account.html?type=password">비밀번호 찾기</a>
+                <a href="find-account.html?type=id">아이디 찾기</a>
+            </nav>
+
+            <p class="auth-or">또는</p>
+            <div class="auth-social-btns">
+                <button type="button" class="social-btn kakao" data-provider="kakao" title="카카오 로그인"><i class="fas fa-comment"></i></button>
+                <button type="button" class="social-btn naver" data-provider="naver" title="네이버 로그인">N</button>
+                <button type="button" class="social-btn google" data-provider="google" title="구글 로그인"><i class="fab fa-google"></i></button>
+            </div>
+            <p class="auth-social-hint">카카오 · 네이버 · 구글 계정으로 간편 로그인</p>
+            <p class="auth-demo">일반 회원 : hatsal / 1234<br>관리자 : admin / 1234</p>
+        </section>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="#" class="highlight">개인정보처리방침</a>
+            <a href="#">이용약관</a>
+            <a href="#">이메일무단수집거부</a>
+            <a href="about/location.html">찾아오시는 길</a>
+        </div>
+        <div class="footer-info">
+            <div class="footer-logo">
+                <img src="img/logo2.png" alt="하단 로고">
+            </div>
+            <div class="info-text">
+                <p>
+                    <span>주소 : 영천시 역전로 16(완산동 1081-5)</span>
+                    <span>대표자 : 강시중</span>
+                    <span>사업자등록번호 : 123-45-67890</span>
+                </p>
+                <p>
+                    <span>대표전화 : 054-334-9986</span>
+                    <span>팩스 : 054-334-9985</span>
+                    <span>이메일 : info@example.com</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="search.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>
