@@ -1,9 +1,10 @@
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-herium-local-dev-only-change-later"
-DEBUG = True
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-herium-local-dev-only-change-later")
+DEBUG = os.environ.get("DEBUG", "false" if os.environ.get("RENDER") else "true").lower() in ("1", "true", "yes")
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
@@ -86,10 +87,20 @@ SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
 CSRF_FAILURE_VIEW = "herium.csrf.csrf_failure"
 CSRF_TRUSTED_ORIGINS = [
+    "https://heriumcare.com",
+    "https://www.heriumcare.com",
+    "https://*.onrender.com",
     "https://*.ngrok-free.app",
     "https://*.ngrok.io",
     "https://*.trycloudflare.com",
     "https://*.loca.lt",
 ]
+_render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if _render_host:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_render_host}")
+for _origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(","):
+    _origin = _origin.strip()
+    if _origin and _origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_origin)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True

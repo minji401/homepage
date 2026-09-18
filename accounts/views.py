@@ -4,6 +4,8 @@ import string
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.utils import OperationalError
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
@@ -25,8 +27,15 @@ def _wants_json(request):
     return request.content_type and "application/json" in request.content_type
 
 
+def _get_profile(user):
+    try:
+        return user.profile
+    except ObjectDoesNotExist:
+        return None
+
+
 def _profile_payload(user):
-    profile = getattr(user, "profile", None)
+    profile = _get_profile(user)
     is_admin = bool(user.is_staff or (profile and profile.role == Profile.ROLE_ADMIN))
     return {
         "authenticated": True,
@@ -60,8 +69,10 @@ def login_api(request):
         existing = User.objects.select_related("profile").get(username=user_id)
     except User.DoesNotExist:
         return JsonResponse({"ok": False, "message": "등록되지 않은 아이디입니다."}, status=400)
+    except OperationalError:
+        return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요."}, status=503)
 
-    profile = getattr(existing, "profile", None)
+    profile = _get_profile(existing)
     if profile and profile.status == Profile.STATUS_SUSPENDED:
         return JsonResponse({"ok": False, "message": "정지된 계정입니다. 관리자에게 문의해 주세요."}, status=403)
     if profile and profile.status == Profile.STATUS_WITHDRAWN:
@@ -107,8 +118,11 @@ def signup_api(request):
         return JsonResponse({"ok": False, "message": "비밀번호가 서로 다릅니다."}, status=400)
     if not agree:
         return JsonResponse({"ok": False, "message": "이용약관 및 개인정보 처리에 동의해 주세요."}, status=400)
-    if User.objects.filter(username=user_id).exists():
-        return JsonResponse({"ok": False, "message": "이미 사용 중인 아이디입니다."}, status=400)
+    try:
+        if User.objects.filter(username=user_id).exists():
+            return JsonResponse({"ok": False, "message": "이미 사용 중인 아이디입니다."}, status=400)
+    except OperationalError:
+        return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요."}, status=503)
 
     user = User.objects.create_user(
         username=user_id,
