@@ -45,7 +45,7 @@
     <div class="header-inner">
         <nav class="main-nav">
             <ul>
-                <li><a href="../about/about.html">요양원 소개</a>
+                <li><a href="../about/about.html">기관 소개</a>
                     <ul class="dropdown">
                         <li><a href="../about/about.html">인사말</a></li>
                         <li><a href="../about/facility.html">시설 둘러보기</a></li>
@@ -61,6 +61,7 @@
                         <li><a href="../service/nighttime.html">주야간보호</a></li>
                         <li><a href="../service/nursing.html">요양원</a></li>
                         <li><a href="../service/home_visit.html">가정방문급여</a></li>
+                        <li><a href="../service/medical.html">의료기</a></li>
                     </ul>
                 </li>
                 <li><a href="procedure.html">이용 방법</a>
@@ -80,7 +81,7 @@
                         <li><a href="../volunteer/application.html">후원</a></li>
                     </ul>
                 </li>
-                <li><a href="../community/notice.html">요양원 소식</a>
+                <li><a href="../community/notice.html">기관 소식</a>
                     <ul class="dropdown">
                         <li><a href="../community/notice.html">공지사항</a></li>
                         <li><a href="../community/gallery.html">활동 갤러리</a></li>
@@ -155,36 +156,50 @@
         </div>
 
         <div class="page-body">
-            <p class="section-label">입소시설 이용 현황 <span style="float:right;font-weight:400;color:#888;font-size:0.9rem;">(2026년 9월 15일 기준, 예시)</span></p>
+            <p class="section-label">입소시설 이용 현황 <span style="float:right;font-weight:400;color:#888;font-size:0.9rem;">({% firstof usage_as_of "2026년 9월 15일" %} 기준)</span></p>
             <table class="page-table">
                 <thead>
                     <tr><th>정원</th><th>현원</th><th>이용 가능 인원</th><th>대기 인원</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>100</td><td>100</td><td>0</td><td>12</td></tr>
+                    <tr>
+                        <td>{{ usage.nursing.capacity }}</td>
+                        <td>{{ usage.nursing.current }}</td>
+                        <td>{{ usage.nursing.available }}</td>
+                        <td>{{ usage.nursing.waiting }}</td>
+                    </tr>
                 </tbody>
             </table>
 
-            <p class="section-label">주·야간 일반 이용 현황 <span style="float:right;font-weight:400;color:#888;font-size:0.9rem;">(2026년 9월 15일 기준, 예시)</span></p>
+            <p class="section-label">주·야간 일반 이용 현황 <span style="float:right;font-weight:400;color:#888;font-size:0.9rem;">({% firstof usage_as_of "2026년 9월 15일" %} 기준)</span></p>
             <table class="page-table">
                 <thead>
                     <tr><th>정원</th><th>현원</th><th>이용 가능 인원</th><th>대기 인원</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>25</td><td>25</td><td>0</td><td>5</td></tr>
+                    <tr>
+                        <td>{{ usage.day_general.capacity }}</td>
+                        <td>{{ usage.day_general.current }}</td>
+                        <td>{{ usage.day_general.available }}</td>
+                        <td>{{ usage.day_general.waiting }}</td>
+                    </tr>
                 </tbody>
             </table>
 
-            <p class="section-label">주·야간 치매전담 이용 현황 <span style="float:right;font-weight:400;color:#888;font-size:0.9rem;">(2026년 9월 15일 기준, 예시)</span></p>
+            <p class="section-label">주·야간 치매전담 이용 현황 <span style="float:right;font-weight:400;color:#888;font-size:0.9rem;">({% firstof usage_as_of "2026년 9월 15일" %} 기준)</span></p>
             <table class="page-table">
                 <thead>
                     <tr><th>정원</th><th>현원</th><th>이용 가능 인원</th><th>대기 인원</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>15</td><td>15</td><td>0</td><td>5</td></tr>
+                    <tr>
+                        <td>{{ usage.day_dementia.capacity }}</td>
+                        <td>{{ usage.day_dementia.current }}</td>
+                        <td>{{ usage.day_dementia.available }}</td>
+                        <td>{{ usage.day_dementia.waiting }}</td>
+                    </tr>
                 </tbody>
             </table>
-            <p class="page-note">숫자는 예시입니다. 실제 정원·현원으로 바꾸시면 됩니다.</p>
         </div>
     </main>
 
@@ -198,6 +213,11 @@
             <a href="#">이용약관</a>
             <a href="#">이메일무단수집거부</a>
             <a href="../about/location.html">찾아오시는 길</a>
+            <div class="footer-sns">
+                <a href="#" class="footer-sns-btn" title="블로그" aria-label="블로그"><span>b</span></a>
+                <a href="#" class="footer-sns-btn" title="인스타그램" aria-label="인스타그램"><i class="fa-brands fa-instagram"></i></a>
+                <a href="../service/medical.html" class="footer-sns-btn" title="의료기 판매" aria-label="의료기 판매"><i class="fa-solid fa-kit-medical"></i></a>
+            </div>
         </div>
         
         <div class="footer-info">

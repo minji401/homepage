@@ -78,26 +78,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const waitForm = document.getElementById("waitForm");
     if (waitForm) {
-        const WAITLIST = [
-            { name: "김순자", type: "입소시설", no: 3 },
-            { name: "박영수", type: "주·야간보호 일반", no: 1 },
-            { name: "이정숙", type: "입소시설", no: 7 },
-            { name: "최만호", type: "주·야간 치매전담", no: 2 }
-        ];
         waitForm.addEventListener("submit", function (e) {
             e.preventDefault();
             const q = (document.getElementById("waitName").value || "").trim();
             const box = document.getElementById("waitResult");
-            const hits = WAITLIST.filter(function (row) { return row.name === q; });
-            if (!hits.length) {
-                box.innerHTML = '<p class="page-note">조회된 대기자가 없습니다. 성명을 다시 확인해 주세요.</p>';
-                return;
-            }
-            box.innerHTML = '<table class="page-table"><thead><tr><th>성명</th><th>구분</th><th>대기 순번</th></tr></thead><tbody>' +
-                hits.map(function (row) {
-                    return "<tr><td>" + row.name + "</td><td>" + row.type + "</td><td>" + row.no + "</td></tr>";
-                }).join("") +
-                "</tbody></table>";
+            fetch("/api/waitlist/?name=" + encodeURIComponent(q), { credentials: "same-origin" })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    const hits = data.items || [];
+                    if (!hits.length) {
+                        box.innerHTML = '<p class="page-note">조회된 대기자가 없습니다. 성명을 다시 확인해 주세요.</p>';
+                        return;
+                    }
+                    box.innerHTML = '<table class="page-table"><thead><tr><th>성명</th><th>구분</th><th>대기 순번</th></tr></thead><tbody>' +
+                        hits.map(function (row) {
+                            return "<tr><td>" + row.name + "</td><td>" + row.type + "</td><td>" + row.no + "</td></tr>";
+                        }).join("") +
+                        "</tbody></table>";
+                })
+                .catch(function () {
+                    box.innerHTML = '<p class="page-note">서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.</p>';
+                });
         });
     }
 

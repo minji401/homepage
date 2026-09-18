@@ -2,7 +2,7 @@ from pathlib import Path
 
 from django.conf import settings
 
-from .models import Banner, Popup, Post, SearchTerm, SiteContent
+from .models import Banner, Popup, Post, SearchTerm, SiteContent, USAGE_AS_OF_KEY, ensure_usage_stats
 
 
 def _img_version():
@@ -17,6 +17,7 @@ def _img_version():
 
 def public_cms(request):
     try:
+        usage = ensure_usage_stats()
         contents = {item.key: item.body for item in SiteContent.objects.all()}
         gallery = list(Post.objects.filter(board__slug="gallery", is_hidden=False).order_by("-created_at"))
         grouped = {"night": [], "nursing": [], "home": []}
@@ -34,7 +35,9 @@ def public_cms(request):
             "cms_menu_posts": Post.objects.filter(board__slug="menu", is_hidden=False).order_by("-is_pinned", "-created_at"),
             "cms_gallery": grouped,
             "cms_has_gallery": bool(gallery),
+            "usage": usage,
+            "usage_as_of": contents.get(USAGE_AS_OF_KEY) or "2026년 9월 15일",
             "img_v": _img_version(),
         }
     except Exception:
-        return {"cms": {}, "cms_has_gallery": False, "cms_gallery": {"night": [], "nursing": [], "home": []}, "cms_menu_posts": [], "img_v": "1"}
+        return {"cms": {}, "cms_has_gallery": False, "cms_gallery": {"night": [], "nursing": [], "home": []}, "cms_menu_posts": [], "usage": {}, "usage_as_of": "", "img_v": "1"}

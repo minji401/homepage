@@ -45,7 +45,7 @@
     <div class="header-inner">
         <nav class="main-nav">
             <ul>
-                <li><a href="about/about.html">요양원 소개</a>
+                <li><a href="about/about.html">기관 소개</a>
                     <ul class="dropdown">
                         <li><a href="about/about.html">인사말</a></li>
                         <li><a href="about/facility.html">시설 둘러보기</a></li>
@@ -61,6 +61,7 @@
                         <li><a href="service/nighttime.html">주야간보호</a></li>
                         <li><a href="service/nursing.html">요양원</a></li>
                         <li><a href="service/home_visit.html">가정방문급여</a></li>
+                        <li><a href="service/medical.html">의료기</a></li>
                     </ul>
                 </li>
                 <li><a href="admission/procedure.html">이용 방법</a>
@@ -80,7 +81,7 @@
                         <li><a href="volunteer/application.html">후원</a></li>
                     </ul>
                 </li>
-                <li><a href="community/notice.html">요양원 소식</a>
+                <li><a href="community/notice.html">기관 소식</a>
                     <ul class="dropdown">
                         <li><a href="community/notice.html">공지사항</a></li>
                         <li><a href="community/gallery.html">활동 갤러리</a></li>
@@ -162,8 +163,8 @@
                 <div class="slider-item"><img src="{{ banner.image }}?v={{ img_v }}" alt="{{ banner.title }}"></div>
                 {% endfor %}
                 {% else %}
-                <div class="slider-item"><img src="img/1.jpg" alt="메인 배너 1"></div>
-                <div class="slider-item"><img src="img/2.jpg" alt="메인 배너 2"></div>
+                <div class="slider-item"><img src="img/1.png" alt="메인 배너 1"></div>
+                <div class="slider-item"><img src="img/2.png" alt="메인 배너 2"></div>
                 <div class="slider-item"><img src="img/3.jpg" alt="메인 배너 3"></div>
                 {% endif %}
             </div>
@@ -272,7 +273,7 @@
         <div class="slide-wrapper">
             <div class="slide-item"><img src="img/gallery1.jpg?v={{ img_v }}" alt="1"></div>
             <div class="slide-item"><img src="img/gallery2.jpg?v={{ img_v }}" alt="2"></div>
-            <div class="slide-item"><img src="img/gallery3.png?v={{ img_v }}" alt="3"></div>
+            <div class="slide-item"><img src="img/gallery3.jpg?v={{ img_v }}" alt="3"></div>
             <div class="slide-item"><img src="img/gallery4.jpg?v={{ img_v }}" alt="4"></div>
             <div class="slide-item"><img src="img/gallery5.jpg?v={{ img_v }}" alt="5"></div>
         </div>
@@ -286,6 +287,11 @@
             <a href="#">이용약관</a>
             <a href="#">이메일무단수집거부</a>
             <a href="about/location.html">찾아오시는 길</a>
+            <div class="footer-sns">
+                <a href="#" class="footer-sns-btn" title="블로그" aria-label="블로그"><span>b</span></a>
+                <a href="#" class="footer-sns-btn" title="인스타그램" aria-label="인스타그램"><i class="fa-brands fa-instagram"></i></a>
+                <a href="service/medical.html" class="footer-sns-btn" title="의료기 판매" aria-label="의료기 판매"><i class="fa-solid fa-kit-medical"></i></a>
+            </div>
         </div>
         
         <div class="footer-info">

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Application, Banner, Board, Comment, Popup, Post, SearchTerm, SiteContent, VisitLog
+from .models import Application, Banner, Board, Comment, Popup, Post, SearchTerm, SiteContent, UsageStat, VisitLog, WaitlistEntry
 
 
 @admin.register(Board)
@@ -20,3 +20,5 @@ admin.site.register(Popup)
 admin.site.register(Banner)
 admin.site.register(SearchTerm)
 admin.site.register(VisitLog)
+admin.site.register(UsageStat)
+admin.site.register(WaitlistEntry)

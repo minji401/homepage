@@ -31,16 +31,17 @@
     };
 
     const SEARCH_INDEX = [
-        { type: "menu", tab: "about", title: "인사말", body: "헤리움 케어센터을 찾아주신 여러분을 환영합니다. 따뜻한 돌봄으로 어르신을 모시겠습니다.", path: "요양원 소개 > 인사말", url: "about/about.html", date: "2026-03-01" },
-        { type: "menu", tab: "about", title: "시설 둘러보기", body: "생활실, 프로그램실, 식당, 재활치료실 등 시설 공간을 소개합니다.", path: "요양원 소개 > 시설 둘러보기", url: "about/facility.html", date: "2026-03-01" },
-        { type: "menu", tab: "about", title: "오시는 길", body: "영천시 역전로 16(완산동 1081-5), 대표전화 054-334-9986", path: "요양원 소개 > 오시는 길", url: "about/location.html", date: "2026-03-02" },
-        { type: "menu", tab: "about", title: "조직표", body: "원장, 사무국, 간호팀, 요양팀, 사회복지팀, 영양팀 조직 구성", path: "요양원 소개 > 조직표", url: "about/organization.html", date: "2026-03-02" },
-        { type: "menu", tab: "about", title: "경영공시", body: "일반현황, 기관운영, 주요사업 및 경영성과, 대내외 평가 등 경영공시 항목을 안내합니다.", path: "요양원 소개 > 경영공시", url: "about/disclosure.html", date: "2026-03-03" },
-        { type: "menu", tab: "about", title: "제도소개", body: "노인장기요양보험의 목적, 적용대상, 장기요양인정 절차를 안내합니다.", path: "요양원 소개 > 제도소개", url: "about/system.html", date: "2026-03-03" },
-        { type: "menu", tab: "about", title: "협력기관", body: "지역 의료기관 및 복지기관과 협력하여 어르신 건강을 지원합니다.", path: "요양원 소개 > 협력기관", url: "about/partners.html", date: "2026-03-03" },
+        { type: "menu", tab: "about", title: "인사말", body: "헤리움 케어센터을 찾아주신 여러분을 환영합니다. 따뜻한 돌봄으로 어르신을 모시겠습니다.", path: "기관 소개 > 인사말", url: "about/about.html", date: "2026-03-01" },
+        { type: "menu", tab: "about", title: "시설 둘러보기", body: "생활실, 프로그램실, 식당, 재활치료실 등 시설 공간을 소개합니다.", path: "기관 소개 > 시설 둘러보기", url: "about/facility.html", date: "2026-03-01" },
+        { type: "menu", tab: "about", title: "오시는 길", body: "영천시 역전로 16(완산동 1081-5), 대표전화 054-334-9986", path: "기관 소개 > 오시는 길", url: "about/location.html", date: "2026-03-02" },
+        { type: "menu", tab: "about", title: "조직표", body: "원장, 사무국, 간호팀, 요양팀, 사회복지팀, 영양팀 조직 구성", path: "기관 소개 > 조직표", url: "about/organization.html", date: "2026-03-02" },
+        { type: "menu", tab: "about", title: "경영공시", body: "일반현황, 기관운영, 주요사업 및 경영성과, 대내외 평가 등 경영공시 항목을 안내합니다.", path: "기관 소개 > 경영공시", url: "about/disclosure.html", date: "2026-03-03" },
+        { type: "menu", tab: "about", title: "제도소개", body: "노인장기요양보험의 목적, 적용대상, 장기요양인정 절차를 안내합니다.", path: "기관 소개 > 제도소개", url: "about/system.html", date: "2026-03-03" },
+        { type: "menu", tab: "about", title: "협력기관", body: "지역 의료기관 및 복지기관과 협력하여 어르신 건강을 지원합니다.", path: "기관 소개 > 협력기관", url: "about/partners.html", date: "2026-03-03" },
         { type: "menu", tab: "service", title: "주야간보호", body: "주야간보호 서비스로 낮 동안 식사, 프로그램, 건강관리를 제공합니다.", path: "서비스 안내 > 주야간보호", url: "service/nighttime.html", date: "2026-04-01" },
         { type: "menu", tab: "service", title: "요양원", body: "24시간 입소 요양 서비스와 맞춤형 케어를 안내합니다.", path: "서비스 안내 > 요양원", url: "service/nursing.html", date: "2026-04-01" },
         { type: "menu", tab: "service", title: "가정방문급여", body: "방문요양과 방문목욕 등 가정으로 찾아가는 재가급여를 안내합니다.", path: "서비스 안내 > 가정방문급여", url: "service/home_visit.html", date: "2026-04-02" },
+        { type: "menu", tab: "service", title: "의료기", body: "휠체어, 보행기, 욕창 예방 용품 등 복지용구·의료기 판매를 안내합니다.", path: "서비스 안내 > 의료기", url: "service/medical.html", date: "2026-09-18" },
         { type: "menu", tab: "service", title: "방문목욕", body: "이동식 목욕 차량과 방문목욕 서비스를 안내합니다.", path: "서비스 안내 > 방문목욕", url: "service/home_bath.html", date: "2026-04-02" },
         { type: "menu", tab: "service", title: "치매·재활 프로그램", body: "치매 예방과 인지 자극, 재활 운동 프로그램을 운영합니다.", path: "서비스 안내 > 치매·재활 프로그램", url: "service/dementia.html", date: "2026-04-03" },
         { type: "menu", tab: "service", title: "맞춤형 케어 일정표", body: "월간 프로그램과 맞춤형 케어 일정을 안내합니다.", path: "서비스 안내 > 맞춤형 케어 일정표", url: "service/monthly.html", date: "2026-04-03" },
@@ -53,27 +54,27 @@
         { type: "menu", tab: "admission", title: "입소 준비물 및 유의사항", body: "입소 시 준비물, 면회, 외출 등 유의사항을 안내합니다.", path: "이용 방법 > 입소 준비물 및 유의사항", url: "admission/requirements.html", date: "2026-05-03" },
         { type: "menu", tab: "volunteer", title: "자원봉사", body: "재능기부, 위문 공연, 말벗 봉사 등 자원봉사 활동을 안내합니다.", path: "사랑나눔 > 자원봉사", url: "volunteer/intro.html", date: "2026-06-01" },
         { type: "menu", tab: "volunteer", title: "후원", body: "물품 후원과 지정기탁 등 후원 안내입니다.", path: "사랑나눔 > 후원", url: "volunteer/application.html", date: "2026-06-01" },
-        { type: "menu", tab: "community", title: "공지사항", body: "요양원 운영 공지와 프로그램 안내를 확인하실 수 있습니다.", path: "요양원 소식 > 공지사항", url: "community/notice.html", date: "2026-06-10" },
-        { type: "menu", tab: "community", title: "활동 갤러리", body: "어르신 활동 사진과 행사 모습을 소개합니다.", path: "요양원 소식 > 활동 갤러리", url: "community/gallery.html", date: "2026-06-10" },
-        { type: "menu", tab: "community", title: "주간 식단표", body: "이번 주 조식, 중식, 석식 식단을 안내합니다.", path: "요양원 소식 > 주간 식단표", url: "community/menu.html", date: "2026-09-08" },
-        { type: "menu", tab: "community", title: "자주 묻는 질문", body: "입소, 면회, 이용요금 등 자주 묻는 질문과 답변입니다.", path: "요양원 소식 > 자주 묻는 질문", url: "community/faq.html", date: "2026-06-12" },
-        { type: "menu", tab: "community", title: "1:1 상담 및 문의", body: "입소 상담과 서비스 이용 문의를 받습니다.", path: "요양원 소식 > 1:1 상담 및 문의", url: "community/inquiry.html", date: "2026-06-12" },
-        { type: "board", tab: "community", title: "2026년 9월 프로그램 안내", body: "원예치료, 음악치료, 인지프로그램 등 9월 월간 프로그램 일정입니다.", path: "요양원 소식 > 공지사항", url: "community/notice.html", date: "2026-09-01" },
-        { type: "board", tab: "community", title: "시설 점검 안내", body: "소방설비 및 시설 안전 점검으로 일부 프로그램이 조정됩니다.", path: "요양원 소식 > 공지사항", url: "community/notice.html", date: "2026-09-10" },
+        { type: "menu", tab: "community", title: "공지사항", body: "요양원 운영 공지와 프로그램 안내를 확인하실 수 있습니다.", path: "기관 소식 > 공지사항", url: "community/notice.html", date: "2026-06-10" },
+        { type: "menu", tab: "community", title: "활동 갤러리", body: "어르신 활동 사진과 행사 모습을 소개합니다.", path: "기관 소식 > 활동 갤러리", url: "community/gallery.html", date: "2026-06-10" },
+        { type: "menu", tab: "community", title: "주간 식단표", body: "이번 주 조식, 중식, 석식 식단을 안내합니다.", path: "기관 소식 > 주간 식단표", url: "community/menu.html", date: "2026-09-08" },
+        { type: "menu", tab: "community", title: "자주 묻는 질문", body: "입소, 면회, 이용요금 등 자주 묻는 질문과 답변입니다.", path: "기관 소식 > 자주 묻는 질문", url: "community/faq.html", date: "2026-06-12" },
+        { type: "menu", tab: "community", title: "1:1 상담 및 문의", body: "입소 상담과 서비스 이용 문의를 받습니다.", path: "기관 소식 > 1:1 상담 및 문의", url: "community/inquiry.html", date: "2026-06-12" },
+        { type: "board", tab: "community", title: "2026년 9월 프로그램 안내", body: "원예치료, 음악치료, 인지프로그램 등 9월 월간 프로그램 일정입니다.", path: "기관 소식 > 공지사항", url: "community/notice.html", date: "2026-09-01" },
+        { type: "board", tab: "community", title: "시설 점검 안내", body: "소방설비 및 시설 안전 점검으로 일부 프로그램이 조정됩니다.", path: "기관 소식 > 공지사항", url: "community/notice.html", date: "2026-09-10" },
         { type: "board", tab: "volunteer", title: "자원봉사자 모집 공고", body: "말벗 봉사와 프로그램 보조 자원봉사자를 모집합니다.", path: "사랑나눔 > 자원봉사", url: "volunteer/intro.html", date: "2026-09-05" },
         { type: "board", tab: "admission", title: "입소 절차 변경 안내", body: "입소 상담 예약 후 견학, 계약 순으로 절차가 안내됩니다.", path: "이용 방법 > 서비스 이용 절차", url: "admission/procedure.html", date: "2026-08-20" },
         { type: "board", tab: "admission", title: "신규 면회 수칙 안내", body: "면회 시간, 예약 방법, 감염 예방 수칙을 안내합니다.", path: "이용 방법 > 입소 준비물 및 유의사항", url: "admission/requirements.html", date: "2026-09-07" },
         { type: "board", tab: "service", title: "주야간보호 이용 안내", body: "주야간보호 대상, 이용 시간, 차량 운행 노선을 안내합니다.", path: "서비스 안내 > 주야간보호", url: "service/nighttime.html", date: "2026-08-28" },
-        { type: "board", tab: "community", title: "이번 주 식단 안내", body: "잡곡밥, 쇠고기 미역국, 고등어 구이 등 이번 주 식단입니다.", path: "요양원 소식 > 주간 식단표", url: "community/menu.html", date: "2026-09-14" }
+        { type: "board", tab: "community", title: "이번 주 식단 안내", body: "잡곡밥, 쇠고기 미역국, 고등어 구이 등 이번 주 식단입니다.", path: "기관 소식 > 주간 식단표", url: "community/menu.html", date: "2026-09-14" }
     ];
 
     const TAB_LABELS = [
         { id: "all", label: "전체" },
-        { id: "about", label: "요양원 소개" },
+        { id: "about", label: "기관 소개" },
         { id: "service", label: "서비스 안내" },
         { id: "admission", label: "이용 방법" },
         { id: "volunteer", label: "사랑나눔" },
-        { id: "community", label: "요양원 소식" }
+        { id: "community", label: "기관 소식" }
     ];
 
     /* ---------- SearchOverlay ---------- */

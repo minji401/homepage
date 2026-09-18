@@ -227,7 +227,7 @@ header::after {
 }
 
 header:hover::after { 
-    height: 20rem;
+    height: 21rem;
 }
 
 header:hover .dropdown { 
@@ -240,7 +240,7 @@ header:hover .dropdown {
     top: 100%; 
     left: 0; 
     width: 100%; 
-    min-height: 20rem;
+    min-height: 21rem;
     padding: 0.625rem 0;
     list-style: none; 
     z-index: 10; 
@@ -304,7 +304,7 @@ header:hover .dropdown {
     left: 0;
     width: 45%;
     height: 100%;
-    background: url('img/1.jpg?v=20260916') no-repeat left center;
+    background: url('img/grandmother.png?v=20260917') no-repeat left center;
     background-size: cover;
     -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
     mask-image: linear-gradient(to right, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
@@ -406,10 +406,48 @@ div h2 { color: white; font-size: 3.5rem; z-index: 20; font-weight: bold; letter
    ========================================================================== */
 .footer { width: 100%; background-color: #45433F; color: #a0a0a0; padding: 40px 0 50px 0; margin-top: 100px; font-size: 14px; }
 .footer-inner { width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 25px; }
-.footer-links { display: flex; gap: 25px; border-bottom: 1px solid #666; padding-bottom: 20px; }
+.footer-links { display: flex; gap: 25px; border-bottom: 1px solid #666; padding-bottom: 20px; align-items: center; flex-wrap: wrap; }
 .footer-links a { color: #ccc; text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
 .footer-links a:hover { color: #fff; }
 .footer-links a.highlight { color: #4caf50; font-weight: bold; }
+.footer-sns { display: flex; gap: 8px; margin-left: auto; }
+.footer-sns-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #fff;
+    color: #333 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.footer-sns-btn span { font-family: Georgia, "Times New Roman", serif; font-size: 1.05rem; }
+.footer-sns-btn:hover { background: #b38b4d; color: #fff !important; }
+.shop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 8px 0 24px; }
+.shop-card {
+    display: grid;
+    gap: 8px;
+    padding: 22px 20px;
+    background: #fff;
+    border: 1px solid #eee8dc;
+    border-radius: 14px;
+    color: inherit;
+    text-decoration: none;
+}
+.shop-card i { font-size: 1.6rem; color: #b38b4d; }
+.shop-card strong { font-size: 1.05rem; }
+.shop-card span { color: #777; font-size: 0.92rem; line-height: 1.5; }
+.shop-card em { color: #b38b4d; font-style: normal; font-size: 0.85rem; font-weight: 700; }
+.shop-card:hover { border-color: #b38b4d; }
+.shop-notice { background: #faf8f2; border-radius: 12px; padding: 18px 20px; }
+.shop-call { display: inline-block; margin-top: 8px; color: #b38b4d; font-weight: 700; font-size: 1.1rem; }
+@media (max-width: 900px) {
+    .shop-grid { grid-template-columns: 1fr; }
+    .footer-sns { margin-left: 0; }
+}
 .footer-info { display: flex; align-items: flex-start; gap: 40px; }
 .footer-logo img { height: 80px; opacity: 0.6; margin-top: -15px; }
 .info-text p { margin-bottom: 8px; line-height: 1.6; }

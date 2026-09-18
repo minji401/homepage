@@ -18,6 +18,7 @@ PAGE_TEMPLATES = [
     ("service/nighttime.html", "service/nighttime.html"),
     ("service/nursing.html", "service/nursing.html"),
     ("service/home_visit.html", "service/home_visit.html"),
+    ("service/medical.html", "service/medical.html"),
     ("service/home_bath.html", "service/home_bath.html"),
     ("service/dementia.html", "service/dementia.html"),
     ("service/monthly.html", "service/monthly.html"),

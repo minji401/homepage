@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from accounts.models import Profile
-from cms.models import Application, Banner, Board, Comment, Popup, Post, SearchTerm, SiteContent, VisitLog
+from cms.models import Application, Banner, Board, Comment, Popup, Post, SearchTerm, SiteContent, VisitLog, ensure_usage_stats
 
 
 class Command(BaseCommand):
@@ -90,8 +90,8 @@ class Command(BaseCommand):
 
         menu_board = board_map["menu"]
         if not Post.objects.filter(board=menu_board).exists():
-            Post.objects.create(board=menu_board, title="9월 14일 ~ 9월 20일 주간 식단표", body="잡곡밥, 미역국, 고등어구이", author_name="영양팀", image="/img/1.jpg")
-            Post.objects.create(board=menu_board, title="9월 7일 ~ 9월 13일 주간 식단표", body="현미밥, 된장찌개, 제육볶음", author_name="영양팀", image="/img/1.jpg")
+            Post.objects.create(board=menu_board, title="9월 14일 ~ 9월 20일 주간 식단표", body="잡곡밥, 미역국, 고등어구이", author_name="영양팀", image="/img/1.png")
+            Post.objects.create(board=menu_board, title="9월 7일 ~ 9월 13일 주간 식단표", body="현미밥, 된장찌개, 제육볶음", author_name="영양팀", image="/img/1.png")
 
         gallery_board = board_map["gallery"]
         if not Post.objects.filter(board=gallery_board).exists():
@@ -99,7 +99,7 @@ class Command(BaseCommand):
                 ("원예 프로그램", "화분을 가꾸며 손 운동과 감각을 깨웁니다.", "night", "/img/gallery1.jpg"),
                 ("음악 활동", "노래와 리듬 악기로 즐거운 오후의 시간.", "night", "/img/gallery2.jpg"),
                 ("야외 산책", "날씨 좋은 날 정원과 주변 길을 걷습니다.", "nursing", "/img/gallery4.jpg"),
-                ("방문요양 일상 지원", "자택에서 식사·이동·위생을 돕습니다.", "home", "/img/2.jpg"),
+                ("방문요양 일상 지원", "자택에서 식사·이동·위생을 돕습니다.", "home", "/img/2.png"),
             ]
             for title, body, category, image in samples:
                 Post.objects.create(
@@ -120,8 +120,8 @@ class Command(BaseCommand):
 
         if not Banner.objects.exists():
             Banner.objects.bulk_create([
-                Banner(title="메인 배너 1", image="/img/1.jpg", sort_order=1),
-                Banner(title="메인 배너 2", image="/img/2.jpg", sort_order=2),
+                Banner(title="메인 배너 1", image="/img/1.png", sort_order=1),
+                Banner(title="메인 배너 2", image="/img/2.png", sort_order=2),
                 Banner(title="메인 배너 3", image="/img/3.jpg", sort_order=3),
             ])
         for banner in Banner.objects.all():
@@ -149,6 +149,8 @@ class Command(BaseCommand):
                 kind=Application.KIND_DONATE, name="이보람", phone="010-4444-5555",
                 title="물품 후원", body="계절 이불 후원 문의드립니다.", extra={"type": "물품 후원"},
             )
+
+        ensure_usage_stats()
 
         if VisitLog.objects.count() < 10:
             now = timezone.now()

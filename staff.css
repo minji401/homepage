@@ -246,6 +246,15 @@ a { color: #b38b4d; text-decoration: none; }
 .stat-list { background: #fff; padding: 12px 20px; border-radius: 10px; overflow-wrap: anywhere; }
 .staff-section { margin: 0 0 36px; }
 .staff-section h2 { margin: 0 0 12px; font-size: 1.1rem; }
+.staff-usage-form { max-width: 980px; }
+.staff-num-table input[type="number"] { width: 88px; min-width: 88px; max-width: 100%; }
+.staff-split { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; }
+.staff-split label { display: flex; gap: 8px; align-items: center; font-size: 0.9rem; color: #555; }
+.staff-split input[type="number"] { width: 88px; min-width: 88px; }
+.staff-num-table .muted { color: #888; white-space: nowrap; }
+.staff-wait-form input[name="name"] { min-width: 120px; width: 140px; }
+.staff-wait-form input[name="queue_no"] { width: 80px; min-width: 80px; }
+.staff-wait-form select { min-width: 160px; }
 
 @media (max-width: 1280px) {
     .staff-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }

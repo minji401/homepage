@@ -15,7 +15,22 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from accounts.models import Profile
-from .models import Application, Banner, Board, Comment, Popup, Post, SearchTerm, SiteContent, VisitLog
+from .models import (
+    USAGE_AS_OF_KEY,
+    WAITLIST_TYPES,
+    Application,
+    Banner,
+    Board,
+    Comment,
+    Popup,
+    Post,
+    SearchTerm,
+    SiteContent,
+    UsageStat,
+    VisitLog,
+    WaitlistEntry,
+    ensure_usage_stats,
+)
 
 CONTENT_BOARDS = {
     "notice": {"name": "공지사항", "has_image": False, "has_category": False},
@@ -406,9 +421,69 @@ def content(request):
             messages.success(request, "배너를 삭제했습니다.")
         return redirect("/staff/content/")
     return render(request, "staff/content.html", {
-        "contents": SiteContent.objects.all(),
+        "contents": SiteContent.objects.exclude(key=USAGE_AS_OF_KEY),
         "popup": Popup.objects.first(),
         "banners": Banner.objects.all(),
+    })
+
+
+def _int(value, default=0):
+    try:
+        return max(0, int(str(value).strip()))
+    except (TypeError, ValueError):
+        return default
+
+
+@staff_required
+def usage(request):
+    stats = ensure_usage_stats()
+    as_of, _ = SiteContent.objects.get_or_create(
+        key=USAGE_AS_OF_KEY,
+        defaults={"label": "이용 현황 기준일", "body": "2026년 9월 15일"},
+    )
+    if request.method == "POST":
+        action = request.POST.get("action") or "save_stats"
+        if action == "save_stats":
+            as_of.body = (request.POST.get("as_of") or "").strip()
+            as_of.save(update_fields=["body"])
+            for slug, item in stats.items():
+                item.capacity = _int(request.POST.get(f"{slug}_capacity"), item.capacity)
+                item.current = _int(request.POST.get(f"{slug}_current"), item.current)
+                item.waiting = _int(request.POST.get(f"{slug}_waiting"), item.waiting)
+                item.general_capacity = _int(request.POST.get(f"{slug}_general"), item.general_capacity)
+                item.dementia_capacity = _int(request.POST.get(f"{slug}_dementia"), item.dementia_capacity)
+                item.save()
+            messages.success(request, "이용 현황 수치를 저장했습니다.")
+        elif action == "wait_add":
+            name = (request.POST.get("name") or "").strip()
+            service_type = (request.POST.get("service_type") or "").strip()
+            if not name:
+                messages.error(request, "대기자 성명을 입력해 주세요.")
+            else:
+                WaitlistEntry.objects.create(
+                    name=name,
+                    service_type=service_type or WAITLIST_TYPES[0],
+                    queue_no=_int(request.POST.get("queue_no"), 1),
+                )
+                messages.success(request, "대기자를 등록했습니다.")
+        elif action == "wait_save":
+            entry = get_object_or_404(WaitlistEntry, pk=request.POST.get("id"))
+            name = (request.POST.get("name") or "").strip()
+            if name:
+                entry.name = name
+                entry.service_type = (request.POST.get("service_type") or entry.service_type).strip()
+                entry.queue_no = _int(request.POST.get("queue_no"), entry.queue_no)
+                entry.save()
+                messages.success(request, "대기자 정보를 저장했습니다.")
+        elif action == "wait_delete":
+            WaitlistEntry.objects.filter(pk=request.POST.get("id")).delete()
+            messages.success(request, "대기자를 삭제했습니다.")
+        return redirect("/staff/usage/")
+    return render(request, "staff/usage.html", {
+        "stats": UsageStat.objects.all(),
+        "as_of": as_of.body,
+        "waitlist": WaitlistEntry.objects.all(),
+        "wait_types": WAITLIST_TYPES,
     })
 
 
@@ -523,6 +598,18 @@ def search_log_api(request):
         term.search_count += 1
         term.save(update_fields=["search_count"])
     return JsonResponse({"ok": True})
+
+
+@require_GET
+def waitlist_api(request):
+    name = (request.GET.get("name") or "").strip()
+    if not name:
+        return JsonResponse({"ok": True, "items": []})
+    items = [
+        {"name": row.name, "type": row.service_type, "no": row.queue_no}
+        for row in WaitlistEntry.objects.filter(name=name)
+    ]
+    return JsonResponse({"ok": True, "items": items})
 
 
 @require_GET

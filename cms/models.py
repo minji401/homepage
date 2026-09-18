@@ -93,6 +93,99 @@ class SiteContent(models.Model):
         return self.label
 
 
+class UsageStat(models.Model):
+    slug = models.SlugField("코드", unique=True)
+    name = models.CharField("구분명", max_length=80)
+    capacity = models.PositiveIntegerField("정원", default=0)
+    current = models.PositiveIntegerField("현원", default=0)
+    waiting = models.PositiveIntegerField("대기 인원", default=0)
+    general_capacity = models.PositiveIntegerField("일반실 정원", default=0)
+    dementia_capacity = models.PositiveIntegerField("치매전담실 정원", default=0)
+    sort_order = models.PositiveIntegerField("순서", default=1)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "이용 현황"
+        verbose_name_plural = "이용 현황"
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def available(self):
+        return max(0, self.capacity - self.current)
+
+
+class WaitlistEntry(models.Model):
+    name = models.CharField("성명", max_length=40)
+    service_type = models.CharField("구분", max_length=40)
+    queue_no = models.PositiveIntegerField("대기 순번")
+
+    class Meta:
+        ordering = ["service_type", "queue_no", "id"]
+        verbose_name = "대기자"
+        verbose_name_plural = "대기자 명단"
+
+    def __str__(self):
+        return f"{self.name} ({self.service_type} {self.queue_no})"
+
+
+USAGE_AS_OF_KEY = "usage_as_of"
+USAGE_DEFAULTS = [
+    {
+        "slug": "nursing",
+        "name": "입소시설",
+        "capacity": 100,
+        "current": 100,
+        "waiting": 12,
+        "general_capacity": 80,
+        "dementia_capacity": 20,
+        "sort_order": 1,
+    },
+    {
+        "slug": "day_general",
+        "name": "주·야간 일반",
+        "capacity": 25,
+        "current": 25,
+        "waiting": 5,
+        "general_capacity": 25,
+        "dementia_capacity": 0,
+        "sort_order": 2,
+    },
+    {
+        "slug": "day_dementia",
+        "name": "주·야간 치매전담",
+        "capacity": 15,
+        "current": 15,
+        "waiting": 5,
+        "general_capacity": 0,
+        "dementia_capacity": 15,
+        "sort_order": 3,
+    },
+]
+WAITLIST_TYPES = ["입소시설", "주·야간보호 일반", "주·야간 치매전담"]
+WAITLIST_DEFAULTS = [
+    ("김순자", "입소시설", 3),
+    ("박영수", "주·야간보호 일반", 1),
+    ("이정숙", "입소시설", 7),
+    ("최만호", "주·야간 치매전담", 2),
+]
+
+
+def ensure_usage_stats():
+    for row in USAGE_DEFAULTS:
+        UsageStat.objects.get_or_create(slug=row["slug"], defaults=row)
+    SiteContent.objects.get_or_create(
+        key=USAGE_AS_OF_KEY,
+        defaults={"label": "이용 현황 기준일", "body": "2026년 9월 15일"},
+    )
+    if not WaitlistEntry.objects.exists():
+        WaitlistEntry.objects.bulk_create(
+            [WaitlistEntry(name=name, service_type=kind, queue_no=no) for name, kind, no in WAITLIST_DEFAULTS]
+        )
+    return {item.slug: item for item in UsageStat.objects.all()}
+
+
 class Popup(models.Model):
     title = models.CharField("제목", max_length=120, blank=True)
     body = models.TextField("내용", blank=True)

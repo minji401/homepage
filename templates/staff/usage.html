@@ -1,0 +1,94 @@
+{% extends "staff/base.html" %}
+{% block title %}이용 현황{% endblock %}
+{% block heading %}이용 현황·대기자{% endblock %}
+{% block content %}
+<section class="staff-section">
+    <h2>이용 현황 수치</h2>
+    <p class="staff-help">이용 현황 페이지의 정원·현원·대기 인원과, 이용 절차 페이지의 정원에 바로 반영됩니다. 이용 가능 인원은 정원에서 현원을 뺀 값입니다.</p>
+    <form method="post" class="staff-form staff-usage-form">{% csrf_token %}
+        <input type="hidden" name="action" value="save_stats">
+        <label>기준일 <input name="as_of" value="{{ as_of }}" placeholder="예: 2026년 9월 15일"></label>
+        <div class="table-wrap">
+        <table class="staff-table staff-num-table">
+            <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>정원</th>
+                    <th>현원</th>
+                    <th>대기 인원</th>
+                    <th>이용 가능</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in stats %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td><input name="{{ item.slug }}_capacity" type="number" min="0" value="{{ item.capacity }}"></td>
+                    <td><input name="{{ item.slug }}_current" type="number" min="0" value="{{ item.current }}"></td>
+                    <td><input name="{{ item.slug }}_waiting" type="number" min="0" value="{{ item.waiting }}"></td>
+                    <td class="muted">{{ item.available }}명</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+
+        <h3 class="staff-subhead">이용 절차 정원 구성</h3>
+        <p class="staff-help">시설 입소의 일반실·치매전담실 정원입니다. 주·야간보호 정원은 위 표의 주·야간 일반 / 치매전담 정원을 그대로 사용합니다.</p>
+        <div class="staff-split">
+            {% for item in stats %}
+                {% if item.slug == "nursing" %}
+                <label>일반실 <input name="nursing_general" type="number" min="0" value="{{ item.general_capacity }}"></label>
+                <label>치매전담실 <input name="nursing_dementia" type="number" min="0" value="{{ item.dementia_capacity }}"></label>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="form-actions">
+            <button type="submit">수치 저장</button>
+        </div>
+    </form>
+</section>
+
+<section class="staff-section">
+    <h2>대기자 명단</h2>
+    <p class="staff-help">대기자 명단 페이지에서 성명으로 조회할 수 있습니다. 성명은 공개 페이지에 미리 노출되지 않습니다.</p>
+    <form method="post" class="staff-form-row staff-wait-form">{% csrf_token %}
+        <input type="hidden" name="action" value="wait_add">
+        <input name="name" placeholder="성명" required>
+        <select name="service_type">
+            {% for kind in wait_types %}
+            <option value="{{ kind }}">{{ kind }}</option>
+            {% endfor %}
+        </select>
+        <input name="queue_no" type="number" min="1" value="1" title="대기 순번">
+        <button type="submit">대기자 등록</button>
+    </form>
+    <div class="table-wrap">
+    <table class="staff-table">
+        <thead><tr><th>성명</th><th>구분</th><th>대기 순번</th><th></th></tr></thead>
+        <tbody>
+        {% for entry in waitlist %}
+        <tr>
+            <td colspan="4">
+                <form method="post" class="staff-form-row staff-wait-form">{% csrf_token %}
+                    <input type="hidden" name="id" value="{{ entry.id }}">
+                    <input name="name" value="{{ entry.name }}" required>
+                    <select name="service_type">
+                        {% for kind in wait_types %}
+                        <option value="{{ kind }}" {% if entry.service_type == kind %}selected{% endif %}>{{ kind }}</option>
+                        {% endfor %}
+                    </select>
+                    <input name="queue_no" type="number" min="1" value="{{ entry.queue_no }}">
+                    <button name="action" value="wait_save">저장</button>
+                    <button name="action" value="wait_delete" class="danger" data-confirm="이 대기자를 삭제할까요?">삭제</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">등록된 대기자가 없습니다.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</section>
+{% endblock %}
