@@ -15,6 +15,7 @@ urlpatterns = [
     path("staff/comments/<int:comment_id>/", views.comment_action, name="staff_comment_action"),
     path("staff/content/", views.content, name="staff_content"),
     path("staff/usage/", views.usage, name="staff_usage"),
+    path("staff/meals/", views.meals, name="staff_meals"),
     path("staff/applications/", views.applications, name="staff_applications"),
     path("staff/applications/<int:app_id>/", views.application_action, name="staff_application_action"),
     path("staff/insights/", views.insights, name="staff_insights"),

@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from accounts.models import Profile
-from cms.models import Application, Banner, Board, Comment, Popup, Post, SearchTerm, SiteContent, VisitLog, ensure_usage_stats
+from cms.models import Application, Banner, Board, Comment, DailyMenu, Popup, Post, SearchTerm, SiteContent, VisitLog, ensure_usage_stats, ensure_site_info
 
 
 class Command(BaseCommand):
@@ -151,6 +151,23 @@ class Command(BaseCommand):
             )
 
         ensure_usage_stats()
+        ensure_site_info()
+
+        if not DailyMenu.objects.exists():
+            today = timezone.localdate()
+            samples = [
+                ("흰죽", "잡곡밥, 쇠고기 미역국, 고등어 구이, 애호박 나물, 포기김치", "쌀밥, 된장찌개, 제육볶음", "과일"),
+                ("흰죽", "현미밥, 콩나물국, 닭갈비, 시금치나물, 백김치", "잡곡밥, 계란국, 고사리나물", "우유"),
+                ("흰죽", "보리밥, 된장찌개, 제육볶음, 콩나물무침, 깍두기", "쌀밥, 미역국, 생선구이", "식혜"),
+            ]
+            for offset, (breakfast, lunch, dinner, snack) in enumerate(samples):
+                DailyMenu.objects.create(
+                    date=today + timedelta(days=offset - 1),
+                    breakfast=breakfast,
+                    lunch=lunch,
+                    dinner=dinner,
+                    snack=snack,
+                )
 
         if VisitLog.objects.count() < 10:
             now = timezone.now()

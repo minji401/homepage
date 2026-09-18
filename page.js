@@ -105,12 +105,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const floorBtns = document.querySelectorAll(".floor-switch [data-floor]");
     const floorMaps = document.querySelectorAll(".floor-map");
     const floorCaption = document.getElementById("floorCaption");
-    const floorLabels = {
-        "3": "3층 — 생활실, 간호스테이션, 프로그램실, 휴게실",
-        "2": "2층 — 생활실, 물리치료실, 작업치료실, 면회실",
-        "1": "1층 — 로비, 사무실, 식당, 주야간보호, 상담실",
-        "b1": "지하 1층 — 주방, 세탁실, 기계실, 창고"
-    };
+    const floorLabels = {};
+    floorBtns.forEach(function (btn) {
+        floorLabels[btn.getAttribute("data-floor")] = btn.getAttribute("data-label") || "";
+    });
     floorBtns.forEach(function (btn) {
         btn.addEventListener("click", function () {
             const floor = btn.getAttribute("data-floor");

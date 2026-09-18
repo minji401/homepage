@@ -171,34 +171,34 @@
                     <div class="spec-row">
                         <i class="fa-solid fa-location-dot"></i>
                         <dt>위치</dt>
-                        <dd>경상북도 영천시 역전로 16 (완산동 1081-5)</dd>
+                        <dd>{{ info.address_full|default:"경상북도 영천시 역전로 16 (완산동 1081-5)" }}</dd>
                     </div>
                     <div class="spec-row">
                         <i class="fa-solid fa-users"></i>
                         <dt>정원</dt>
-                        <dd>입소 80명 / 주야간보호 40명 (예시)</dd>
+                        <dd>입소 {{ usage.nursing.capacity|default:100 }}명 / 주야간보호 {{ usage_day_total|default:40 }}명</dd>
                     </div>
                     <div class="spec-row">
                         <i class="fa-solid fa-building"></i>
                         <dt>규모</dt>
-                        <dd>지상 3층 · 지하 1층 / 연면적 2,450㎡ (예시)</dd>
+                        <dd>{{ info.scale|default:"지상 3층 · 지하 1층 / 연면적 2,450㎡" }}</dd>
                     </div>
                 </dl>
                 <ol class="floor-stack">
-                    <li><em>3F</em> 생활실, 간호스테이션, 프로그램실, 휴게실</li>
-                    <li><em>2F</em> 생활실, 물리치료실, 작업치료실, 면회실</li>
-                    <li><em>1F</em> 로비, 사무실, 식당, 주야간보호, 상담실</li>
-                    <li><em>B1</em> 주방, 세탁실, 기계실, 창고</li>
+                    <li><em>3F</em> {{ info.floor_3|default:"생활실, 간호스테이션, 프로그램실, 휴게실" }}</li>
+                    <li><em>2F</em> {{ info.floor_2|default:"생활실, 물리치료실, 작업치료실, 면회실" }}</li>
+                    <li><em>1F</em> {{ info.floor_1|default:"로비, 사무실, 식당, 주야간보호, 상담실" }}</li>
+                    <li><em>B1</em> {{ info.floor_b1|default:"주방, 세탁실, 기계실, 창고" }}</li>
                 </ol>
             </div>
 
             <div class="tab-panel" id="tab-guide">
                 <div class="floor-guide">
                     <aside class="floor-switch">
-                        <button type="button" data-floor="3" class="is-active">3F</button>
-                        <button type="button" data-floor="2">2F</button>
-                        <button type="button" data-floor="1">1F</button>
-                        <button type="button" data-floor="b1">B1</button>
+                        <button type="button" data-floor="3" data-label="3층 — {{ info.floor_3|default:'생활실, 간호스테이션, 프로그램실, 휴게실' }}" class="is-active">3F</button>
+                        <button type="button" data-floor="2" data-label="2층 — {{ info.floor_2|default:'생활실, 물리치료실, 작업치료실, 면회실' }}">2F</button>
+                        <button type="button" data-floor="1" data-label="1층 — {{ info.floor_1|default:'로비, 사무실, 식당, 주야간보호, 상담실' }}">1F</button>
+                        <button type="button" data-floor="b1" data-label="지하 1층 — {{ info.floor_b1|default:'주방, 세탁실, 기계실, 창고' }}">B1</button>
                     </aside>
                     <div class="floor-plan-stage">
                         <div class="floor-map is-active" data-floor="3">
@@ -238,7 +238,7 @@
                         </div>
                     </div>
                 </div>
-                <p class="floor-plan-caption" id="floorCaption">3층 — 생활실, 간호스테이션, 프로그램실, 휴게실</p>
+                <p class="floor-plan-caption" id="floorCaption">3층 — {{ info.floor_3|default:"생활실, 간호스테이션, 프로그램실, 휴게실" }}</p>
             </div>
 
             <div class="tab-panel" id="tab-gallery">
@@ -298,14 +298,14 @@
             </div>
             <div class="info-text">
                 <p>
-                    <span>주소 : 영천시 역전로 16(완산동 1081-5)</span>
-                    <span>대표자 : 강시중</span>
-                    <span>사업자등록번호 : 123-45-67890</span>
+                    <span>주소 : {{ info.address|default:"영천시 역전로 16(완산동 1081-5)" }}</span>
+                    <span>대표자 : {{ info.owner|default:"강시중" }}</span>
+                    <span>사업자등록번호 : {{ info.biz_no|default:"123-45-67890" }}</span>
                 </p>
                 <p>
-                    <span>대표전화 : 054-334-9986</span>
-                    <span>팩스 : 054-334-9985</span>
-                    <span>이메일 : info@example.com</span>
+                    <span>대표전화 : {{ info.phone|default:"054-334-9986" }}</span>
+                    <span>팩스 : {{ info.fax|default:"054-334-9985" }}</span>
+                    <span>이메일 : {{ info.email|default:"info@example.com" }}</span>
                 </p>
             </div>
         </div>

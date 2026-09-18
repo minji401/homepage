@@ -15,13 +15,15 @@
             <a href="/staff/" class="{% if request.path == '/staff/' %}is-on{% endif %}"><i class="fa-solid fa-chart-line"></i> 대시보드</a>
             <p class="staff-group">콘텐츠 관리</p>
             <a href="/staff/posts/notice/" class="{% if slug == 'notice' or '/posts/notice/' in request.path %}is-on{% endif %}">공지사항</a>
-            <a href="/staff/posts/menu/" class="{% if slug == 'menu' or '/posts/menu/' in request.path %}is-on{% endif %}">식단표</a>
+            <a href="/staff/posts/menu/" class="{% if slug == 'menu' or '/posts/menu/' in request.path %}is-on{% endif %}">식단표 사진</a>
+            <a href="/staff/meals/" class="{% if '/meals/' in request.path %}is-on{% endif %}">메인 식단</a>
             <a href="/staff/posts/gallery/" class="{% if slug == 'gallery' or '/posts/gallery/' in request.path %}is-on{% endif %}">갤러리</a>
+            <a href="/staff/posts/faq/" class="{% if slug == 'faq' or '/posts/faq/' in request.path %}is-on{% endif %}">자주 묻는 질문</a>
             <p class="staff-group">정보 관리</p>
             <a href="/staff/members/" class="{% if '/members/' in request.path %}is-on{% endif %}">회원 관리</a>
             <a href="/staff/applications/" class="{% if '/applications/' in request.path %}is-on{% endif %}">신청 관리</a>
             <p class="staff-group">사이트 설정</p>
-            <a href="/staff/content/" class="{% if '/content/' in request.path %}is-on{% endif %}">메인·소개·팝업</a>
+            <a href="/staff/content/" class="{% if '/content/' in request.path %}is-on{% endif %}">사이트 정보</a>
             <a href="/staff/usage/" class="{% if '/usage/' in request.path %}is-on{% endif %}">이용 현황·대기</a>
             <a href="/staff/insights/" class="{% if '/insights/' in request.path %}is-on{% endif %}">검색·통계</a>
         </nav>

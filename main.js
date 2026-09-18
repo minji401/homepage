@@ -34,35 +34,56 @@ setInterval(nextGallerySlide, 3000);
 /* ==========================================================================
    2. 식단표 날짜 변경 로직
    ========================================================================== */
-const menus = {
-    "5월 9일": ["보리밥", "된장찌개", "제육볶음", "콩나물무침", "깍두기"],
-    "5월 10일": ["잡곡밥", "쇠고기 미역국", "고등어 구이", "애호박 나물", "포기 김치"],
-    "5월 11일": ["현미밥", "콩나물국", "닭갈비", "시금치나물", "백김치"]
-};
+(function () {
+    const dateDisplay = document.getElementById("current-date");
+    const menuList = document.getElementById("menu-list");
+    const prevBtn = document.getElementById("prev-day");
+    const nextBtn = document.getElementById("next-day");
+    if (!dateDisplay || !menuList) return;
 
-let currentDate = 10;
-const dateDisplay = document.getElementById('current-date');
-const menuList = document.getElementById('menu-list');
+    let days = [];
+    const dataEl = document.getElementById("diet-data");
+    if (dataEl) {
+        try { days = JSON.parse(dataEl.textContent); } catch (err) { days = []; }
+    }
+    if (!Array.isArray(days) || !days.length) {
+        dateDisplay.textContent = "식단 준비 중";
+        menuList.innerHTML = "<li>관리자가 식단을 등록하면 여기에 표시됩니다.</li>";
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        return;
+    }
 
-document.getElementById('prev-day').addEventListener('click', () => {
-    if (currentDate > 9) { currentDate--; updateDiet(); }
-});
+    const now = new Date();
+    const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+    let index = days.findIndex(function (day) { return day.date === today; });
+    if (index < 0) index = 0;
 
-document.getElementById('next-day').addEventListener('click', () => {
-    if (currentDate < 11) { currentDate++; updateDiet(); }
-});
+    function renderDiet() {
+        const day = days[index];
+        dateDisplay.textContent = day.label || day.date;
+        menuList.innerHTML = "";
+        (day.items || ["식단 준비 중"]).forEach(function (item) {
+            const li = document.createElement("li");
+            li.textContent = item;
+            menuList.appendChild(li);
+        });
+        if (prevBtn) prevBtn.disabled = index <= 0;
+        if (nextBtn) nextBtn.disabled = index >= days.length - 1;
+    }
 
-function updateDiet() {
-    const dateStr = `5월 ${currentDate}일`;
-    dateDisplay.innerText = dateStr + (currentDate === 10 ? "" : "");
-    menuList.innerHTML = "";
-    const dayMenu = menus[dateStr] || ["식단 준비 중"];
-    dayMenu.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        menuList.appendChild(li);
-    });
-}
+    if (prevBtn) {
+        prevBtn.addEventListener("click", function () {
+            if (index > 0) { index -= 1; renderDiet(); }
+        });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener("click", function () {
+            if (index < days.length - 1) { index += 1; renderDiet(); }
+        });
+    }
+    renderDiet();
+})();
 
 
 /* ==========================================================================

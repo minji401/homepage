@@ -211,7 +211,7 @@
                     <div class="tl-content">
                         <p>내방 상담 후 이용신청서 작성, 팩스·우편·이메일, 입소 상담 후 확인</p>
                         <p>이용신청서를 다운로드해 작성하신 뒤 구비서류와 함께 방문, 팩스, 우편으로 제출하시면 됩니다.</p>
-                        <p>복지팀 팩스 : 054-334-9985 &nbsp; 전화 : 054-334-9986</p>
+                        <p>복지팀 팩스 : {{ info.fax|default:"054-334-9985" }} &nbsp; 전화 : {{ info.phone|default:"054-334-9986" }}</p>
                     </div>
                 </div>
                 <div class="tl-item">
@@ -263,8 +263,8 @@
                     <div class="tl-rail"><span></span></div>
                     <div class="tl-badge c2">02. 신청서 제출</div>
                     <div class="tl-content">
-                        <p>팩스 : 054-334-9985 &nbsp; 이메일 : info@example.com</p>
-                        <p>우편 : 영천시 역전로 16 (완산동 1081-5) 주야간보호 사무실</p>
+                        <p>팩스 : {{ info.fax|default:"054-334-9985" }} &nbsp; 이메일 : {{ info.email|default:"info@example.com" }}</p>
+                        <p>우편 : {{ info.address_full|default:"영천시 역전로 16 (완산동 1081-5)" }} 주야간보호 사무실</p>
                         <p>내방 : 사전에 연락하여 예약 후 방문</p>
                     </div>
                 </div>
@@ -310,8 +310,8 @@
             <a href="#">이메일무단수집거부</a>
             <a href="../about/location.html">찾아오시는 길</a>
             <div class="footer-sns">
-                <a href="#" class="footer-sns-btn" title="블로그" aria-label="블로그"><span>b</span></a>
-                <a href="#" class="footer-sns-btn" title="인스타그램" aria-label="인스타그램"><i class="fa-brands fa-instagram"></i></a>
+                <a href="{% firstof info.blog_url "#" %}" class="footer-sns-btn" title="블로그" aria-label="블로그"><span>b</span></a>
+                <a href="{% firstof info.instagram_url "#" %}" class="footer-sns-btn" title="인스타그램" aria-label="인스타그램"><i class="fa-brands fa-instagram"></i></a>
                 <a href="../service/medical.html" class="footer-sns-btn" title="의료기 판매" aria-label="의료기 판매"><i class="fa-solid fa-kit-medical"></i></a>
             </div>
         </div>
@@ -322,14 +322,14 @@
             </div>
             <div class="info-text">
                 <p>
-                    <span>주소 : 영천시 역전로 16(완산동 1081-5)</span>
-                    <span>대표자 : 강시중</span>
-                    <span>사업자등록번호 : 123-45-67890</span>
+                    <span>주소 : {{ info.address|default:"영천시 역전로 16(완산동 1081-5)" }}</span>
+                    <span>대표자 : {{ info.owner|default:"강시중" }}</span>
+                    <span>사업자등록번호 : {{ info.biz_no|default:"123-45-67890" }}</span>
                 </p>
                 <p>
-                    <span>대표전화 : 054-334-9986</span>
-                    <span>팩스 : 054-334-9985</span>
-                    <span>이메일 : info@example.com</span>
+                    <span>대표전화 : {{ info.phone|default:"054-334-9986" }}</span>
+                    <span>팩스 : {{ info.fax|default:"054-334-9985" }}</span>
+                    <span>이메일 : {{ info.email|default:"info@example.com" }}</span>
                 </p>
             </div>
         </div>

@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from functools import wraps
 from pathlib import Path
 import re
@@ -16,13 +16,17 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from accounts.models import Profile
+from .menu_import import parse_menu_table, rows_from_csv, rows_from_xlsx
 from .models import (
+    SITE_FIELD_GROUPS,
+    SITE_FIELD_KEYS,
     USAGE_AS_OF_KEY,
     WAITLIST_TYPES,
     Application,
     Banner,
     Board,
     Comment,
+    DailyMenu,
     Popup,
     Post,
     SearchTerm,
@@ -30,6 +34,7 @@ from .models import (
     UsageStat,
     VisitLog,
     WaitlistEntry,
+    ensure_site_info,
     ensure_usage_stats,
 )
 
@@ -37,6 +42,7 @@ CONTENT_BOARDS = {
     "notice": {"name": "공지사항", "has_image": False, "has_category": False},
     "menu": {"name": "식단표", "has_image": True, "has_category": False},
     "gallery": {"name": "갤러리", "has_image": True, "has_category": True},
+    "faq": {"name": "자주 묻는 질문", "has_image": False, "has_category": False},
 }
 GALLERY_CATEGORIES = [
     ("night", "주야간보호"),
@@ -420,9 +426,31 @@ def content(request):
         elif section == "banner_delete":
             Banner.objects.filter(pk=request.POST.get("id")).delete()
             messages.success(request, "배너를 삭제했습니다.")
+        elif section == "site_info":
+            ensure_site_info()
+            for key in SITE_FIELD_KEYS:
+                item = SiteContent.objects.filter(key=key).first()
+                if item:
+                    item.body = request.POST.get(key, item.body)
+                    item.save(update_fields=["body"])
+            messages.success(request, "사이트 정보를 저장했습니다.")
         return redirect("/staff/content/")
+    ensure_site_info()
+    site_groups = []
+    contents_by_key = {item.key: item for item in SiteContent.objects.all()}
+    for title, fields in SITE_FIELD_GROUPS:
+        rows = []
+        for key, label, default in fields:
+            item = contents_by_key.get(key)
+            rows.append({
+                "key": key,
+                "label": label,
+                "body": item.body if item else default,
+                "multiline": key in ("about_greeting", "facility_intro", "main_headline", "org_lead", "fees_note", "location_lead"),
+            })
+        site_groups.append({"title": title, "fields": rows})
     return render(request, "staff/content.html", {
-        "contents": SiteContent.objects.exclude(key=USAGE_AS_OF_KEY),
+        "site_groups": site_groups,
         "popup": Popup.objects.first(),
         "banners": Banner.objects.all(),
     })
@@ -507,6 +535,81 @@ def application_action(request, app_id):
         item.save(update_fields=["status"])
         messages.success(request, "신청 상태를 변경했습니다.")
     return redirect(request.POST.get("next") or "/staff/applications/")
+
+
+def _save_menu_rows(rows):
+    count = 0
+    for row in rows:
+        day = row.get("date")
+        if not day:
+            continue
+        item, _ = DailyMenu.objects.get_or_create(date=day)
+        changed = False
+        for field in ("breakfast", "lunch", "dinner", "snack"):
+            if row.get(field):
+                setattr(item, field, row[field])
+                changed = True
+        if changed:
+            item.save()
+            count += 1
+    return count
+
+
+@staff_required
+def meals(request):
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "save_day":
+            raw = (request.POST.get("date") or "").strip()
+            try:
+                day = date.fromisoformat(raw)
+            except ValueError:
+                messages.error(request, "날짜를 확인해 주세요.")
+                return redirect("/staff/meals/")
+            DailyMenu.objects.update_or_create(
+                date=day,
+                defaults={
+                    "breakfast": (request.POST.get("breakfast") or "").strip(),
+                    "lunch": (request.POST.get("lunch") or "").strip(),
+                    "dinner": (request.POST.get("dinner") or "").strip(),
+                    "snack": (request.POST.get("snack") or "").strip(),
+                },
+            )
+            messages.success(request, f"{day.month}월 {day.day}일 식단을 저장했습니다.")
+        elif action == "delete":
+            DailyMenu.objects.filter(pk=request.POST.get("id")).delete()
+            messages.success(request, "식단을 삭제했습니다.")
+        elif action == "paste":
+            rows = parse_menu_table(request.POST.get("paste") or "")
+            saved = _save_menu_rows(rows)
+            if saved:
+                messages.success(request, f"{saved}일치 식단을 반영했습니다.")
+            else:
+                messages.error(request, "표에서 날짜와 메뉴를 찾지 못했습니다. 엑셀에서 복사한 뒤 붙여 넣어 주세요.")
+        elif action == "upload":
+            upload = request.FILES.get("file")
+            if not upload:
+                messages.error(request, "엑셀 또는 CSV 파일을 선택해 주세요.")
+            else:
+                name = (upload.name or "").lower()
+                try:
+                    if name.endswith(".xlsx") or name.endswith(".xlsm"):
+                        rows = rows_from_xlsx(upload)
+                    else:
+                        rows = rows_from_csv(upload)
+                    saved = _save_menu_rows(rows)
+                    if saved:
+                        messages.success(request, f"{saved}일치 식단을 파일에서 가져왔습니다.")
+                    else:
+                        messages.error(request, "파일에서 식단을 읽지 못했습니다. 날짜와 아침/점심/저녁 행이 있는지 확인해 주세요.")
+                except Exception:
+                    messages.error(request, "파일을 읽지 못했습니다. CSV 또는 엑셀(.xlsx)로 올려 주세요.")
+        return redirect("/staff/meals/")
+    today = timezone.localdate()
+    return render(request, "staff/meals.html", {
+        "items": DailyMenu.objects.filter(date__gte=today - timedelta(days=7)).order_by("date"),
+        "today": today.isoformat(),
+    })
 
 
 @staff_required

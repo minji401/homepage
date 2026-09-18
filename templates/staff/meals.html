@@ -1,0 +1,75 @@
+{% extends "staff/base.html" %}
+{% block title %}메인 식단{% endblock %}
+{% block heading %}메인 식단{% endblock %}
+{% block content %}
+<p class="staff-help">식단표 사진을 올려도 글자는 자동으로 읽히지 않습니다. 메인 ‘오늘의 식단’에 나오려면 아래에 메뉴 이름을 넣어야 합니다. 엑셀·한글 표를 복사해 붙여 넣거나, CSV/엑셀 파일을 올리면 됩니다.</p>
+
+<section class="staff-section">
+    <h2>하루 식단 입력</h2>
+    <form method="post" class="staff-form">{% csrf_token %}
+        <input type="hidden" name="action" value="save_day">
+        <label>날짜 <input type="date" name="date" value="{{ today }}" required></label>
+        <label>아침 <input name="breakfast" placeholder="흰죽, 김치"></label>
+        <label>점심 <input name="lunch" placeholder="잡곡밥, 미역국, 고등어구이"></label>
+        <label>저녁 <input name="dinner" placeholder="쌀밥, 된장찌개"></label>
+        <label>간식 <input name="snack" placeholder="과일"></label>
+        <div class="form-actions">
+            <button type="submit">이 날짜 저장</button>
+        </div>
+    </form>
+</section>
+
+<section class="staff-section">
+    <h2>표 붙여넣기</h2>
+    <p class="staff-help">엑셀이나 한글에서 표를 복사한 뒤 붙여 넣으세요. 첫 줄에 날짜, 첫 칸에 아침/점심/저녁이 있으면 자동으로 나눕니다.</p>
+    <form method="post" class="staff-form">{% csrf_token %}
+        <input type="hidden" name="action" value="paste">
+        <label>복사한 표
+            <textarea name="paste" rows="8" placeholder="날짜	아침	점심	저녁
+2026-09-18	흰죽	잡곡밥, 미역국, 고등어구이	쌀밥, 된장찌개"></textarea>
+        </label>
+        <div class="form-actions">
+            <button type="submit">붙여넣은 표 반영</button>
+        </div>
+    </form>
+</section>
+
+<section class="staff-section">
+    <h2>파일로 가져오기</h2>
+    <form method="post" class="staff-form" enctype="multipart/form-data">{% csrf_token %}
+        <input type="hidden" name="action" value="upload">
+        <label>CSV 또는 엑셀(.xlsx) <input type="file" name="file" accept=".csv,.xlsx,.xlsm,text/csv"></label>
+        <div class="form-actions">
+            <button type="submit">파일 가져오기</button>
+        </div>
+    </form>
+</section>
+
+<section class="staff-section">
+    <h2>등록된 식단</h2>
+    <div class="table-wrap">
+    <table class="staff-table">
+        <thead><tr><th>날짜</th><th>아침</th><th>점심</th><th>저녁</th><th>간식</th><th></th></tr></thead>
+        <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.date|date:"Y-m-d" }}</td>
+            <td>{{ item.breakfast }}</td>
+            <td>{{ item.lunch }}</td>
+            <td>{{ item.dinner }}</td>
+            <td>{{ item.snack }}</td>
+            <td>
+                <form method="post">{% csrf_token %}
+                    <input type="hidden" name="id" value="{{ item.id }}">
+                    <button name="action" value="delete" class="danger" data-confirm="이 날짜 식단을 삭제할까요?">삭제</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">아직 등록된 식단이 없습니다.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</section>
+{% endblock %}

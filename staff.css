@@ -255,6 +255,9 @@ a { color: #b38b4d; text-decoration: none; }
 .staff-wait-form input[name="name"] { min-width: 120px; width: 140px; }
 .staff-wait-form input[name="queue_no"] { width: 80px; min-width: 80px; }
 .staff-wait-form select { min-width: 160px; }
+.staff-info-form { max-width: 980px; }
+.staff-info-grid { display: grid; gap: 12px; }
+.staff-info-grid label { display: grid; gap: 6px; }
 
 @media (max-width: 1280px) {
     .staff-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }

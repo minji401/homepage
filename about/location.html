@@ -156,32 +156,32 @@
         </div>
 
         <div class="page-body">
-            <p class="page-lead">헤리움 케어센터는 영천시 완산동에 있습니다. 방문 전 전화로 예약해 주시면 안내가 더 수월합니다.</p>
+            <p class="page-lead">{{ info.location_lead|default:"헤리움 케어센터는 영천시 완산동에 있습니다. 방문 전 전화로 예약해 주시면 안내가 더 수월합니다." }}</p>
             <div class="map-wrap">
-                <iframe src="https://maps.google.com/maps?q=%EA%B2%BD%EC%83%81%EB%B6%81%EB%8F%84+%EC%98%81%EC%B2%9C%EC%8B%9C+%EC%97%AD%EC%A0%84%EB%A1%9C+16&t=&z=16&ie=UTF8&iwloc=&output=embed" loading="lazy" title="헤리움 케어센터 위치"></iframe>
+                <iframe src="https://maps.google.com/maps?q={{ info.map_query|default:'경상북도 영천시 역전로 16'|urlencode }}&t=&z=16&ie=UTF8&iwloc=&output=embed" loading="lazy" title="{{ info.center_name|default:'헤리움 케어센터' }} 위치"></iframe>
             </div>
             <table class="page-table">
-                <tr><th>주소</th><td class="left">경상북도 영천시 역전로 16 (완산동 1081-5)</td></tr>
-                <tr><th>대표전화</th><td class="left">054-334-9986</td></tr>
-                <tr><th>팩스</th><td class="left">054-334-9985</td></tr>
-                <tr><th>상담시간</th><td class="left">평일 09:00 ~ 18:00 (주말·공휴일은 사전 예약)</td></tr>
+                <tr><th>주소</th><td class="left">{{ info.address_full|default:"경상북도 영천시 역전로 16 (완산동 1081-5)" }}</td></tr>
+                <tr><th>대표전화</th><td class="left">{{ info.phone|default:"054-334-9986" }}</td></tr>
+                <tr><th>팩스</th><td class="left">{{ info.fax|default:"054-334-9985" }}</td></tr>
+                <tr><th>상담시간</th><td class="left">{{ info.hours|default:"평일 09:00 ~ 18:00 (주말·공휴일은 사전 예약)" }}</td></tr>
             </table>
             <h3 class="page-h3">교통 안내</h3>
             <div class="info-cards">
                 <div class="info-card">
                     <i class="fa-solid fa-bus"></i>
                     <strong>버스</strong>
-                    <p>영천역 인근 하차 후 도보 약 5~10분</p>
+                    <p>{{ info.transit_bus|default:"영천역 인근 하차 후 도보 약 5~10분" }}</p>
                 </div>
                 <div class="info-card">
                     <i class="fa-solid fa-train"></i>
                     <strong>기차</strong>
-                    <p>영천역에서 나와 역전로 방면으로 이동</p>
+                    <p>{{ info.transit_train|default:"영천역에서 나와 역전로 방면으로 이동" }}</p>
                 </div>
                 <div class="info-card">
                     <i class="fa-solid fa-square-parking"></i>
                     <strong>주차</strong>
-                    <p>센터 앞 방문객 주차장 이용 (한정 대수)</p>
+                    <p>{{ info.transit_parking|default:"센터 앞 방문객 주차장 이용 (한정 대수)" }}</p>
                 </div>
             </div>
         </div>
@@ -205,14 +205,14 @@
             </div>
             <div class="info-text">
                 <p>
-                    <span>주소 : 영천시 역전로 16(완산동 1081-5)</span>
-                    <span>대표자 : 강시중</span>
-                    <span>사업자등록번호 : 123-45-67890</span>
+                    <span>주소 : {{ info.address|default:"영천시 역전로 16(완산동 1081-5)" }}</span>
+                    <span>대표자 : {{ info.owner|default:"강시중" }}</span>
+                    <span>사업자등록번호 : {{ info.biz_no|default:"123-45-67890" }}</span>
                 </p>
                 <p>
-                    <span>대표전화 : 054-334-9986</span>
-                    <span>팩스 : 054-334-9985</span>
-                    <span>이메일 : info@example.com</span>
+                    <span>대표전화 : {{ info.phone|default:"054-334-9986" }}</span>
+                    <span>팩스 : {{ info.fax|default:"054-334-9985" }}</span>
+                    <span>이메일 : {{ info.email|default:"info@example.com" }}</span>
                 </p>
             </div>
         </div>

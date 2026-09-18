@@ -170,8 +170,8 @@
             <a href="#">이메일무단수집거부</a>
             <a href="about/location.html">찾아오시는 길</a>
             <div class="footer-sns">
-                <a href="#" class="footer-sns-btn" title="블로그" aria-label="블로그"><span>b</span></a>
-                <a href="#" class="footer-sns-btn" title="인스타그램" aria-label="인스타그램"><i class="fa-brands fa-instagram"></i></a>
+                <a href="{% firstof info.blog_url "#" %}" class="footer-sns-btn" title="블로그" aria-label="블로그"><span>b</span></a>
+                <a href="{% firstof info.instagram_url "#" %}" class="footer-sns-btn" title="인스타그램" aria-label="인스타그램"><i class="fa-brands fa-instagram"></i></a>
                 <a href="service/medical.html" class="footer-sns-btn" title="의료기 판매" aria-label="의료기 판매"><i class="fa-solid fa-kit-medical"></i></a>
             </div>
         </div>
@@ -181,14 +181,14 @@
             </div>
             <div class="info-text">
                 <p>
-                    <span>주소 : 영천시 역전로 16(완산동 1081-5)</span>
-                    <span>대표자 : 강시중</span>
-                    <span>사업자등록번호 : 123-45-67890</span>
+                    <span>주소 : {{ info.address|default:"영천시 역전로 16(완산동 1081-5)" }}</span>
+                    <span>대표자 : {{ info.owner|default:"강시중" }}</span>
+                    <span>사업자등록번호 : {{ info.biz_no|default:"123-45-67890" }}</span>
                 </p>
                 <p>
-                    <span>대표전화 : 054-334-9986</span>
-                    <span>팩스 : 054-334-9985</span>
-                    <span>이메일 : info@example.com</span>
+                    <span>대표전화 : {{ info.phone|default:"054-334-9986" }}</span>
+                    <span>팩스 : {{ info.fax|default:"054-334-9985" }}</span>
+                    <span>이메일 : {{ info.email|default:"info@example.com" }}</span>
                 </p>
             </div>
         </div>
