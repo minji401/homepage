@@ -31,14 +31,30 @@
         };
     }
 
-    function api(url, options) {
-        return fetch(url, Object.assign({ credentials: "same-origin" }, options)).then(function (res) {
-            return res.json().then(function (data) {
-                return { ok: res.ok && data.ok !== false, status: res.status, data: data };
-            }).catch(function () {
-                return { ok: false, status: res.status, data: { message: "서버 응답을 읽을 수 없습니다." } };
-            });
+    function parseApiResponse(res) {
+        return res.text().then(function (text) {
+            var data = {};
+            if (text) {
+                try {
+                    data = JSON.parse(text);
+                } catch (err) {
+                    var message = "서버 응답을 읽을 수 없습니다.";
+                    if (res.status === 403) {
+                        message = "보안 검증에 실패했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.";
+                    } else if (res.status === 404 || res.status === 405) {
+                        message = "로그인 서버에 연결되지 않았습니다. 도메인이 Django 사이트와 같은 주소인지 확인해 주세요.";
+                    } else if (res.status >= 500) {
+                        message = "서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+                    }
+                    return { ok: false, status: res.status, data: { message: message } };
+                }
+            }
+            return { ok: res.ok && data.ok !== false, status: res.status, data: data };
         });
+    }
+
+    function api(url, options) {
+        return fetch(url, Object.assign({ credentials: "same-origin" }, options)).then(parseApiResponse);
     }
 
     function showMessage(el, text, type) {

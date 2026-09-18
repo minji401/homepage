@@ -20,6 +20,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "herium.middleware.TrustCsrfOriginMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -80,7 +81,10 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
 
 CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
+CSRF_FAILURE_VIEW = "herium.csrf.csrf_failure"
 CSRF_TRUSTED_ORIGINS = [
     "https://*.ngrok-free.app",
     "https://*.ngrok.io",
@@ -88,3 +92,4 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.loca.lt",
 ]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True

@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from .models import Profile
@@ -47,6 +47,7 @@ def login_page(request):
     return render(request, "login.html")
 
 
+@csrf_exempt
 @require_POST
 def login_api(request):
     data = _json_body(request)
@@ -84,6 +85,7 @@ def signup_page(request):
     return render(request, "signup.html")
 
 
+@csrf_exempt
 @require_POST
 def signup_api(request):
     data = _json_body(request)
@@ -121,6 +123,7 @@ def signup_api(request):
     return JsonResponse({"ok": True})
 
 
+@csrf_exempt
 @require_POST
 def logout_api(request):
     logout(request)
@@ -129,6 +132,7 @@ def logout_api(request):
     return redirect("/main.html")
 
 
+@ensure_csrf_cookie
 @require_GET
 def me_api(request):
     if not request.user.is_authenticated:
@@ -141,6 +145,7 @@ def find_page(request):
     return render(request, "find-account.html")
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def find_api(request):
     data = _json_body(request)

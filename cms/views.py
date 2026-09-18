@@ -12,6 +12,7 @@ from django.db.models.functions import TruncDate, TruncMonth
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from accounts.models import Profile
@@ -567,6 +568,7 @@ def insights(request):
     })
 
 
+@csrf_exempt
 @require_POST
 def apply_api(request):
     data = _json_body(request)
@@ -589,6 +591,7 @@ def apply_api(request):
     return JsonResponse({"ok": True, "message": "접수되었습니다. 담당자가 확인 후 연락드리겠습니다."})
 
 
+@csrf_exempt
 @require_POST
 def search_log_api(request):
     data = _json_body(request)
