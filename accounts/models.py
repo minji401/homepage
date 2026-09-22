@@ -42,3 +42,26 @@ class Profile(models.Model):
     def is_admin(self):
         return self.role == self.ROLE_ADMIN or self.user.is_staff
 
+
+class SharedUser(models.Model):
+    """현대 의료기 Postgres users 테이블. managed=False — DROP/변경 금지."""
+
+    id = models.CharField(primary_key=True, max_length=80)
+    name = models.TextField()
+    phone = models.TextField(unique=True)
+    password_hash = models.TextField()
+    role = models.TextField(default="user")
+    herium_linked = models.IntegerField(default=0)
+    herium_relation = models.TextField(null=True, blank=True)
+    herium_note = models.TextField(null=True, blank=True)
+    created_at = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = "users"
+        verbose_name = "공유 회원"
+        verbose_name_plural = "공유 회원"
+
+    def __str__(self):
+        return f"{self.name} ({self.phone})"
+

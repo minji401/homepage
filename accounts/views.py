@@ -12,6 +12,17 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from .models import Profile
+from .shared_users import (
+    SharedAuthError,
+    create_shared_user,
+    find_local_by_login,
+    get_shared_by_phone,
+    login_with_shared,
+    normalize_phone,
+    shared_enabled,
+    sync_local_user,
+    update_shared_password,
+)
 
 
 def _json_body(request):
@@ -65,10 +76,20 @@ def login_api(request):
     if not user_id or not password:
         return JsonResponse({"ok": False, "message": "아이디와 비밀번호를 입력해 주세요."}, status=400)
 
+    if shared_enabled():
+        try:
+            user = login_with_shared(request, user_id, password)
+        except SharedAuthError as exc:
+            return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
+        payload = _profile_payload(user)
+        return JsonResponse({"ok": True, "user": payload, "redirect": "/staff/" if payload["is_admin"] else "/main.html"})
+
     try:
         existing = User.objects.select_related("profile").get(username=user_id)
     except User.DoesNotExist:
-        return JsonResponse({"ok": False, "message": "등록되지 않은 아이디입니다."}, status=400)
+        existing = find_local_by_login(user_id)
+        if existing is None:
+            return JsonResponse({"ok": False, "message": "등록되지 않은 아이디입니다."}, status=400)
     except OperationalError:
         return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요."}, status=503)
 
@@ -80,7 +101,7 @@ def login_api(request):
     if not existing.is_active:
         return JsonResponse({"ok": False, "message": "정지된 계정입니다. 관리자에게 문의해 주세요."}, status=403)
 
-    user = authenticate(request, username=user_id, password=password)
+    user = authenticate(request, username=existing.username, password=password)
     if user is None:
         return JsonResponse({"ok": False, "message": "비밀번호가 일치하지 않습니다."}, status=400)
 
@@ -118,11 +139,20 @@ def signup_api(request):
         return JsonResponse({"ok": False, "message": "비밀번호가 서로 다릅니다."}, status=400)
     if not agree:
         return JsonResponse({"ok": False, "message": "이용약관 및 개인정보 처리에 동의해 주세요."}, status=400)
+    digits = normalize_phone(phone)
+    if len(digits) < 10:
+        return JsonResponse({"ok": False, "message": "올바른 휴대폰 번호를 입력해 주세요."}, status=400)
     try:
         if User.objects.filter(username=user_id).exists():
             return JsonResponse({"ok": False, "message": "이미 사용 중인 아이디입니다."}, status=400)
     except OperationalError:
         return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요."}, status=503)
+
+    if shared_enabled():
+        try:
+            create_shared_user(name=name, phone=digits, password=password, username=user_id)
+        except SharedAuthError as exc:
+            return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
 
     user = User.objects.create_user(
         username=user_id,
@@ -166,19 +196,52 @@ def find_api(request):
     find_type = (data.get("type") or request.GET.get("type") or "id").strip()
     phone = (data.get("phone") or "").strip()
 
+    digits = normalize_phone(phone)
     if find_type == "password":
         user_id = (data.get("id") or "").strip()
         if not user_id or not phone:
             return JsonResponse({"ok": False, "message": "아이디와 연락처를 입력해 주세요."}, status=400)
+
+        user = None
         try:
-            user = User.objects.select_related("profile").get(username=user_id, profile__phone=phone)
+            user = User.objects.select_related("profile").get(username=user_id)
+            profile_phone = normalize_phone(getattr(_get_profile(user), "phone", "") or "")
+            if digits and profile_phone and digits != profile_phone:
+                user = None
         except User.DoesNotExist:
+            user = find_local_by_login(user_id)
+            if user is not None:
+                profile_phone = normalize_phone(getattr(_get_profile(user), "phone", "") or "")
+                if digits and profile_phone and digits != profile_phone:
+                    user = None
+
+        shared = None
+        if shared_enabled() and digits:
+            try:
+                shared = get_shared_by_phone(digits)
+            except SharedAuthError as exc:
+                return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
+        if user is None and shared is not None and (not user_id or user_id in (shared.phone, shared.name, digits)):
+            user = sync_local_user(shared, username_hint=user_id)
+        if user is None and shared is None:
             return JsonResponse({"ok": False, "message": "일치하는 회원 정보가 없습니다."}, status=400)
 
         alphabet = string.ascii_letters + string.digits
         temp = "".join(secrets.choice(alphabet) for _ in range(8))
         user.set_password(temp)
         user.save(update_fields=["password"])
+        if shared is not None:
+            update_shared_password(shared, temp)
+        elif shared_enabled() and digits:
+            try:
+                create_shared_user(
+                    name=(_get_profile(user).name if _get_profile(user) else user.first_name) or user.username,
+                    phone=digits,
+                    password=temp,
+                    username=user.username,
+                )
+            except SharedAuthError:
+                pass
         return JsonResponse({
             "ok": True,
             "message": f"임시 비밀번호는 {temp} 입니다. 로그인 후 변경해 주세요.",
@@ -187,8 +250,21 @@ def find_api(request):
     name = (data.get("name") or "").strip()
     if not name or not phone:
         return JsonResponse({"ok": False, "message": "이름과 연락처를 입력해 주세요."}, status=400)
+    if shared_enabled() and digits:
+        try:
+            shared = get_shared_by_phone(digits)
+        except SharedAuthError as exc:
+            return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
+        if shared is not None and shared.name.replace(" ", "") == name.replace(" ", ""):
+            return JsonResponse({
+                "ok": True,
+                "id": shared.phone,
+                "message": f"회원님의 로그인 번호는 {shared.phone} 입니다. 헤리움 아이디가 있으면 아이디로도 로그인할 수 있습니다.",
+            })
     try:
         user = User.objects.select_related("profile").get(profile__name=name, profile__phone=phone)
     except User.DoesNotExist:
-        return JsonResponse({"ok": False, "message": "일치하는 회원 정보가 없습니다."}, status=400)
+        user = find_local_by_login(digits)
+        if user is None or not _get_profile(user) or _get_profile(user).name != name:
+            return JsonResponse({"ok": False, "message": "일치하는 회원 정보가 없습니다."}, status=400)
     return JsonResponse({"ok": True, "id": user.username, "message": f"회원님의 아이디는 {user.username} 입니다."})

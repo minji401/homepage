@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -57,6 +58,35 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+
+def _postgres_from_url(url):
+    parsed = urlparse(url)
+    name = unquote((parsed.path or "").lstrip("/"))
+    if not name:
+        return None
+    config = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": name,
+        "USER": unquote(parsed.username or ""),
+        "PASSWORD": unquote(parsed.password or ""),
+        "HOST": parsed.hostname or "",
+        "PORT": str(parsed.port or 5432),
+        "CONN_MAX_AGE": 60,
+        "OPTIONS": {},
+    }
+    sslmode = os.environ.get("PGSSLMODE", "").strip()
+    if sslmode:
+        config["OPTIONS"]["sslmode"] = sslmode
+    return config
+
+
+_shared_url = (os.environ.get("DATABASE_URL") or os.environ.get("SHARED_DATABASE_URL") or "").strip()
+if _shared_url:
+    _shared_db = _postgres_from_url(_shared_url)
+    if _shared_db:
+        DATABASES["shared"] = _shared_db
+        DATABASE_ROUTERS = ["accounts.db_router.SharedDatabaseRouter"]
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 4}},
