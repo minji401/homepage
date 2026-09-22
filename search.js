@@ -59,6 +59,7 @@
         { type: "menu", tab: "community", title: "주간 식단표", body: "이번 주 조식, 중식, 석식 식단을 안내합니다.", path: "기관 소식 > 주간 식단표", url: "community/menu.html", date: "2026-09-08" },
         { type: "menu", tab: "community", title: "자주 묻는 질문", body: "입소, 면회, 이용요금 등 자주 묻는 질문과 답변입니다.", path: "기관 소식 > 자주 묻는 질문", url: "community/faq.html", date: "2026-06-12" },
         { type: "menu", tab: "community", title: "1:1 상담 및 문의", body: "입소 상담과 서비스 이용 문의를 받습니다.", path: "기관 소식 > 1:1 상담 및 문의", url: "community/inquiry.html", date: "2026-06-12" },
+        { type: "menu", tab: "community", title: "사이트맵", body: "헤리움 케어센터 홈페이지의 전체 메뉴와 페이지를 한눈에 볼 수 있습니다.", path: "사이트맵", url: "sitemap.html", date: "2026-09-22" },
         { type: "board", tab: "community", title: "2026년 9월 프로그램 안내", body: "원예치료, 음악치료, 인지프로그램 등 9월 월간 프로그램 일정입니다.", path: "기관 소식 > 공지사항", url: "community/notice.html", date: "2026-09-01" },
         { type: "board", tab: "community", title: "시설 점검 안내", body: "소방설비 및 시설 안전 점검으로 일부 프로그램이 조정됩니다.", path: "기관 소식 > 공지사항", url: "community/notice.html", date: "2026-09-10" },
         { type: "board", tab: "volunteer", title: "자원봉사자 모집 공고", body: "말벗 봉사와 프로그램 보조 자원봉사자를 모집합니다.", path: "사랑나눔 > 자원봉사", url: "volunteer/intro.html", date: "2026-09-05" },
@@ -424,9 +425,15 @@
 
     function bindAllMenuLink() {
         document.querySelectorAll(".sp").forEach(function (el) {
+            if (el.tagName === "A" && el.getAttribute("href")) {
+                if (!el.getAttribute("aria-label")) {
+                    el.setAttribute("aria-label", "사이트맵");
+                }
+                return;
+            }
             el.setAttribute("role", "link");
             el.setAttribute("tabindex", "0");
-            el.setAttribute("aria-label", "전체메뉴");
+            el.setAttribute("aria-label", "사이트맵");
             function go(e) {
                 e.preventDefault();
                 window.location.href = SITEMAP_PAGE;

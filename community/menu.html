@@ -30,12 +30,12 @@
         <!-- 우측 검색 & 전체메뉴 -->
         <div class="header-right">
             <a href="#" class="js-open-search" aria-expanded="false" aria-controls="searchOverlay"><i class="fas fa-search"> 검색</i></a>
-            <div class="sp">
-                <button class="all-menu-btn" title="전체 메뉴">
+            <a class="sp" href="../sitemap.html">
+                <span class="all-menu-btn" title="사이트맵" aria-hidden="true">
                     <span></span><span></span><span></span>
-                </button>
-                <span>전체메뉴</span>
-            </div>
+                </span>
+                <span>사이트맵</span>
+            </a>
         </div>
     </div>
 </div>
@@ -203,6 +203,7 @@
             <a href="#" class="highlight">개인정보처리방침</a>
             <a href="#">이용약관</a>
             <a href="#">이메일무단수집거부</a>
+            <a href="../sitemap.html">사이트맵</a>
             <a href="../about/location.html">찾아오시는 길</a>
             <div class="footer-sns">
                 <a href="{% firstof info.blog_url "#" %}" class="footer-sns-btn" title="블로그" aria-label="블로그"><span>b</span></a>

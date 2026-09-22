@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>전체메뉴 | 헤리움 케어센터</title>
+    <title>사이트맵 | 헤리움 케어센터</title>
     <link rel="stylesheet" href="main.css" type="text/css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
@@ -22,12 +22,12 @@
         </div>
         <div class="header-right">
             <a href="#" class="js-open-search" aria-expanded="false" aria-controls="searchOverlay"><i class="fas fa-search"> 검색</i></a>
-            <div class="sp">
-                <button type="button" class="all-menu-btn" title="전체 메뉴">
+            <a class="sp" href="sitemap.html">
+                <span class="all-menu-btn" title="사이트맵" aria-hidden="true">
                     <span></span><span></span><span></span>
-                </button>
-                <span>전체메뉴</span>
-            </div>
+                </span>
+                <span>사이트맵</span>
+            </a>
         </div>
     </div>
 </div>
@@ -114,11 +114,12 @@
 
 <div class="sitemap-page">
     <div class="search-page-head">
-        <h2>전체메뉴</h2>
+        <h2>사이트맵</h2>
         <div class="breadcrumb">
-            <span><i class="fas fa-home"></i> Home</span> &gt; <strong>전체메뉴</strong>
+            <span><i class="fas fa-home"></i> Home</span> &gt; <strong>사이트맵</strong>
         </div>
     </div>
+    <p class="sitemap-lead">헤리움 케어센터 홈페이지의 모든 메뉴를 한눈에 볼 수 있습니다.</p>
 
     <div class="sitemap-grid">
         <section class="sitemap-col">
@@ -140,6 +141,9 @@
                 <li><a href="service/nighttime.html">주야간보호</a></li>
                 <li><a href="service/nursing.html">요양원</a></li>
                 <li><a href="service/home_visit.html">가정방문급여</a></li>
+                <li><a href="service/home_bath.html">방문목욕</a></li>
+                <li><a href="service/dementia.html">치매·재활</a></li>
+                <li><a href="service/monthly.html">맞춤형 케어 일정표</a></li>
                 <li><a href="service/medical.html">의료기</a></li>
             </ul>
         </section>
@@ -163,6 +167,12 @@
                 <li><a href="volunteer/intro.html">자원봉사</a></li>
                 <li><a href="volunteer/application.html">후원</a></li>
             </ul>
+            <h3 class="sitemap-sub"><a href="login.html">회원</a></h3>
+            <ul>
+                <li><a href="login.html">로그인</a></li>
+                <li><a href="signup.html">회원가입</a></li>
+                <li><a href="find-account.html">아이디·비밀번호 찾기</a></li>
+            </ul>
         </section>
 
         <section class="sitemap-col">
@@ -173,6 +183,7 @@
                 <li><a href="community/menu.html">주간 식단표</a></li>
                 <li><a href="community/faq.html">자주 묻는 질문</a></li>
                 <li><a href="community/inquiry.html">1:1 상담 및 문의</a></li>
+                <li><a href="search.html">통합검색</a></li>
             </ul>
         </section>
     </div>
@@ -184,6 +195,7 @@
             <a href="#" class="highlight">개인정보처리방침</a>
             <a href="#">이용약관</a>
             <a href="#">이메일무단수집거부</a>
+            <a href="sitemap.html">사이트맵</a>
             <a href="about/location.html">찾아오시는 길</a>
             <div class="footer-sns">
                 <a href="{% firstof info.blog_url "#" %}" class="footer-sns-btn" title="블로그" aria-label="블로그"><span>b</span></a>
