@@ -28,8 +28,13 @@ class Command(BaseCommand):
         linked = 0
         skipped = 0
         reset_needed = []
+        seed_usernames = {"admin", "hatsal", "parkmin", "leeguard"}
 
         for user in User.objects.select_related("profile").order_by("id"):
+            if user.username in seed_usernames:
+                skipped += 1
+                self.stdout.write(f"skip  {user.username}: 예시 계정")
+                continue
             profile = getattr(user, "profile", None)
             digits = normalize_phone(profile.phone if profile else "")
             if not digits:
@@ -39,7 +44,7 @@ class Command(BaseCommand):
 
             shared = get_shared_by_phone(digits)
             if shared is not None:
-                mark_herium_linked(shared, note=f"herium_username={user.username}")
+                mark_herium_linked(shared, note=f"herium_username={user.username}", username=user.username)
                 linked += 1
                 continue
 
@@ -47,6 +52,7 @@ class Command(BaseCommand):
                 id=f"u_{uuid4()}",
                 name=(profile.name if profile and profile.name else user.first_name) or user.username,
                 phone=digits,
+                username=user.username,
                 password_hash=hash_password(f"reset-required-{uuid4()}"),
                 role="admin" if (user.is_staff or (profile and profile.role == "admin")) else "user",
                 herium_linked=1,

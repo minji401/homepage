@@ -17,11 +17,15 @@ from .shared_users import (
     create_shared_user,
     find_local_by_login,
     get_shared_by_phone,
+    get_shared_by_username,
     login_with_shared,
     normalize_phone,
     shared_enabled,
+    shared_expected,
+    shared_matches_login,
     sync_local_user,
     update_shared_password,
+    username_from_note,
 )
 
 
@@ -76,6 +80,11 @@ def login_api(request):
     if not user_id or not password:
         return JsonResponse({"ok": False, "message": "아이디와 비밀번호를 입력해 주세요."}, status=400)
 
+    if shared_expected() and not shared_enabled():
+        return JsonResponse(
+            {"ok": False, "message": "공유 회원 DB가 연결되지 않았습니다. Render DATABASE_URL을 확인해 주세요."},
+            status=503,
+        )
     if shared_enabled():
         try:
             user = login_with_shared(request, user_id, password)
@@ -148,7 +157,12 @@ def signup_api(request):
     except OperationalError:
         return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요."}, status=503)
 
-    if shared_enabled():
+    if shared_expected() and not shared_enabled():
+        return JsonResponse(
+            {"ok": False, "message": "공유 회원 DB가 연결되지 않았습니다. Render DATABASE_URL을 확인해 주세요."},
+            status=503,
+        )
+    if shared_expected() or shared_enabled():
         try:
             create_shared_user(name=name, phone=digits, password=password, username=user_id)
         except SharedAuthError as exc:
@@ -162,7 +176,7 @@ def signup_api(request):
     )
     Profile.objects.update_or_create(
         user=user,
-        defaults={"name": name, "phone": phone, "role": Profile.ROLE_MEMBER, "status": Profile.STATUS_ACTIVE},
+        defaults={"name": name, "phone": digits, "role": Profile.ROLE_MEMBER, "status": Profile.STATUS_ACTIVE},
     )
     return JsonResponse({"ok": True})
 
@@ -216,14 +230,22 @@ def find_api(request):
                     user = None
 
         shared = None
-        if shared_enabled() and digits:
+        if shared_enabled():
             try:
-                shared = get_shared_by_phone(digits)
+                if digits:
+                    shared = get_shared_by_phone(digits)
+                if shared is None:
+                    shared = get_shared_by_username(user_id)
             except SharedAuthError as exc:
                 return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
-        if user is None and shared is not None and (not user_id or user_id in (shared.phone, shared.name, digits)):
-            user = sync_local_user(shared, username_hint=user_id)
-        if user is None and shared is None:
+            if shared is not None and digits and normalize_phone(shared.phone) != digits:
+                shared = None
+            if shared is not None and not shared_matches_login(shared, user_id):
+                return JsonResponse({"ok": False, "message": "일치하는 회원 정보가 없습니다."}, status=400)
+        if user is None and shared is not None:
+            hint = (shared.username or "").strip() or username_from_note(shared.herium_note) or user_id
+            user = sync_local_user(shared, username_hint=hint)
+        if user is None:
             return JsonResponse({"ok": False, "message": "일치하는 회원 정보가 없습니다."}, status=400)
 
         alphabet = string.ascii_letters + string.digits
@@ -256,11 +278,12 @@ def find_api(request):
         except SharedAuthError as exc:
             return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
         if shared is not None and shared.name.replace(" ", "") == name.replace(" ", ""):
-            return JsonResponse({
-                "ok": True,
-                "id": shared.phone,
-                "message": f"회원님의 로그인 번호는 {shared.phone} 입니다. 헤리움 아이디가 있으면 아이디로도 로그인할 수 있습니다.",
-            })
+            shown = (shared.username or "").strip() or username_from_note(shared.herium_note) or shared.phone
+            if shown == shared.phone or shown == normalize_phone(shared.phone):
+                message = f"회원님의 로그인 번호는 {shared.phone} 입니다. 헤리움 아이디가 있으면 아이디로도 로그인할 수 있습니다."
+            else:
+                message = f"회원님의 아이디는 {shown} 입니다."
+            return JsonResponse({"ok": True, "id": shown, "message": message})
     try:
         user = User.objects.select_related("profile").get(profile__name=name, profile__phone=phone)
     except User.DoesNotExist:

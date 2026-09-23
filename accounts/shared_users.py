@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+import logging
+import os
 from datetime import datetime, timezone
 from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from django.db import IntegrityError
-from django.db.utils import OperationalError
+from django.db import IntegrityError, connections
+from django.db.utils import DatabaseError
 
 from .models import Profile, SharedUser
 from .scrypt_compat import hash_password, verify_password
+
+logger = logging.getLogger("herium.shared")
 
 
 class SharedAuthError(Exception):
@@ -22,6 +26,10 @@ class SharedAuthError(Exception):
 
 def shared_enabled():
     return "shared" in getattr(settings, "DATABASES", {})
+
+
+def shared_expected():
+    return bool((os.environ.get("DATABASE_URL") or os.environ.get("SHARED_DATABASE_URL") or "").strip())
 
 
 def normalize_phone(value):
@@ -36,20 +44,186 @@ def format_phone(digits):
     return digits
 
 
+def is_mobile(digits):
+    return bool(digits) and digits.startswith("01") and len(digits) in (10, 11) and digits[2] in "016789"
+
+
+def username_from_note(note):
+    for part in (note or "").split(";"):
+        item = part.strip()
+        key = "herium_username="
+        if item.lower().startswith(key):
+            return item[len(key):].strip()
+    return ""
+
+
+def phone_variants(phone):
+    digits = normalize_phone(phone)
+    if not digits:
+        return []
+    values = [digits, format_phone(digits)]
+    if digits.startswith("0"):
+        values.append("+82" + digits[1:])
+        values.append("82" + digits[1:])
+    return list(dict.fromkeys(values))
+
+
 def _shared_qs():
     return SharedUser.objects.using("shared")
 
 
+_schema_ready = False
+
+_USER_COLUMNS = (
+    ("username", "TEXT"),
+    ("email", "TEXT"),
+    ("kakao_id", "TEXT"),
+    ("naver_id", "TEXT"),
+    ("google_id", "TEXT"),
+    ("herium_linked", "INTEGER"),
+    ("herium_relation", "TEXT"),
+    ("herium_note", "TEXT"),
+)
+
+
+def ensure_shared_schema():
+    global _schema_ready
+    if _schema_ready or not shared_enabled():
+        return
+    connection = connections["shared"]
+    vendor = connection.vendor
+    with connection.cursor() as cursor:
+        if vendor == "sqlite":
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.fetchall()
+            cursor.execute("PRAGMA busy_timeout=5000")
+            cursor.fetchall()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              phone TEXT NOT NULL UNIQUE,
+              password_hash TEXT NOT NULL,
+              role TEXT NOT NULL DEFAULT 'user',
+              herium_linked INTEGER NOT NULL DEFAULT 0,
+              herium_relation TEXT,
+              herium_note TEXT,
+              created_at TEXT NOT NULL
+            )
+            """
+        )
+        if vendor == "sqlite":
+            cursor.execute("PRAGMA table_info(users)")
+            existing = {row[1] for row in cursor.fetchall()}
+        else:
+            cursor.execute(
+                """
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name = %s AND table_schema = 'public'
+                """,
+                ["users"],
+            )
+            existing = {row[0] for row in cursor.fetchall()}
+        for name, coltype in _USER_COLUMNS:
+            if name in existing:
+                continue
+            cursor.execute(f"ALTER TABLE users ADD COLUMN {name} {coltype}")
+    for row in _shared_qs().all().iterator():
+        if (row.username or "").strip():
+            continue
+        parsed = username_from_note(row.herium_note)
+        if not parsed:
+            continue
+        row.username = parsed
+        row.save(update_fields=["username"], using="shared")
+    _schema_ready = True
+
+
 def get_shared_by_phone(phone):
-    digits = normalize_phone(phone)
-    if not digits:
+    variants = phone_variants(phone)
+    if not variants:
         return None
     try:
-        return _shared_qs().get(phone=digits)
-    except SharedUser.DoesNotExist:
-        return None
-    except OperationalError as exc:
+        ensure_shared_schema()
+        return _shared_qs().filter(phone__in=variants).first()
+    except DatabaseError as exc:
+        logger.exception("shared users SELECT failed: %s", type(exc).__name__)
         raise SharedAuthError("회원 DB에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.", 503) from exc
+
+
+def get_shared_by_username(username):
+    login = (username or "").strip()
+    if not login:
+        return None
+    try:
+        ensure_shared_schema()
+        found = _shared_qs().filter(username__iexact=login).first()
+        if found is not None:
+            return found
+        for row in _shared_qs().exclude(herium_note="").exclude(herium_note__isnull=True).iterator():
+            parsed = username_from_note(row.herium_note)
+            if parsed.lower() != login.lower():
+                continue
+            if not (row.username or "").strip():
+                row.username = parsed
+                row.save(update_fields=["username"], using="shared")
+            return row
+        return None
+    except DatabaseError as exc:
+        logger.exception("shared users SELECT failed: %s", type(exc).__name__)
+        raise SharedAuthError("회원 DB에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.", 503) from exc
+
+
+def shared_matches_login(shared, login_id):
+    login_id = (login_id or "").strip()
+    if shared is None or not login_id:
+        return False
+    candidates = {
+        (shared.username or "").strip().lower(),
+        username_from_note(shared.herium_note).lower(),
+        (shared.phone or "").strip(),
+        normalize_phone(shared.phone),
+        (shared.name or "").strip().lower(),
+    }
+    candidates.discard("")
+    if login_id.lower() in candidates:
+        return True
+    digits = normalize_phone(login_id)
+    return bool(digits) and digits == normalize_phone(shared.phone)
+
+
+def resolve_shared_login(login_id, local=None):
+    login_id = (login_id or "").strip()
+    if not shared_enabled() or not login_id:
+        return None
+    digits = normalize_phone(login_id)
+    if is_mobile(digits):
+        shared = get_shared_by_phone(digits)
+        if shared is not None:
+            return shared
+    shared = get_shared_by_username(login_id)
+    if shared is not None:
+        return shared
+    if local is not None:
+        profile = getattr(local, "profile", None)
+        phone = normalize_phone(getattr(profile, "phone", "") or "")
+        if phone:
+            return get_shared_by_phone(phone)
+    return None
+
+
+def _username_hint(login_id, local, shared):
+    if shared is not None and (shared.username or "").strip():
+        return shared.username.strip()
+    noted = username_from_note(shared.herium_note) if shared is not None else ""
+    if noted:
+        return noted
+    if local is not None and local.username:
+        return local.username
+    if login_id and not is_mobile(normalize_phone(login_id)):
+        return login_id.strip()
+    return ""
 
 
 def find_local_by_phone(phone):
@@ -71,11 +245,15 @@ def find_local_by_login(login_id):
         return find_local_by_phone(login_id)
 
 
-def mark_herium_linked(shared, note=None):
+def mark_herium_linked(shared, note=None, username=""):
     fields = []
     if shared.herium_linked != 1:
         shared.herium_linked = 1
         fields.append("herium_linked")
+    username = (username or "").strip() or username_from_note(note) or username_from_note(shared.herium_note)
+    if username and not (shared.username or "").strip():
+        shared.username = username
+        fields.append("username")
     if note and not shared.herium_note:
         shared.herium_note = note
         fields.append("herium_note")
@@ -112,7 +290,7 @@ def sync_local_user(shared, username_hint=""):
         user.first_name = shared.name
         user.save(update_fields=["first_name"])
 
-    Profile.objects.update_or_create(
+    profile, _created = Profile.objects.update_or_create(
         user=user,
         defaults={
             "name": shared.name or user.first_name or user.username,
@@ -121,6 +299,9 @@ def sync_local_user(shared, username_hint=""):
             "status": Profile.STATUS_ACTIVE,
         },
     )
+    cache = getattr(user._state, "fields_cache", None)
+    if cache is not None:
+        cache["profile"] = profile
     return user
 
 
@@ -128,14 +309,19 @@ def create_shared_user(*, name, phone, password, username="", relation=""):
     digits = normalize_phone(phone)
     if len(digits) < 10:
         raise SharedAuthError("올바른 휴대폰 번호를 입력해 주세요.")
+    ensure_shared_schema()
     if get_shared_by_phone(digits):
         raise SharedAuthError("이미 가입된 번호입니다.")
+    username = (username or "").strip()
+    if username and get_shared_by_username(username):
+        raise SharedAuthError("이미 사용 중인 아이디입니다.")
 
     note = f"herium_username={username}" if username else None
     shared = SharedUser(
         id=f"u_{uuid4()}",
         name=name,
         phone=digits,
+        username=username or None,
         password_hash=hash_password(password),
         role="user",
         herium_linked=1,
@@ -147,8 +333,10 @@ def create_shared_user(*, name, phone, password, username="", relation=""):
         shared.save(using="shared", force_insert=True)
     except IntegrityError as exc:
         raise SharedAuthError("이미 가입된 번호입니다.") from exc
-    except OperationalError as exc:
+    except DatabaseError as exc:
+        logger.exception("shared users INSERT failed: %s", type(exc).__name__)
         raise SharedAuthError("회원 DB에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.", 503) from exc
+    logger.info("shared users INSERT ok herium_linked=1")
     return shared
 
 
@@ -161,16 +349,15 @@ def update_shared_password(shared, password):
 def login_with_shared(request, login_id, password):
     login_id = (login_id or "").strip()
     local = find_local_by_login(login_id)
-    phone = normalize_phone(login_id)
-    if not phone and local is not None:
-        profile = getattr(local, "profile", None)
-        phone = normalize_phone(profile.phone if profile else "")
-
-    shared = get_shared_by_phone(phone) if phone else None
-    username_hint = local.username if local is not None else login_id
+    shared = resolve_shared_login(login_id, local)
+    username_hint = _username_hint(login_id, local, shared)
 
     if shared is not None and verify_password(password, shared.password_hash):
-        mark_herium_linked(shared, note=f"herium_username={username_hint}" if username_hint else None)
+        mark_herium_linked(
+            shared,
+            note=f"herium_username={username_hint}" if username_hint else None,
+            username=username_hint,
+        )
         user = sync_local_user(shared, username_hint=username_hint)
         _ensure_local_status(user)
         login(request, user)
@@ -187,10 +374,13 @@ def login_with_shared(request, login_id, password):
 
     _ensure_local_status(django_user)
     profile = getattr(django_user, "profile", None)
-    digits = normalize_phone(profile.phone if profile else "") or phone
+    digits = normalize_phone(profile.phone if profile else "")
     if not digits:
         login(request, django_user)
         return django_user
+
+    if shared is None or normalize_phone(shared.phone) != digits:
+        shared = get_shared_by_phone(digits)
 
     if shared is None:
         try:
@@ -204,12 +394,19 @@ def login_with_shared(request, login_id, password):
             shared = get_shared_by_phone(digits)
             if shared is None:
                 raise
-            if verify_password(password, shared.password_hash) or django_user:
-                update_shared_password(shared, password)
-                mark_herium_linked(shared, note=f"herium_username={django_user.username}")
+            update_shared_password(shared, password)
+            mark_herium_linked(
+                shared,
+                note=f"herium_username={django_user.username}",
+                username=django_user.username,
+            )
     else:
         update_shared_password(shared, password)
-        mark_herium_linked(shared, note=f"herium_username={django_user.username}")
+        mark_herium_linked(
+            shared,
+            note=f"herium_username={django_user.username}",
+            username=django_user.username,
+        )
 
     login(request, django_user)
     return django_user

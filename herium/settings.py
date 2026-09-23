@@ -1,6 +1,10 @@
+import logging
 import os
+import sys
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
+
+logger = logging.getLogger("herium")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -61,11 +65,18 @@ DATABASES = {
 
 
 def _postgres_from_url(url):
+    url = (url or "").strip().strip('"').strip("'")
+    if not url:
+        return None
     parsed = urlparse(url)
-    name = unquote((parsed.path or "").lstrip("/"))
+    name = unquote((parsed.path or "").lstrip("/").split("?")[0])
+    query = parse_qs(parsed.query or "")
+    if not name:
+        name = (query.get("dbname") or query.get("database") or [""])[0]
     if not name:
         return None
-    config = {
+    sslmode = (os.environ.get("PGSSLMODE") or "").strip() or (query.get("sslmode") or [""])[0] or "prefer"
+    return {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": name,
         "USER": unquote(parsed.username or ""),
@@ -73,20 +84,47 @@ def _postgres_from_url(url):
         "HOST": parsed.hostname or "",
         "PORT": str(parsed.port or 5432),
         "CONN_MAX_AGE": 60,
-        "OPTIONS": {},
+        "OPTIONS": {"sslmode": sslmode},
     }
-    sslmode = os.environ.get("PGSSLMODE", "").strip()
-    if sslmode:
-        config["OPTIONS"]["sslmode"] = sslmode
-    return config
+
+
+def _medical_sqlite_path():
+    parent = BASE_DIR.parent
+    direct = parent / "medical _device"
+    if (direct / "server" / "db.js").exists():
+        return direct / "server" / "data" / "hyundai.db"
+    try:
+        children = list(parent.iterdir())
+    except OSError:
+        children = []
+    for child in children:
+        if child.is_dir() and (child / "server" / "db.js").exists() and "medical" in child.name.lower():
+            return child / "server" / "data" / "hyundai.db"
+    return direct / "server" / "data" / "hyundai.db"
 
 
 _shared_url = (os.environ.get("DATABASE_URL") or os.environ.get("SHARED_DATABASE_URL") or "").strip()
+_running_tests = "test" in sys.argv
 if _shared_url:
     _shared_db = _postgres_from_url(_shared_url)
     if _shared_db:
         DATABASES["shared"] = _shared_db
         DATABASE_ROUTERS = ["accounts.db_router.SharedDatabaseRouter"]
+        logger.info("shared postgres configured name=%s host_set=%s", _shared_db["NAME"], bool(_shared_db["HOST"]))
+    else:
+        logger.error("DATABASE_URL is set but could not be parsed (missing database name)")
+elif os.environ.get("RENDER"):
+    logger.error("RENDER is set but DATABASE_URL is missing; herium signup will not write users")
+elif not _running_tests:
+    _shared_sqlite = _medical_sqlite_path()
+    _shared_sqlite.parent.mkdir(parents=True, exist_ok=True)
+    DATABASES["shared"] = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": _shared_sqlite,
+        "OPTIONS": {"timeout": 20},
+    }
+    DATABASE_ROUTERS = ["accounts.db_router.SharedDatabaseRouter"]
+    logger.info("shared sqlite configured")
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 4}},

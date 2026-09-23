@@ -49,6 +49,7 @@ class SharedUser(models.Model):
     id = models.CharField(primary_key=True, max_length=80)
     name = models.TextField()
     phone = models.TextField(unique=True)
+    username = models.TextField(null=True, blank=True)
     password_hash = models.TextField()
     role = models.TextField(default="user")
     herium_linked = models.IntegerField(default=0)

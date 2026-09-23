@@ -1,4 +1,9 @@
-"""Node crypto.scryptSync(password, salt, 64) 와 같은 saltHex:hashHex 형식."""
+"""현대 의료기 Node crypto.scryptSync 와 같은 saltHex:hashHex.
+
+Node: crypto.scryptSync(password, saltHex문자열 그대로, 64)
+salt는 hex decode 하지 않고 UTF-8 문자열 바이트로 넣는다.
+N=16384, r=8, p=1, dklen=64
+"""
 
 from __future__ import annotations
 
@@ -15,17 +20,17 @@ SALT_BYTES = 16
 
 
 def hash_password(password: str) -> str:
-    salt = os.urandom(SALT_BYTES)
+    salt_hex = os.urandom(SALT_BYTES).hex()
     digest = hashlib.scrypt(
         password.encode("utf-8"),
-        salt=salt,
+        salt=salt_hex.encode("utf-8"),
         n=SCRYPT_N,
         r=SCRYPT_R,
         p=SCRYPT_P,
         dklen=SCRYPT_DKLEN,
         maxmem=SCRYPT_MAXMEM,
     )
-    return f"{salt.hex()}:{digest.hex()}"
+    return f"{salt_hex}:{digest.hex()}"
 
 
 def verify_password(password: str, stored: str) -> bool:
@@ -33,13 +38,12 @@ def verify_password(password: str, stored: str) -> bool:
         return False
     salt_hex, hash_hex = stored.split(":", 1)
     try:
-        salt = bytes.fromhex(salt_hex)
         expected = bytes.fromhex(hash_hex)
     except ValueError:
         return False
     actual = hashlib.scrypt(
         password.encode("utf-8"),
-        salt=salt,
+        salt=salt_hex.encode("utf-8"),
         n=SCRYPT_N,
         r=SCRYPT_R,
         p=SCRYPT_P,
