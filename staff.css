@@ -109,6 +109,8 @@ a { color: #b38b4d; text-decoration: none; }
     min-width: 140px;
 }
 .staff-shell .staff-search input[type="search"] { min-width: 220px; flex: 1; }
+.staff-shell .staff-search .staff-check { display: flex; gap: 6px; align-items: center; font-size: 0.9rem; color: #555; }
+.staff-shell .staff-search input[type="checkbox"] { min-width: 0; width: auto; }
 .form-actions form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .toolbar { justify-content: space-between; margin-bottom: 14px; }
 .bulk-bar { margin-bottom: 10px; }

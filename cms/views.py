@@ -130,8 +130,26 @@ def dashboard(request):
 def members(request):
     q = (request.GET.get("q") or "").strip()
     sort = request.GET.get("sort") or "-date_joined"
-    allowed = {"date_joined": "date_joined", "-date_joined": "-date_joined", "username": "username"}
-    users = User.objects.select_related("profile").order_by(allowed.get(sort, "-date_joined"))
+    status = (request.GET.get("status") or "").strip()
+    show_withdrawn = request.GET.get("withdrawn") == "1"
+    allowed = {
+        "date_joined": "date_joined",
+        "-date_joined": "-date_joined",
+        "username": "username",
+        "name": "profile__name",
+    }
+    if sort not in allowed:
+        sort = "-date_joined"
+    allowed_status = {
+        Profile.STATUS_ACTIVE,
+        Profile.STATUS_SUSPENDED,
+        Profile.STATUS_WITHDRAWN,
+    }
+    users = User.objects.select_related("profile").order_by(allowed[sort])
+    if status in allowed_status:
+        users = users.filter(profile__status=status)
+    elif not show_withdrawn:
+        users = users.exclude(profile__status=Profile.STATUS_WITHDRAWN)
     if q:
         users = users.filter(
             Q(username__icontains=q)
@@ -139,7 +157,11 @@ def members(request):
             | Q(email__icontains=q)
             | Q(profile__phone__icontains=q)
         )
-    return render(request, "staff/members.html", {"users": users, "q": q, "sort": sort})
+    return render(
+        request,
+        "staff/members.html",
+        {"users": users, "q": q, "sort": sort, "status": status, "show_withdrawn": show_withdrawn},
+    )
 
 
 @staff_required

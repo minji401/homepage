@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 
 from django.contrib.auth.models import User
@@ -18,39 +19,48 @@ class Command(BaseCommand):
         )
         admin_user.is_staff = True
         admin_user.is_superuser = True
-        if created or not admin_user.check_password("1234"):
-            admin_user.set_password("1234")
+        if created:
+            if os.environ.get("RENDER"):
+                admin_password = os.environ.get("ADMIN_PASSWORD", "").strip()
+                if admin_password:
+                    admin_user.set_password(admin_password)
+                else:
+                    admin_user.set_unusable_password()
+                    self.stdout.write("RENDER 환경에는 ADMIN_PASSWORD가 없어 admin 로그인 비밀번호를 만들지 않았습니다.")
+            else:
+                admin_user.set_password("1234")
         admin_user.save()
         Profile.objects.update_or_create(
             user=admin_user,
             defaults={"name": "관리자", "phone": "054-334-9986", "role": Profile.ROLE_ADMIN, "status": Profile.STATUS_ACTIVE},
         )
 
-        hatsal, created = User.objects.get_or_create(
-            username="hatsal",
-            defaults={"first_name": "홍길동", "email": "hatsal@example.com"},
-        )
-        if created:
-            hatsal.set_password("1234")
-            hatsal.save()
-        Profile.objects.update_or_create(
-            user=hatsal,
-            defaults={"name": "홍길동", "phone": "010-1234-5678", "role": Profile.ROLE_GUARDIAN, "status": Profile.STATUS_ACTIVE},
-        )
-
-        extras = [
-            ("parkmin", "박민수", "010-2222-3333", Profile.ROLE_MEMBER),
-            ("leeguard", "이보람", "010-4444-5555", Profile.ROLE_GUARDIAN),
-        ]
-        for username, name, phone, role in extras:
-            user, made = User.objects.get_or_create(username=username, defaults={"first_name": name})
-            if made:
-                user.set_password("1234")
-                user.save()
-            Profile.objects.update_or_create(
-                user=user,
-                defaults={"name": name, "phone": phone, "role": role, "status": Profile.STATUS_ACTIVE},
+        if not os.environ.get("RENDER"):
+            hatsal, created = User.objects.get_or_create(
+                username="hatsal",
+                defaults={"first_name": "홍길동", "email": "hatsal@example.com"},
             )
+            if created:
+                hatsal.set_password("1234")
+                hatsal.save()
+            Profile.objects.update_or_create(
+                user=hatsal,
+                defaults={"name": "홍길동", "phone": "010-1234-5678", "role": Profile.ROLE_GUARDIAN, "status": Profile.STATUS_ACTIVE},
+            )
+
+            extras = [
+                ("parkmin", "박민수", "010-2222-3333", Profile.ROLE_MEMBER),
+                ("leeguard", "이보람", "010-4444-5555", Profile.ROLE_GUARDIAN),
+            ]
+            for username, name, phone, role in extras:
+                user, made = User.objects.get_or_create(username=username, defaults={"first_name": name})
+                if made:
+                    user.set_password("1234")
+                    user.save()
+                Profile.objects.update_or_create(
+                    user=user,
+                    defaults={"name": name, "phone": phone, "role": role, "status": Profile.STATUS_ACTIVE},
+                )
 
         boards = [
             ("notice", "공지사항", "운영 공지"),

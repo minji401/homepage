@@ -8,9 +8,28 @@ logger = logging.getLogger("herium")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-herium-local-dev-only-change-later")
+_DEV_SECRET = "django-insecure-herium-local-dev-only-change-later"
+SECRET_KEY = os.environ.get("SECRET_KEY", "" if os.environ.get("RENDER") else _DEV_SECRET)
+if os.environ.get("RENDER") and (not SECRET_KEY or SECRET_KEY == _DEV_SECRET):
+    raise RuntimeError("RENDER 환경에는 SECRET_KEY 환경변수가 필요합니다.")
 DEBUG = os.environ.get("DEBUG", "false" if os.environ.get("RENDER") else "true").lower() in ("1", "true", "yes")
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get(
+        "ALLOWED_HOSTS",
+        "heriumcare.com,www.heriumcare.com,localhost,127.0.0.1",
+    ).split(",")
+    if host.strip()
+]
+_render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if _render_host and _render_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_render_host)
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 INSTALLED_APPS = [
     "django.contrib.admin",

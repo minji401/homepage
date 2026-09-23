@@ -50,9 +50,10 @@ class Command(BaseCommand):
 
             SharedUser(
                 id=f"u_{uuid4()}",
-                name=(profile.name if profile and profile.name else user.first_name) or user.username,
+                name="",
                 phone=digits,
                 username=user.username,
+                guardian_name=(profile.name if profile and profile.name else user.first_name) or user.username,
                 password_hash=hash_password(f"reset-required-{uuid4()}"),
                 role="admin" if (user.is_staff or (profile and profile.role == "admin")) else "user",
                 herium_linked=1,

@@ -15,6 +15,6 @@ def create_profile(sender, instance, created, **kwargs):
     except ObjectDoesNotExist:
         Profile.objects.create(
             user=instance,
-            name=instance.first_name or instance.username,
+            name=instance.first_name or "",
             phone="",
         )

@@ -83,6 +83,7 @@ _USER_COLUMNS = (
     ("herium_linked", "INTEGER"),
     ("herium_relation", "TEXT"),
     ("herium_note", "TEXT"),
+    ("guardian_name", "TEXT"),
 )
 
 
@@ -245,9 +246,53 @@ def find_local_by_login(login_id):
         return find_local_by_phone(login_id)
 
 
+def needs_guardian_prompt(shared, user=None):
+    """보호자 성함은 헤리움에서 직접 입력한 값만 인정한다. 의료기 이름은 넣지 않는다."""
+    del user
+    if shared is None:
+        return False
+    buyer = (shared.name or "").strip()
+    guardian = (getattr(shared, "guardian_name", None) or "").strip()
+    confirmed = "guardian_confirmed=1" in (getattr(shared, "herium_note", None) or "")
+    if guardian and buyer and guardian == buyer and not confirmed:
+        shared.guardian_name = None
+        shared.herium_linked = 0
+        shared.save(update_fields=["guardian_name", "herium_linked"], using="shared")
+        return True
+    return not guardian
+
+
+def _note_with_flag(note, flag):
+    parts = [part.strip() for part in (note or "").split(";") if part.strip()]
+    if flag not in parts:
+        parts.append(flag)
+    return ";".join(parts)
+
+
+def set_guardian_name(shared, guardian_name):
+    shared.guardian_name = (guardian_name or "").strip()
+    shared.herium_linked = 1
+    shared.herium_note = _note_with_flag(shared.herium_note, "guardian_confirmed=1")
+    shared.save(update_fields=["guardian_name", "herium_linked", "herium_note"], using="shared")
+    return shared
+
+
+def update_shared_phone(shared, phone):
+    digits = normalize_phone(phone)
+    if len(digits) < 10:
+        raise SharedAuthError("올바른 휴대폰 번호를 입력해 주세요.")
+    other = get_shared_by_phone(digits)
+    if other is not None and other.id != shared.id:
+        raise SharedAuthError("이미 사용 중인 연락처입니다.")
+    if shared.phone != digits:
+        shared.phone = digits
+        shared.save(update_fields=["phone"], using="shared")
+    return shared
+
+
 def mark_herium_linked(shared, note=None, username=""):
     fields = []
-    if shared.herium_linked != 1:
+    if (getattr(shared, "guardian_name", None) or "").strip() and shared.herium_linked != 1:
         shared.herium_linked = 1
         fields.append("herium_linked")
     username = (username or "").strip() or username_from_note(note) or username_from_note(shared.herium_note)
@@ -270,13 +315,14 @@ def sync_local_user(shared, username_hint=""):
             user = User.objects.select_related("profile").get(username=username)
         except User.DoesNotExist:
             user = None
+    guardian = (getattr(shared, "guardian_name", None) or "").strip()
     if user is None:
         base = username if username and not User.objects.filter(username=username).exists() else shared.phone
         if User.objects.filter(username=base).exists():
             base = shared.phone
         user = User.objects.create_user(
             username=base,
-            first_name=shared.name or base,
+            first_name=guardian,
             password=None,
         )
         user.set_unusable_password()
@@ -286,17 +332,18 @@ def sync_local_user(shared, username_hint=""):
     if is_admin and not user.is_staff:
         user.is_staff = True
         user.save(update_fields=["is_staff"])
-    if shared.name and user.first_name != shared.name:
-        user.first_name = shared.name
+    if user.first_name != guardian:
+        user.first_name = guardian
         user.save(update_fields=["first_name"])
 
+    existing = Profile.objects.filter(user=user).first()
     profile, _created = Profile.objects.update_or_create(
         user=user,
         defaults={
-            "name": shared.name or user.first_name or user.username,
+            "name": guardian,
             "phone": format_phone(shared.phone) or shared.phone,
-            "role": Profile.ROLE_ADMIN if is_admin else Profile.ROLE_MEMBER,
-            "status": Profile.STATUS_ACTIVE,
+            "role": Profile.ROLE_ADMIN if is_admin else (existing.role if existing else Profile.ROLE_MEMBER),
+            "status": existing.status if existing else Profile.STATUS_ACTIVE,
         },
     )
     cache = getattr(user._state, "fields_cache", None)
@@ -305,7 +352,7 @@ def sync_local_user(shared, username_hint=""):
     return user
 
 
-def create_shared_user(*, name, phone, password, username="", relation=""):
+def create_shared_user(*, name, phone, password, username="", relation="", as_guardian=True):
     digits = normalize_phone(phone)
     if len(digits) < 10:
         raise SharedAuthError("올바른 휴대폰 번호를 입력해 주세요.")
@@ -316,15 +363,21 @@ def create_shared_user(*, name, phone, password, username="", relation=""):
     if username and get_shared_by_username(username):
         raise SharedAuthError("이미 사용 중인 아이디입니다.")
 
-    note = f"herium_username={username}" if username else None
+    note = f"herium_username={username}" if username else ""
+    if as_guardian:
+        note = _note_with_flag(note, "guardian_confirmed=1")
+    note = note or None
+    buyer_name = "" if as_guardian else (name or "")
+    guardian = (name or "").strip() if as_guardian else None
     shared = SharedUser(
         id=f"u_{uuid4()}",
-        name=name,
+        name=buyer_name,
+        guardian_name=guardian,
         phone=digits,
         username=username or None,
         password_hash=hash_password(password),
         role="user",
-        herium_linked=1,
+        herium_linked=1 if as_guardian else 0,
         herium_relation=relation or None,
         herium_note=note,
         created_at=datetime.now(timezone.utc).isoformat(),
@@ -353,6 +406,7 @@ def login_with_shared(request, login_id, password):
     username_hint = _username_hint(login_id, local, shared)
 
     if shared is not None and verify_password(password, shared.password_hash):
+        needs_guardian_prompt(shared)
         mark_herium_linked(
             shared,
             note=f"herium_username={username_hint}" if username_hint else None,
@@ -368,9 +422,7 @@ def login_with_shared(request, login_id, password):
         django_user = authenticate(request, username=local.username, password=password)
 
     if django_user is None:
-        if shared is not None:
-            raise SharedAuthError("비밀번호가 일치하지 않습니다.")
-        raise SharedAuthError("등록되지 않은 아이디 또는 휴대폰 번호입니다.")
+        raise SharedAuthError("아이디 또는 비밀번호가 일치하지 않습니다.")
 
     _ensure_local_status(django_user)
     profile = getattr(django_user, "profile", None)

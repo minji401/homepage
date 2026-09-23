@@ -1,7 +1,13 @@
 from django.test import SimpleTestCase
 
 from accounts.scrypt_compat import hash_password, verify_password
-from accounts.shared_users import is_mobile, normalize_phone, shared_matches_login, username_from_note
+from accounts.shared_users import (
+    is_mobile,
+    needs_guardian_prompt,
+    normalize_phone,
+    shared_matches_login,
+    username_from_note,
+)
 
 
 class ScryptCompatTests(SimpleTestCase):
@@ -62,3 +68,24 @@ class ScryptCompatTests(SimpleTestCase):
         self.assertTrue(shared_matches_login(shared, "hatsal"))
         self.assertTrue(shared_matches_login(shared, "010-1234-5678"))
         self.assertFalse(shared_matches_login(shared, "other"))
+
+    def test_copied_buyer_name_is_not_a_guardian_name(self):
+        shared = type("Shared", (), {})()
+        shared.name = "김구매"
+        shared.guardian_name = "김구매"
+        shared.herium_linked = 1
+        shared.herium_note = "herium_username=buyer1"
+        shared.save = lambda **_kwargs: None
+        self.assertTrue(needs_guardian_prompt(shared))
+        self.assertIsNone(shared.guardian_name)
+        self.assertEqual(shared.herium_linked, 0)
+
+    def test_confirmed_guardian_keeps_the_same_name_as_the_buyer(self):
+        shared = type("Shared", (), {})()
+        shared.name = "김구매"
+        shared.guardian_name = "김구매"
+        shared.herium_linked = 1
+        shared.herium_note = "herium_username=buyer1;guardian_confirmed=1"
+        shared.save = lambda **_kwargs: (_ for _ in ()).throw(AssertionError("should not clear"))
+        self.assertFalse(needs_guardian_prompt(shared))
+        self.assertEqual(shared.guardian_name, "김구매")

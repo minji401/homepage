@@ -2,13 +2,27 @@
 {% block title %}회원 관리{% endblock %}
 {% block heading %}회원 관리{% endblock %}
 {% block content %}
+<nav class="staff-tabs">
+    <a href="/staff/members/?sort={{ sort }}&q={{ q|urlencode }}" class="{% if not status %}is-on{% endif %}">전체</a>
+    <a href="/staff/members/?status=active&sort={{ sort }}&q={{ q|urlencode }}" class="{% if status == 'active' %}is-on{% endif %}">정상</a>
+    <a href="/staff/members/?status=suspended&sort={{ sort }}&q={{ q|urlencode }}" class="{% if status == 'suspended' %}is-on{% endif %}">정지</a>
+    <a href="/staff/members/?status=withdrawn&sort={{ sort }}&q={{ q|urlencode }}" class="{% if status == 'withdrawn' %}is-on{% endif %}">탈퇴</a>
+</nav>
 <form class="staff-search" method="get">
+    <input type="hidden" name="status" value="{{ status }}">
     <input type="search" name="q" value="{{ q }}" placeholder="이름, 아이디, 연락처">
     <select name="sort" onchange="this.form.submit()">
         <option value="-date_joined" {% if sort == "-date_joined" %}selected{% endif %}>가입일 최신순</option>
         <option value="date_joined" {% if sort == "date_joined" %}selected{% endif %}>가입일 오래된순</option>
         <option value="username" {% if sort == "username" %}selected{% endif %}>아이디순</option>
+        <option value="name" {% if sort == "name" %}selected{% endif %}>이름순</option>
     </select>
+    {% if not status %}
+    <label class="staff-check">
+        <input type="checkbox" name="withdrawn" value="1" {% if show_withdrawn %}checked{% endif %} onchange="this.form.submit()">
+        탈퇴 회원 보기
+    </label>
+    {% endif %}
     <button type="submit">검색</button>
 </form>
 <div class="table-wrap">

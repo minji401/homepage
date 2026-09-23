@@ -1,7 +1,7 @@
 from django.urls import path
 from django.views.generic import RedirectView
 
-from accounts.views import find_page, login_page, signup_page
+from accounts.views import account_page, find_page, guardian_page, login_page, signup_page
 from .views import SitePageView, robots_txt, sitemap_xml
 
 PAGE_TEMPLATES = [
@@ -45,6 +45,8 @@ urlpatterns = [
     path("login.html", login_page, name="login_page"),
     path("signup.html", signup_page, name="signup_page"),
     path("find-account.html", find_page, name="find_page"),
+    path("guardian.html", guardian_page, name="guardian_page"),
+    path("account.html", account_page, name="account_page"),
 ]
 
 urlpatterns += [

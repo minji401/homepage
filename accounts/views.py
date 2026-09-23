@@ -19,12 +19,16 @@ from .shared_users import (
     get_shared_by_phone,
     get_shared_by_username,
     login_with_shared,
+    needs_guardian_prompt,
     normalize_phone,
+    resolve_shared_login,
+    set_guardian_name,
     shared_enabled,
     shared_expected,
     shared_matches_login,
     sync_local_user,
     update_shared_password,
+    update_shared_phone,
     username_from_note,
 )
 
@@ -55,10 +59,11 @@ def _profile_payload(user):
     return {
         "authenticated": True,
         "id": user.username,
-        "name": (profile.name if profile and profile.name else user.first_name) or user.username,
+        "name": (profile.name if profile and profile.name else "") or "",
         "phone": profile.phone if profile else "",
         "email": user.email or "",
         "is_admin": is_admin,
+        "needs_guardian": False,
         "role": profile.role if profile else Profile.ROLE_MEMBER,
         "status": profile.status if profile else Profile.STATUS_ACTIVE,
     }
@@ -91,28 +96,37 @@ def login_api(request):
         except SharedAuthError as exc:
             return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
         payload = _profile_payload(user)
-        return JsonResponse({"ok": True, "user": payload, "redirect": "/staff/" if payload["is_admin"] else "/main.html"})
+        shared = resolve_shared_login(user_id, user)
+        needs = needs_guardian_prompt(shared, user)
+        payload["needs_guardian"] = needs
+        if needs:
+            payload["name"] = ""
+            redirect = "/guardian.html"
+        elif payload["is_admin"]:
+            redirect = "/staff/"
+        else:
+            redirect = "/main.html"
+        return JsonResponse({"ok": True, "user": payload, "redirect": redirect})
 
     try:
         existing = User.objects.select_related("profile").get(username=user_id)
     except User.DoesNotExist:
         existing = find_local_by_login(user_id)
         if existing is None:
-            return JsonResponse({"ok": False, "message": "등록되지 않은 아이디입니다."}, status=400)
+            return JsonResponse({"ok": False, "message": "아이디 또는 비밀번호가 일치하지 않습니다."}, status=400)
     except OperationalError:
         return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요."}, status=503)
 
-    profile = _get_profile(existing)
+    user = authenticate(request, username=existing.username, password=password)
+    if user is None:
+        return JsonResponse({"ok": False, "message": "아이디 또는 비밀번호가 일치하지 않습니다."}, status=400)
+    profile = _get_profile(user)
     if profile and profile.status == Profile.STATUS_SUSPENDED:
         return JsonResponse({"ok": False, "message": "정지된 계정입니다. 관리자에게 문의해 주세요."}, status=403)
     if profile and profile.status == Profile.STATUS_WITHDRAWN:
         return JsonResponse({"ok": False, "message": "탈퇴 처리된 계정입니다."}, status=403)
-    if not existing.is_active:
+    if not user.is_active:
         return JsonResponse({"ok": False, "message": "정지된 계정입니다. 관리자에게 문의해 주세요."}, status=403)
-
-    user = authenticate(request, username=existing.username, password=password)
-    if user is None:
-        return JsonResponse({"ok": False, "message": "비밀번호가 일치하지 않습니다."}, status=400)
 
     login(request, user)
     payload = _profile_payload(user)
@@ -195,7 +209,13 @@ def logout_api(request):
 def me_api(request):
     if not request.user.is_authenticated:
         return JsonResponse({"authenticated": False})
-    return JsonResponse(_profile_payload(request.user))
+    payload = _profile_payload(request.user)
+    if shared_enabled() and not payload["is_admin"]:
+        shared = resolve_shared_login(request.user.username, request.user)
+        payload["needs_guardian"] = needs_guardian_prompt(shared, request.user)
+        if payload["needs_guardian"]:
+            payload["name"] = ""
+    return JsonResponse(payload)
 
 
 @ensure_csrf_cookie
@@ -277,7 +297,9 @@ def find_api(request):
             shared = get_shared_by_phone(digits)
         except SharedAuthError as exc:
             return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
-        if shared is not None and shared.name.replace(" ", "") == name.replace(" ", ""):
+        guardian = (getattr(shared, "guardian_name", None) or "").strip() if shared is not None else ""
+        label = guardian or ((shared.name or "") if shared is not None and int(shared.herium_linked or 0) == 1 else "")
+        if shared is not None and label.replace(" ", "") == name.replace(" ", ""):
             shown = (shared.username or "").strip() or username_from_note(shared.herium_note) or shared.phone
             if shown == shared.phone or shown == normalize_phone(shared.phone):
                 message = f"회원님의 로그인 번호는 {shared.phone} 입니다. 헤리움 아이디가 있으면 아이디로도 로그인할 수 있습니다."
@@ -291,3 +313,109 @@ def find_api(request):
         if user is None or not _get_profile(user) or _get_profile(user).name != name:
             return JsonResponse({"ok": False, "message": "일치하는 회원 정보가 없습니다."}, status=400)
     return JsonResponse({"ok": True, "id": user.username, "message": f"회원님의 아이디는 {user.username} 입니다."})
+
+
+def _shared_for_user(user):
+    if not shared_enabled():
+        return None
+    return resolve_shared_login(user.username, user)
+
+
+@ensure_csrf_cookie
+def guardian_page(request):
+    if not request.user.is_authenticated:
+        return redirect("/login.html")
+    return render(request, "guardian.html")
+
+
+@require_POST
+def guardian_api(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"ok": False, "message": "로그인이 필요합니다."}, status=401)
+    data = _json_body(request)
+    name = (data.get("name") or "").strip()
+    if len(name) < 2:
+        return JsonResponse({"ok": False, "message": "보호자 성함을 입력해 주세요."}, status=400)
+    user = request.user
+    user.first_name = name
+    user.save(update_fields=["first_name"])
+    profile = _get_profile(user)
+    Profile.objects.update_or_create(
+        user=user,
+        defaults={
+            "name": name,
+            "phone": profile.phone if profile else "",
+            "role": profile.role if profile else Profile.ROLE_MEMBER,
+            "status": profile.status if profile else Profile.STATUS_ACTIVE,
+        },
+    )
+    shared = _shared_for_user(user)
+    if shared is not None:
+        set_guardian_name(shared, name)
+    return JsonResponse({"ok": True, "redirect": "/main.html"})
+
+
+@ensure_csrf_cookie
+def account_page(request):
+    if not request.user.is_authenticated:
+        return redirect("/login.html")
+    return render(request, "account.html")
+
+
+@require_POST
+def profile_api(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"ok": False, "message": "로그인이 필요합니다."}, status=401)
+    data = _json_body(request)
+    name = (data.get("name") or "").strip()
+    phone = (data.get("phone") or "").strip()
+    email = (data.get("email") or "").strip()
+    current = data.get("currentPassword") or data.get("current_password") or ""
+    new_password = data.get("newPassword") or data.get("new_password") or ""
+    if len(name) < 2:
+        return JsonResponse({"ok": False, "message": "보호자 성함을 입력해 주세요."}, status=400)
+    digits = normalize_phone(phone)
+    if len(digits) < 10:
+        return JsonResponse({"ok": False, "message": "올바른 휴대폰 번호를 입력해 주세요."}, status=400)
+    user = request.user
+    shared = _shared_for_user(user)
+    if new_password:
+        if len(new_password) < 4:
+            return JsonResponse({"ok": False, "message": "새 비밀번호는 4자 이상이어야 합니다."}, status=400)
+        ok = False
+        if shared is not None:
+            from .scrypt_compat import verify_password
+            ok = verify_password(current, shared.password_hash)
+        if not ok:
+            ok = authenticate(request, username=user.username, password=current) is not None
+        if not ok:
+            return JsonResponse({"ok": False, "message": "현재 비밀번호가 일치하지 않습니다."}, status=400)
+    if shared is not None:
+        try:
+            update_shared_phone(shared, digits)
+            set_guardian_name(shared, name)
+            if new_password:
+                update_shared_password(shared, new_password)
+        except SharedAuthError as exc:
+            return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
+    if new_password:
+        user.set_password(new_password)
+    user.email = email
+    user.first_name = name
+    user.save()
+    profile = _get_profile(user)
+    role = profile.role if profile else Profile.ROLE_MEMBER
+    status = profile.status if profile else Profile.STATUS_ACTIVE
+    profile, _created = Profile.objects.update_or_create(
+        user=user,
+        defaults={"name": name, "phone": format_phone_or_digits(digits), "role": role, "status": status},
+    )
+    cache = getattr(user._state, "fields_cache", None)
+    if cache is not None:
+        cache["profile"] = profile
+    return JsonResponse({"ok": True, "message": "개인정보를 저장했습니다.", "user": _profile_payload(user)})
+
+
+def format_phone_or_digits(digits):
+    from .shared_users import format_phone
+    return format_phone(digits) or digits

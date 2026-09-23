@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>보호자 성함 | 헤리움 케어센터</title>
+    <link rel="stylesheet" href="main.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="top-bar">
+    <div class="user-menu">
+        <a href="login.html">로그인</a>
+        <a href="signup.html">회원가입</a>
+    </div>
+</div>
+<div class="header-top-row">
+    <div class="header-top-inner">
+        <div class="logo">
+            <a href="main.html"><img src="img/logo.png" alt="홈페이지 로고"></a>
+        </div>
+    </div>
+</div>
+<div class="auth-wrap">
+    <div class="auth-inner">
+        <section class="auth-hero">
+            <span class="eyebrow">헤리움 케어센터</span>
+            <h1>보호자 성함이 <span>필요합니다</span></h1>
+            <p>의료기 회원 이름과 헤리움 보호자 성함은 따로 저장됩니다.<br>헤리움을 이용하려면 보호자 성함을 입력해 주세요.</p>
+        </section>
+        <section class="auth-card">
+            <h2>보호자 성함</h2>
+            <div class="auth-message" id="authMessage"></div>
+            <form id="guardianForm">
+                <div class="auth-field">
+                    <label for="guardianName">보호자 성함</label>
+                    <div class="auth-input">
+                        <i class="fas fa-id-card field-icon"></i>
+                        <input type="text" id="guardianName" name="name" placeholder="보호자 성함">
+                    </div>
+                </div>
+                <button type="submit" class="auth-submit">저장하고 들어가기</button>
+            </form>
+        </section>
+    </div>
+</div>
+<script src="auth.js"></script>
+</body>
+</html>

@@ -93,9 +93,15 @@
             api("/accounts/me/").then(function (result) {
                 const data = result.data || {};
                 if (data.authenticated) {
+                    if (data.needs_guardian && window.location.pathname.indexOf("guardian.html") < 0) {
+                        window.location.href = BASE + "guardian.html";
+                        return;
+                    }
                     var extra = data.is_admin ? '<a href="/staff/">관리페이지</a>' : "";
+                    var who = data.needs_guardian ? "회원" : (data.name || "회원");
                     menu.innerHTML =
-                        '<span class="user-name">' + data.name + "님</span>" + extra +
+                        '<span class="user-name">' + who + "님</span>" + extra +
+                        '<a href="' + BASE + 'account.html">내 정보</a>' +
                         '<a href="/accounts/logout/" id="logoutLink">로그아웃</a>';
                     const logout = document.getElementById("logoutLink");
                     logout.addEventListener("click", function (e) {
@@ -278,6 +284,75 @@
         }
     };
 
+    const GuardianForm = {
+        init: function () {
+            const form = document.getElementById("guardianForm");
+            if (!form) return;
+            const message = document.getElementById("authMessage");
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                const name = (form.querySelector('[name="name"]').value || "").trim();
+                if (name.length < 2) {
+                    showMessage(message, "보호자 성함을 입력해 주세요.", "error");
+                    return;
+                }
+                api("/accounts/guardian/", {
+                    method: "POST",
+                    headers: csrfHeaders(),
+                    body: JSON.stringify({ name: name })
+                }).then(function (result) {
+                    if (!result.ok) {
+                        showMessage(message, result.data.message || "저장하지 못했습니다.", "error");
+                        return;
+                    }
+                    window.location.href = result.data.redirect || BASE + "main.html";
+                });
+            });
+        }
+    };
+
+    const AccountForm = {
+        init: function () {
+            const form = document.getElementById("accountForm");
+            if (!form) return;
+            const message = document.getElementById("authMessage");
+            bindPasswordToggles(form);
+            api("/accounts/me/").then(function (result) {
+                const data = result.data || {};
+                if (!data.authenticated) {
+                    window.location.href = BASE + "login.html";
+                    return;
+                }
+                form.querySelector('[name="id"]').value = data.id || "";
+                form.querySelector('[name="name"]').value = data.name || "";
+                form.querySelector('[name="phone"]').value = data.phone || "";
+                form.querySelector('[name="email"]').value = data.email || "";
+            });
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                api("/accounts/profile/", {
+                    method: "POST",
+                    headers: csrfHeaders(),
+                    body: JSON.stringify({
+                        name: (form.querySelector('[name="name"]').value || "").trim(),
+                        phone: (form.querySelector('[name="phone"]').value || "").trim(),
+                        email: (form.querySelector('[name="email"]').value || "").trim(),
+                        currentPassword: form.querySelector('[name="currentPassword"]').value || "",
+                        newPassword: form.querySelector('[name="newPassword"]').value || ""
+                    })
+                }).then(function (result) {
+                    if (!result.ok) {
+                        showMessage(message, result.data.message || "저장하지 못했습니다.", "error");
+                        return;
+                    }
+                    showMessage(message, result.data.message || "저장했습니다.", "ok");
+                    form.querySelector('[name="currentPassword"]').value = "";
+                    form.querySelector('[name="newPassword"]').value = "";
+                });
+            });
+        }
+    };
+
     window.AuthService = AuthService;
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -285,6 +360,8 @@
         LoginForm.init();
         SignupForm.init();
         FindAccountForm.init();
+        GuardianForm.init();
+        AccountForm.init();
         document.querySelectorAll(".js-close-popup").forEach(function (btn) {
             btn.addEventListener("click", function () {
                 const popup = document.getElementById("sitePopup");
