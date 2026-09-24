@@ -67,10 +67,16 @@ def robots_txt(request):
     scheme = "https" if request.is_secure() else request.scheme
     host = request.get_host()
     body = (
+        "User-agent: Yeti\n"
+        "Allow: /\n"
+        "\n"
         "User-agent: *\n"
         "Allow: /\n"
         "Disallow: /staff/\n"
         "Disallow: /admin/\n"
+        "Disallow: /account.html\n"
+        "Disallow: /guardian.html\n"
+        "Disallow: /accounts/\n"
         f"Sitemap: {scheme}://{host}/sitemap.xml\n"
     )
     return HttpResponse(body, content_type="text/plain")
