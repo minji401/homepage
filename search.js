@@ -38,12 +38,12 @@
         { type: "menu", tab: "about", title: "경영공시", body: "일반현황, 기관운영, 주요사업 및 경영성과, 대내외 평가 등 경영공시 항목을 안내합니다.", path: "기관 소개 > 경영공시", url: "about/disclosure.html", date: "2026-03-03" },
         { type: "menu", tab: "about", title: "제도소개", body: "노인장기요양보험의 목적, 적용대상, 장기요양인정 절차를 안내합니다.", path: "기관 소개 > 제도소개", url: "about/system.html", date: "2026-03-03" },
         { type: "menu", tab: "about", title: "협력기관", body: "지역 의료기관 및 복지기관과 협력하여 어르신 건강을 지원합니다.", path: "기관 소개 > 협력기관", url: "about/partners.html", date: "2026-03-03" },
-        { type: "menu", tab: "service", title: "주야간보호", body: "주야간보호 서비스로 낮 동안 식사, 프로그램, 건강관리를 제공합니다.", path: "서비스 안내 > 주야간보호", url: "service/nighttime.html", date: "2026-04-01" },
-        { type: "menu", tab: "service", title: "요양원", body: "24시간 입소 요양 서비스와 맞춤형 케어를 안내합니다.", path: "서비스 안내 > 요양원", url: "service/nursing.html", date: "2026-04-01" },
+        { type: "menu", tab: "service", title: "주야간보호", body: "영천 주야간보호와 치매전담 주야간보호, 치매특화형으로 낮 동안 식사와 건강관리를 제공합니다.", path: "서비스 안내 > 주야간보호", url: "service/nighttime.html", date: "2026-04-01" },
+        { type: "menu", tab: "service", title: "요양원", body: "영천 요양원에서 24시간 입소 생활과 치매전담형 케어를 안내합니다.", path: "서비스 안내 > 요양원", url: "service/nursing.html", date: "2026-04-01" },
         { type: "menu", tab: "service", title: "가정방문급여", body: "방문요양과 방문목욕 등 가정으로 찾아가는 재가급여를 안내합니다.", path: "서비스 안내 > 가정방문급여", url: "service/home_visit.html", date: "2026-04-02" },
-        { type: "menu", tab: "service", title: "의료기", body: "휠체어, 보행기, 욕창 예방 용품 등 복지용구·의료기 판매를 안내합니다.", path: "서비스 안내 > 의료기", url: "service/medical.html", date: "2026-09-18" },
+        { type: "menu", tab: "service", title: "의료기", body: "복지용구, 비급여 일반의료기, 장애인 용품은 현대 의료기에서 안내합니다. 위치는 헤리움과 같은 영천시 역전로 16입니다.", path: "서비스 안내 > 의료기", url: "service/medical.html", date: "2026-09-18" },
         { type: "menu", tab: "service", title: "방문목욕", body: "이동식 목욕 차량과 방문목욕 서비스를 안내합니다.", path: "서비스 안내 > 방문목욕", url: "service/home_bath.html", date: "2026-04-02" },
-        { type: "menu", tab: "service", title: "치매·재활 프로그램", body: "치매 예방과 인지 자극, 재활 운동 프로그램을 운영합니다.", path: "서비스 안내 > 치매·재활 프로그램", url: "service/dementia.html", date: "2026-04-03" },
+        { type: "menu", tab: "service", title: "치매·재활 프로그램", body: "영천 치매특화 프로그램으로 인지 자극과 재활을 매일 진행합니다.", path: "서비스 안내 > 치매·재활 프로그램", url: "service/dementia.html", date: "2026-04-03" },
         { type: "menu", tab: "service", title: "맞춤형 케어 일정표", body: "월간 프로그램과 맞춤형 케어 일정을 안내합니다.", path: "서비스 안내 > 맞춤형 케어 일정표", url: "service/monthly.html", date: "2026-04-03" },
         { type: "menu", tab: "admission", title: "서비스 이용 절차", body: "상담, 시설 견학, 입소 계약 등 서비스 이용 절차를 안내합니다.", path: "이용 방법 > 서비스 이용 절차", url: "admission/procedure.html", date: "2026-05-01" },
         { type: "menu", tab: "admission", title: "이용 요금 및 급여 안내", body: "장기요양 급여와 본인부담금, 이용요금 안내입니다.", path: "이용 방법 > 이용 요금 및 급여 안내", url: "admission/fees.html", date: "2026-05-01" },
@@ -407,11 +407,14 @@
         itemHtml: function (item, q) {
             const badgeClass = item.type === "board" ? " is-board" : "";
             const badgeText = item.type === "board" ? "게시판" : "메뉴";
+            const external = /^https?:\/\//.test(item.url);
+            const href = external ? item.url : BASE + item.url;
+            const extra = external ? ' target="_blank" rel="noopener"' : "";
             return (
                 '<article class="result-item">' +
                     '<div class="result-item-head">' +
                         '<span class="result-badge' + badgeClass + '">' + badgeText + "</span>" +
-                        '<a class="result-item-title" href="' + BASE + item.url + '">' + highlight(item.title, q) + "</a>" +
+                        '<a class="result-item-title" href="' + href + '"' + extra + '>' + highlight(item.title, q) + "</a>" +
                     "</div>" +
                     '<div class="result-item-meta">' +
                         "<span>" + escapeHtml(item.path) + "</span>" +
