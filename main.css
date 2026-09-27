@@ -338,6 +338,25 @@ header:hover .dropdown {
 div h1 { position: absolute; top: 50px; left: 330px; color: #333; font-size: 2rem; font-weight: 400; letter-spacing: 1px; line-height: 1.3; z-index: 25; font-family: 'Noto Serif KR', serif; }
 div h1 span { font-weight: 800; font-size: 2.3rem; color: #b38b4d; font-family: 'Noto Serif KR', serif; }
 div h2 { color: white; font-size: 3.5rem; z-index: 20; font-weight: bold; letter-spacing: -1px; }
+.hero-phone-num {
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 700;
+    position: absolute;
+    top: 358px;
+    left: 350px;
+}
+.hero-phone-num a { color: inherit; text-decoration: none; }
+.hero-phone-icon {
+    font-size: 30px;
+    color: #b38b4d;
+    position: relative;
+    left: 780px;
+    top: 368px;
+    z-index: 30;
+    background: white;
+    padding: 20px;
+    border-radius: 50%;
+}
 
 /* ==========================================================================
    7. 중간 콘텐츠 (Notice & Diet Table)
@@ -376,6 +395,8 @@ div h2 { color: white; font-size: 3.5rem; z-index: 20; font-weight: bold; letter
 .slide-wrapper { display: flex; gap: 20px; }
 .slide-item { flex: 0 0 calc(33.333% - 14px); height: 400px; background-color: #ddd; border-radius: 10px; overflow: hidden; }
 .slide-item img { width: 100%; height: 100%; object-fit: cover; }
+.m-shortcuts { display: none; }
+.gallery-controls { display: none; }
 
 /* ==========================================================================
    9. 메인 비주얼 슬라이더 (메인 전용)
@@ -1115,6 +1136,12 @@ body.is-search-open header .dropdown { display: none !important; }
 .auth-links a + a {
     border-left: 1px solid #ddd;
 }
+.auth-help {
+    margin: 18px 0 8px;
+    color: #6b6256;
+    font-size: 0.92rem;
+    line-height: 1.7;
+}
 
 .auth-or {
     display: flex;
@@ -1200,4 +1227,173 @@ body.is-search-open header .dropdown { display: none !important; }
     text-align: center;
     font-size: 0.8rem;
     color: #aaa;
+}
+
+/* ==========================================================================
+   15. 모바일
+   ========================================================================== */
+@media (max-width: 860px) {
+    .top-bar { padding: 8px 16px; }
+    .top-bar-inner { width: 100%; }
+    .user-menu { font-size: 0.92rem; }
+
+    .header-top-inner,
+    .header-inner,
+    .search-overlay-inner {
+        width: auto;
+        max-width: 100%;
+        margin-left: 16px;
+        margin-right: 16px;
+    }
+    .header-top-inner { height: auto; padding: 12px 0; }
+    .logo img { height: 52px; }
+    .header-right { gap: 16px; }
+    .header-right a, .sp span:not(.all-menu-btn span) { font-size: 0.95rem; }
+
+    header {
+        background: transparent;
+        border: none;
+    }
+    header::after,
+    header:hover::after { display: none; height: 0; min-width: 0; }
+    .header-inner { display: none; }
+    .dropdown,
+    header:hover .dropdown,
+    .main-nav > ul > li:hover .dropdown { display: none !important; }
+
+    .main-visual-row,
+    .middle-content,
+    .bottom-gallery,
+    .search-page {
+        width: auto;
+        margin-left: 16px;
+        margin-right: 16px;
+    }
+    .main-visual-row { flex-direction: column; gap: 16px; margin-top: 16px; }
+    .main-slider { order: 1; }
+    .m-shortcuts { order: 2; }
+    .box { order: 3; }
+    .m-shortcuts {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        width: 100%;
+        margin: 0;
+        background: #e6e0d4;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .m-shortcuts a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 78px;
+        padding: 12px 4px;
+        background: #faf8f3;
+        color: #3d3830;
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.25;
+        text-align: center;
+    }
+    .m-shortcuts i { color: #b38b4d; font-size: 1.25rem; }
+    .box {
+        width: 100%;
+        height: auto;
+        border-radius: 22px;
+        padding: 22px 18px 0;
+    }
+    .box::before {
+        width: 100%;
+        opacity: 0.16;
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+    .box h1 {
+        position: static;
+        font-size: 1.35rem;
+        line-height: 1.45;
+    }
+    .box h1 span { font-size: 1.5rem; }
+    .quick-icons { display: none; }
+    .box2 { display: none; }
+    .hero-call {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 16px -18px 0;
+        padding: 14px 18px;
+        background: #b38b4d;
+        border-radius: 0 0 22px 22px;
+    }
+    .hero-phone-num {
+        position: static;
+        font-size: 1.55rem;
+        color: #fff;
+    }
+    .hero-phone-icon {
+        position: static;
+        left: auto;
+        top: auto;
+        font-size: 18px;
+        padding: 12px;
+    }
+    .main-slider { width: 100%; height: 240px; border-radius: 22px; }
+
+    .middle-content { flex-direction: column; gap: 28px; margin-top: 28px; }
+    .notice-section,
+    .diet-section { width: 100%; position: static; top: auto; }
+    .service-grid-section { display: none; }
+    .notice-container,
+    .diet-card { height: auto; }
+    .section-header, .section-header h3 { font-size: 1.3rem; }
+    .grid-item { height: 110px; }
+
+    .bottom-gallery { margin-top: 28px; }
+    .slide-container { position: relative; padding: 0; overflow: hidden; }
+    .slide-wrapper { flex-direction: row; gap: 0; width: 100%; }
+    .slide-item { flex: 0 0 100%; height: 230px; border-radius: 0; }
+    .gallery-controls {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        position: absolute;
+        left: 50%;
+        bottom: 14px;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 25px;
+        z-index: 2;
+    }
+    .gallery-controls button {
+        border: none;
+        background: none;
+        color: #fff;
+        font-size: 0.9rem;
+        cursor: pointer;
+        padding: 2px 4px;
+    }
+
+    .footer { margin-top: 48px; padding: 28px 16px 40px; }
+    .footer-inner { width: auto; }
+    .footer-info { flex-direction: column; gap: 12px; }
+    .footer-logo img { margin-top: 0; height: 56px; }
+    .info-text span { display: block; margin: 0 0 4px; }
+    .info-text span:not(:last-child)::after { content: none; }
+
+    .search-overlay-inner { padding: 28px 0 24px; }
+    .search-overlay-field input { font-size: 1.15rem; }
+    .search-recommend { flex-direction: column; gap: 10px; }
+    .search-page { margin-top: 24px; }
+    .search-page-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .search-page-head h2 { font-size: 1.45rem; }
+    .search-filter-box { padding: 18px 14px; }
+    .search-filter-keyword { flex-direction: column; }
 }

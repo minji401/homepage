@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>헤리움 케어센터 | 영천 요양원·주야간보호</title>
     <meta name="description" content="영천 요양원과 주야간보호, 치매전담 주야간보호, 치매특화 프로그램을 운영하는 평가 A 장기요양기관 헤리움 케어센터입니다. 영천시 역전로 16.">
     <meta property="og:type" content="website">
@@ -56,10 +57,10 @@
         <div class="header-right">
             <a href="#" class="js-open-search" aria-expanded="false" aria-controls="searchOverlay"><i class="fas fa-search"> 검색</i></a>
             <a class="sp" href="sitemap.html">
-                <span class="all-menu-btn" title="사이트맵" aria-hidden="true">
+                <span class="all-menu-btn" title="전체 메뉴" aria-hidden="true">
                     <span></span><span></span><span></span>
                 </span>
-                <span>사이트맵</span>
+                <span>전체 메뉴</span>
             </a>
         </div>
     </div>
@@ -172,10 +173,9 @@
             </a>
         </div>
 
-        <div>
-            <h2 style="font-family: 'Noto Serif KR', serif; font-weight: 700; position: absolute; top: 358px; left:350px;"><a href="tel:{{ info.phone|default:'054-334-9986' }}" style="color:inherit;text-decoration:none;">{{ info.phone|default:"054-334-9986" }}</a></h2>
-            <!-- 전화 이미지를 아이콘으로 변경 -->
-            <i class="fa-solid fa-phone call" style="font-size: 30px; color: #b38b4d; position:relative; left:780px; top:368px; z-index: 30; background: white; padding: 20px; border-radius: 50%;"></i>
+        <div class="hero-call">
+            <h2 class="hero-phone-num"><a href="tel:{{ info.phone|default:'054-334-9986' }}">{{ info.phone|default:"054-334-9986" }}</a></h2>
+            <i class="fa-solid fa-phone call hero-phone-icon" aria-hidden="true"></i>
         </div>
 
         <div class="box2"></div>
@@ -206,6 +206,17 @@
             </div>
         </div>
     </div>
+
+    <nav class="m-shortcuts" aria-label="자주 찾는 메뉴">
+        <a href="service/nighttime.html"><i class="fa-solid fa-cloud-sun"></i><span>주야간보호</span></a>
+        <a href="service/nursing.html"><i class="fa-solid fa-house-medical"></i><span>요양원</span></a>
+        <a href="admission/period.html"><i class="fa-solid fa-id-card"></i><span>등급신청</span></a>
+        <a href="admission/tour.html"><i class="fa-solid fa-door-open"></i><span>시설견학</span></a>
+        <a href="community/inquiry.html"><i class="fa-solid fa-headset"></i><span>상담문의</span></a>
+        <a href="about/location.html"><i class="fa-solid fa-location-dot"></i><span>오시는 길</span></a>
+        <a href="admission/fees.html"><i class="fa-solid fa-won-sign"></i><span>이용요금</span></a>
+        <a href="community/menu.html"><i class="fa-solid fa-utensils"></i><span>식단표</span></a>
+    </nav>
 </div>
 
 <div class="middle-content">
@@ -292,11 +303,16 @@
     
     <div class="slide-container">
         <div class="slide-wrapper">
-            <div class="slide-item"><img src="img/gallery1.jpg?v={{ img_v }}" alt="1"></div>
-            <div class="slide-item"><img src="img/gallery2.jpg?v={{ img_v }}" alt="2"></div>
-            <div class="slide-item"><img src="img/gallery3.jpg?v={{ img_v }}" alt="3"></div>
-            <div class="slide-item"><img src="img/gallery4.jpg?v={{ img_v }}" alt="4"></div>
-            <div class="slide-item"><img src="img/gallery5.jpg?v={{ img_v }}" alt="5"></div>
+            <div class="slide-item"><img src="img/gallery1.jpg?v={{ img_v }}" alt="활동 사진 1"></div>
+            <div class="slide-item"><img src="img/gallery2.jpg?v={{ img_v }}" alt="활동 사진 2"></div>
+            <div class="slide-item"><img src="img/gallery3.jpg?v={{ img_v }}" alt="활동 사진 3"></div>
+            <div class="slide-item"><img src="img/gallery4.jpg?v={{ img_v }}" alt="활동 사진 4"></div>
+            <div class="slide-item"><img src="img/gallery5.jpg?v={{ img_v }}" alt="활동 사진 5"></div>
+        </div>
+        <div class="gallery-controls">
+            <button type="button" id="gallery-prev" aria-label="이전 사진"><i class="fas fa-chevron-left"></i></button>
+            <span><span id="gallery-current">1</span> / <span id="gallery-total">5</span></span>
+            <button type="button" id="gallery-next" aria-label="다음 사진"><i class="fas fa-chevron-right"></i></button>
         </div>
     </div>
 </div>
@@ -307,7 +323,7 @@
             <a href="#" class="highlight">개인정보처리방침</a>
             <a href="#">이용약관</a>
             <a href="#">이메일무단수집거부</a>
-            <a href="sitemap.html">사이트맵</a>
+            <a href="sitemap.html">전체 메뉴</a>
             <a href="about/location.html">찾아오시는 길</a>
             <div class="footer-sns">
                 <a href="{% firstof info.blog_url "#" %}" class="footer-sns-btn" title="블로그" aria-label="블로그"><span>b</span></a>

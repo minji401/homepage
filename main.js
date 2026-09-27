@@ -3,10 +3,10 @@
    ========================================================================== */
 const galleryWrapper = document.querySelector('.slide-container .slide-wrapper');
 const galleryItems = document.querySelectorAll('.slide-container .slide-item');
-const galleryItemsToShow = 3; 
-const gallerySlideWidth = 460; 
+const galleryItemsToShow = 3;
+const gallerySlideWidth = 460;
+const galleryMobileQuery = window.matchMedia('(max-width: 860px)');
 
-// 앞의 사진들을 복사해서 뒤에 붙이기
 for (let i = 0; i < galleryItemsToShow; i++) {
     const clone = galleryItems[i].cloneNode(true);
     galleryWrapper.appendChild(clone);
@@ -14,21 +14,80 @@ for (let i = 0; i < galleryItemsToShow; i++) {
 
 let galleryIndex = 0;
 const galleryTotal = galleryItems.length;
+const galleryCurrent = document.getElementById('gallery-current');
+const galleryTotalLabel = document.getElementById('gallery-total');
+if (galleryTotalLabel) galleryTotalLabel.textContent = galleryTotal;
+
+function galleryIsMobile() {
+    return galleryMobileQuery.matches;
+}
+
+function galleryStepWidth() {
+    if (!galleryIsMobile()) return gallerySlideWidth;
+    const box = document.querySelector('.slide-container');
+    return box ? box.clientWidth : 0;
+}
+
+function sizeGalleryItems() {
+    const items = galleryWrapper.querySelectorAll('.slide-item');
+    if (!galleryIsMobile()) {
+        items.forEach(function (item) {
+            item.style.flex = '';
+            item.style.width = '';
+        });
+        galleryWrapper.style.gap = '';
+        return;
+    }
+    const width = galleryStepWidth();
+    galleryWrapper.style.gap = '0px';
+    items.forEach(function (item) {
+        item.style.flex = '0 0 ' + width + 'px';
+        item.style.width = width + 'px';
+    });
+}
+
+function paintGallery(animate) {
+    sizeGalleryItems();
+    galleryWrapper.style.transition = animate ? 'transform 0.5s ease' : 'none';
+    galleryWrapper.style.transform = 'translateX(-' + (galleryIndex * galleryStepWidth()) + 'px)';
+    if (galleryCurrent) {
+        const shown = galleryIndex % galleryTotal;
+        galleryCurrent.textContent = String(shown + 1);
+    }
+}
 
 function nextGallerySlide() {
     galleryIndex++;
-    galleryWrapper.style.transition = 'transform 0.5s ease';
-    galleryWrapper.style.transform = `translateX(-${galleryIndex * gallerySlideWidth}px)`;
-
+    paintGallery(true);
     if (galleryIndex === galleryTotal) {
-        setTimeout(() => {
-            galleryWrapper.style.transition = 'none';
+        setTimeout(function () {
             galleryIndex = 0;
-            galleryWrapper.style.transform = `translateX(0px)`;
+            paintGallery(false);
         }, 500);
     }
 }
+
+function prevGallerySlide() {
+    if (galleryIndex <= 0) {
+        galleryIndex = galleryTotal - 1;
+        paintGallery(false);
+        return;
+    }
+    galleryIndex--;
+    paintGallery(true);
+}
+
+paintGallery(false);
 setInterval(nextGallerySlide, 3000);
+
+const galleryPrev = document.getElementById('gallery-prev');
+const galleryNext = document.getElementById('gallery-next');
+if (galleryPrev) galleryPrev.addEventListener('click', prevGallerySlide);
+if (galleryNext) galleryNext.addEventListener('click', nextGallerySlide);
+window.addEventListener('resize', function () {
+    galleryIndex = 0;
+    paintGallery(false);
+});
 
 
 /* ==========================================================================

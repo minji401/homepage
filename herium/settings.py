@@ -45,6 +45,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "herium.middleware.StagingAuthMiddleware",
+    "herium.middleware.SecurityHeadersMiddleware",
     "herium.middleware.TrustCsrfOriginMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -146,7 +148,7 @@ elif not _running_tests:
     logger.info("shared sqlite configured")
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 4}},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
 ]
 
 LANGUAGE_CODE = "ko-kr"
@@ -170,8 +172,17 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
 
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
+SITE_URL = os.environ.get("SITE_URL", "https://heriumcare.com").rstrip("/")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587") or "587")
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "true").lower() in ("1", "true", "yes")
+DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_FROM", "") or EMAIL_HOST_USER or "noreply@heriumcare.com"
 CSRF_FAILURE_VIEW = "herium.csrf.csrf_failure"
 CSRF_TRUSTED_ORIGINS = [
     "https://heriumcare.com",

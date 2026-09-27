@@ -1,3 +1,4 @@
+cryptography>=43
 Django>=5.1,<5.3
 gunicorn
 openpyxl

@@ -6,6 +6,7 @@ urlpatterns = [
     path("staff/", views.dashboard, name="staff_dashboard"),
     path("staff/members/", views.members, name="staff_members"),
     path("staff/members/<int:user_id>/", views.member_detail, name="staff_member_detail"),
+    path("staff/password-help/", views.password_help, name="staff_password_help"),
     path("staff/posts/<int:post_id>/edit/", views.post_edit, name="staff_post_edit"),
     path("staff/posts/<int:post_id>/", views.post_action, name="staff_post_action"),
     path("staff/posts/<slug:slug>/bulk/", views.posts_bulk, name="staff_posts_bulk"),

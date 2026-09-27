@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
+import secrets
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -12,6 +14,7 @@ from django.db import IntegrityError, connections
 from django.db.utils import DatabaseError
 
 from .models import Profile, SharedUser
+from .password_policy import LOCK_LIMIT, lock_message, lock_until
 from .scrypt_compat import hash_password, verify_password
 
 logger = logging.getLogger("herium.shared")
@@ -46,6 +49,12 @@ def format_phone(digits):
 
 def is_mobile(digits):
     return bool(digits) and digits.startswith("01") and len(digits) in (10, 11) and digits[2] in "016789"
+
+
+def names_match(left, right):
+    a = (left or "").replace(" ", "")
+    b = (right or "").replace(" ", "")
+    return bool(a) and a == b
 
 
 def username_from_note(note):
@@ -84,6 +93,8 @@ _USER_COLUMNS = (
     ("herium_relation", "TEXT"),
     ("herium_note", "TEXT"),
     ("guardian_name", "TEXT"),
+    ("login_failures", "INTEGER NOT NULL DEFAULT 0"),
+    ("login_locked_until", "TEXT"),
 )
 
 
@@ -130,6 +141,32 @@ def ensure_shared_schema():
             if name in existing:
                 continue
             cursor.execute(f"ALTER TABLE users ADD COLUMN {name} {coltype}")
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS password_resets (
+              id TEXT PRIMARY KEY,
+              user_id TEXT NOT NULL,
+              token_hash TEXT NOT NULL,
+              expires_at TEXT NOT NULL,
+              used_at TEXT,
+              created_at TEXT NOT NULL
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS password_help_requests (
+              id TEXT PRIMARY KEY,
+              user_id TEXT NOT NULL,
+              name_enc TEXT NOT NULL,
+              phone_enc TEXT NOT NULL,
+              site TEXT NOT NULL,
+              status TEXT NOT NULL DEFAULT 'open',
+              created_at TEXT NOT NULL,
+              closed_at TEXT
+            )
+            """
+        )
     for row in _shared_qs().all().iterator():
         if (row.username or "").strip():
             continue
@@ -139,6 +176,183 @@ def ensure_shared_schema():
         row.username = parsed
         row.save(update_fields=["username"], using="shared")
     _schema_ready = True
+
+
+def get_shared_by_email(email):
+    value = (email or "").strip()
+    if "@" not in value:
+        return None
+    ensure_shared_schema()
+    return _shared_qs().filter(email__iexact=value).first()
+
+
+def ensure_login_open(shared):
+    message = lock_message(shared.login_locked_until)
+    if message:
+        raise SharedAuthError(message, 423)
+    if shared.login_locked_until:
+        shared.login_failures = 0
+        shared.login_locked_until = None
+        shared.save(update_fields=["login_failures", "login_locked_until"], using="shared")
+
+
+def note_login_failure(shared):
+    count = int(shared.login_failures or 0) + 1
+    if count >= LOCK_LIMIT:
+        until = lock_until()
+        shared.login_failures = count
+        shared.login_locked_until = until.isoformat()
+        shared.save(update_fields=["login_failures", "login_locked_until"], using="shared")
+        raise SharedAuthError(lock_message(until), 423)
+    shared.login_failures = count
+    shared.save(update_fields=["login_failures"], using="shared")
+
+
+def clear_login_failure(shared):
+    if not int(shared.login_failures or 0) and not shared.login_locked_until:
+        return
+    shared.login_failures = 0
+    shared.login_locked_until = None
+    shared.save(update_fields=["login_failures", "login_locked_until"], using="shared")
+
+
+def issue_reset_token(user_id):
+    from datetime import timedelta
+
+    raw = secrets.token_urlsafe(32)
+    digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    now = datetime.now(timezone.utc)
+    expires = now + timedelta(minutes=30)
+    now_s = now.isoformat()
+    token_id = "pr_" + uuid4().hex
+    ensure_shared_schema()
+    with connections["shared"].cursor() as cursor:
+        cursor.execute(
+            "UPDATE password_resets SET used_at = %s WHERE user_id = %s AND used_at IS NULL",
+            [now_s, user_id],
+        )
+        cursor.execute(
+            """
+            INSERT INTO password_resets (id, user_id, token_hash, expires_at, used_at, created_at)
+            VALUES (%s, %s, %s, %s, NULL, %s)
+            """,
+            [token_id, user_id, digest, expires.isoformat(), now_s],
+        )
+    return raw
+
+
+def take_reset_token(raw):
+    if not raw:
+        return None
+    from .password_policy import parse_iso
+
+    digest = hashlib.sha256(str(raw).encode("utf-8")).hexdigest()
+    ensure_shared_schema()
+    with connections["shared"].cursor() as cursor:
+        cursor.execute(
+            "SELECT id, user_id, expires_at, used_at FROM password_resets WHERE token_hash = %s LIMIT 1",
+            [digest],
+        )
+        row = cursor.fetchone()
+        if not row or row[3]:
+            return None
+        expires = parse_iso(row[2])
+        if expires is None or expires <= datetime.now(timezone.utc):
+            return None
+        cursor.execute(
+            "UPDATE password_resets SET used_at = %s WHERE id = %s AND used_at IS NULL",
+            [datetime.now(timezone.utc).isoformat(), row[0]],
+        )
+        if cursor.rowcount != 1:
+            return None
+    return row[1]
+
+
+def member_without_email(name, phone):
+    shared = get_shared_by_phone(phone)
+    if shared is None or (shared.email or "").strip():
+        return None
+    candidates = [(shared.guardian_name or "").strip(), (shared.name or "").strip()]
+    if not any(names_match(name, item) for item in candidates):
+        return None
+    return shared
+
+
+def open_password_help(user_id, name, phone, site):
+    from cms.pii import encrypt_text
+
+    if not shared_enabled():
+        return
+    ensure_shared_schema()
+    now_s = datetime.now(timezone.utc).isoformat()
+    with connections["shared"].cursor() as cursor:
+        cursor.execute(
+            "SELECT id FROM password_help_requests WHERE user_id = %s AND status = 'open' LIMIT 1",
+            [user_id],
+        )
+        if cursor.fetchone():
+            return
+        cursor.execute(
+            """
+            INSERT INTO password_help_requests
+              (id, user_id, name_enc, phone_enc, site, status, created_at, closed_at)
+            VALUES (%s, %s, %s, %s, %s, 'open', %s, NULL)
+            """,
+            ["ph_" + uuid4().hex, user_id, encrypt_text(name), encrypt_text(phone), site, now_s],
+        )
+
+
+def list_password_help():
+    from cms.pii import decrypt_text
+
+    if not shared_enabled():
+        return []
+    ensure_shared_schema()
+    with connections["shared"].cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT id, user_id, name_enc, phone_enc, site, created_at
+            FROM password_help_requests
+            WHERE status = 'open'
+            ORDER BY created_at DESC
+            """
+        )
+        rows = cursor.fetchall()
+    return [
+        {
+            "id": row[0],
+            "user_id": row[1],
+            "name": decrypt_text(row[2]),
+            "phone": decrypt_text(row[3]),
+            "site": row[4],
+            "created_at": row[5],
+        }
+        for row in rows
+    ]
+
+
+def close_password_help(request_id):
+    if not shared_enabled():
+        return False
+    ensure_shared_schema()
+    now_s = datetime.now(timezone.utc).isoformat()
+    with connections["shared"].cursor() as cursor:
+        cursor.execute(
+            """
+            UPDATE password_help_requests
+            SET status = 'done', closed_at = %s
+            WHERE id = %s AND status = 'open'
+            """,
+            [now_s, request_id],
+        )
+        return cursor.rowcount == 1
+
+
+def get_shared_by_id(user_id):
+    if not user_id:
+        return None
+    ensure_shared_schema()
+    return _shared_qs().filter(pk=user_id).first()
 
 
 def get_shared_by_phone(phone):
@@ -352,7 +566,7 @@ def sync_local_user(shared, username_hint=""):
     return user
 
 
-def create_shared_user(*, name, phone, password, username="", relation="", as_guardian=True):
+def create_shared_user(*, name, phone, password, username="", relation="", as_guardian=True, email=""):
     digits = normalize_phone(phone)
     if len(digits) < 10:
         raise SharedAuthError("올바른 휴대폰 번호를 입력해 주세요.")
@@ -363,6 +577,9 @@ def create_shared_user(*, name, phone, password, username="", relation="", as_gu
     if username and get_shared_by_username(username):
         raise SharedAuthError("이미 사용 중인 아이디입니다.")
 
+    email = (email or "").strip()
+    if email and get_shared_by_email(email):
+        raise SharedAuthError("이미 사용 중인 이메일입니다.")
     note = f"herium_username={username}" if username else ""
     if as_guardian:
         note = _note_with_flag(note, "guardian_confirmed=1")
@@ -375,6 +592,7 @@ def create_shared_user(*, name, phone, password, username="", relation="", as_gu
         guardian_name=guardian,
         phone=digits,
         username=username or None,
+        email=email or None,
         password_hash=hash_password(password),
         role="user",
         herium_linked=1 if as_guardian else 0,
@@ -405,7 +623,11 @@ def login_with_shared(request, login_id, password):
     shared = resolve_shared_login(login_id, local)
     username_hint = _username_hint(login_id, local, shared)
 
+    if shared is not None:
+        ensure_login_open(shared)
+
     if shared is not None and verify_password(password, shared.password_hash):
+        clear_login_failure(shared)
         needs_guardian_prompt(shared)
         mark_herium_linked(
             shared,
@@ -422,8 +644,12 @@ def login_with_shared(request, login_id, password):
         django_user = authenticate(request, username=local.username, password=password)
 
     if django_user is None:
+        if shared is not None:
+            note_login_failure(shared)
         raise SharedAuthError("아이디 또는 비밀번호가 일치하지 않습니다.")
 
+    if shared is not None:
+        clear_login_failure(shared)
     _ensure_local_status(django_user)
     profile = getattr(django_user, "profile", None)
     digits = normalize_phone(profile.phone if profile else "")

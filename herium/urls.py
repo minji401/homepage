@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import include, path, re_path
 from django.utils.cache import patch_cache_control
 from django.views.static import serve as static_serve
@@ -11,6 +12,7 @@ def serve(request, path, document_root=None, show_indexes=False):
     return response
 
 urlpatterns = [
+    path("healthz", lambda request: HttpResponse("ok", content_type="text/plain")),
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),
     path("", include("cms.urls")),

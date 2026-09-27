@@ -30,6 +30,8 @@ class Profile(models.Model):
     phone = models.CharField("연락처", max_length=20)
     role = models.CharField("권한", max_length=20, choices=ROLE_CHOICES, default=ROLE_MEMBER)
     status = models.CharField("상태", max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
+    login_failures = models.IntegerField(default=0)
+    login_locked_until = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name = "회원 프로필"
@@ -51,7 +53,10 @@ class SharedUser(models.Model):
     guardian_name = models.TextField(null=True, blank=True)
     phone = models.TextField(unique=True)
     username = models.TextField(null=True, blank=True)
+    email = models.TextField(null=True, blank=True)
     password_hash = models.TextField()
+    login_failures = models.IntegerField(default=0)
+    login_locked_until = models.TextField(null=True, blank=True)
     role = models.TextField(default="user")
     herium_linked = models.IntegerField(default=0)
     herium_relation = models.TextField(null=True, blank=True)

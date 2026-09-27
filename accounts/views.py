@@ -1,36 +1,158 @@
 import json
-import secrets
-import string
+import logging
+import time
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
 from django.db.utils import OperationalError
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from .models import Profile
+from herium.middleware import registration_open
+from .password_policy import PASSWORD_RULE, password_error, lock_message, lock_until
 from .shared_users import (
     SharedAuthError,
+    clear_login_failure,
     create_shared_user,
     find_local_by_login,
+    format_phone,
+    get_shared_by_email,
     get_shared_by_phone,
-    get_shared_by_username,
+    is_mobile,
+    issue_reset_token,
     login_with_shared,
+    member_without_email,
     needs_guardian_prompt,
     normalize_phone,
+    open_password_help,
     resolve_shared_login,
     set_guardian_name,
     shared_enabled,
     shared_expected,
-    shared_matches_login,
-    sync_local_user,
+    take_reset_token,
     update_shared_password,
     update_shared_phone,
     username_from_note,
 )
+
+
+logger = logging.getLogger("herium")
+
+_LOGIN_WINDOW = 10 * 60
+_LOGIN_MAX = 8
+_login_fails = {}
+
+
+def _client_ip(request):
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip() or "unknown"
+    return request.META.get("REMOTE_ADDR") or "unknown"
+
+
+def _note_login_fail(ip):
+    now = time.time()
+    row = _login_fails.get(ip)
+    if not row or now - row["t"] > _LOGIN_WINDOW:
+        _login_fails[ip] = {"n": 1, "t": now}
+    else:
+        row["n"] += 1
+    if len(_login_fails) > 5000:
+        cutoff = now - _LOGIN_WINDOW
+        for key in list(_login_fails):
+            if _login_fails[key]["t"] < cutoff:
+                del _login_fails[key]
+
+
+def _login_blocked(ip):
+    row = _login_fails.get(ip)
+    if not row or time.time() - row["t"] > _LOGIN_WINDOW:
+        return False
+    return row["n"] >= _LOGIN_MAX
+
+
+def _clear_login_fail(ip):
+    _login_fails.pop(ip, None)
+
+
+_reset_hits = {}
+
+
+def _note_reset(ip):
+    now = time.time()
+    row = _reset_hits.get(ip)
+    if not row or now - row["t"] > _LOGIN_WINDOW:
+        _reset_hits[ip] = {"n": 1, "t": now}
+    else:
+        row["n"] += 1
+
+
+def _reset_blocked(ip):
+    row = _reset_hits.get(ip)
+    if not row or time.time() - row["t"] > _LOGIN_WINDOW:
+        return False
+    return row["n"] > 8
+
+
+_help_hits = {}
+
+
+def _note_help(ip):
+    now = time.time()
+    row = _help_hits.get(ip)
+    if not row or now - row["t"] > _LOGIN_WINDOW:
+        _help_hits[ip] = {"n": 1, "t": now}
+    else:
+        row["n"] += 1
+
+
+def _help_blocked(ip):
+    row = _help_hits.get(ip)
+    if not row or time.time() - row["t"] > _LOGIN_WINDOW:
+        return False
+    return row["n"] > 8
+
+
+def _profile_locked(profile):
+    if profile is None or not profile.login_locked_until:
+        return ""
+    message = lock_message(profile.login_locked_until)
+    if message:
+        return message
+    profile.login_failures = 0
+    profile.login_locked_until = None
+    profile.save(update_fields=["login_failures", "login_locked_until"])
+    return ""
+
+
+def _note_profile_failure(profile):
+    if profile is None:
+        return ""
+    count = int(profile.login_failures or 0) + 1
+    if count >= 5:
+        until = lock_until()
+        profile.login_failures = count
+        profile.login_locked_until = until
+        profile.save(update_fields=["login_failures", "login_locked_until"])
+        return lock_message(until)
+    profile.login_failures = count
+    profile.save(update_fields=["login_failures"])
+    return ""
+
+
+def _clear_profile_failure(profile):
+    if profile is None:
+        return
+    if not profile.login_failures and not profile.login_locked_until:
+        return
+    profile.login_failures = 0
+    profile.login_locked_until = None
+    profile.save(update_fields=["login_failures", "login_locked_until"])
 
 
 def _json_body(request):
@@ -85,6 +207,13 @@ def login_api(request):
     if not user_id or not password:
         return JsonResponse({"ok": False, "message": "아이디와 비밀번호를 입력해 주세요."}, status=400)
 
+    ip = _client_ip(request)
+    if _login_blocked(ip):
+        return JsonResponse(
+            {"ok": False, "message": "로그인 시도가 너무 많습니다. 10분 뒤에 다시 시도해 주세요."},
+            status=429,
+        )
+
     if shared_expected() and not shared_enabled():
         return JsonResponse(
             {"ok": False, "message": "공유 회원 DB가 연결되지 않았습니다. Render DATABASE_URL을 확인해 주세요."},
@@ -94,7 +223,10 @@ def login_api(request):
         try:
             user = login_with_shared(request, user_id, password)
         except SharedAuthError as exc:
+            if exc.status in (400, 423):
+                _note_login_fail(ip)
             return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
+        _clear_login_fail(ip)
         payload = _profile_payload(user)
         shared = resolve_shared_login(user_id, user)
         needs = needs_guardian_prompt(shared, user)
@@ -113,14 +245,23 @@ def login_api(request):
     except User.DoesNotExist:
         existing = find_local_by_login(user_id)
         if existing is None:
+            _note_login_fail(ip)
             return JsonResponse({"ok": False, "message": "아이디 또는 비밀번호가 일치하지 않습니다."}, status=400)
     except OperationalError:
         return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요."}, status=503)
 
+    profile = _get_profile(existing)
+    locked = _profile_locked(profile)
+    if locked:
+        _note_login_fail(ip)
+        return JsonResponse({"ok": False, "message": locked}, status=423)
     user = authenticate(request, username=existing.username, password=password)
     if user is None:
+        _note_login_fail(ip)
+        locked = _note_profile_failure(profile)
+        if locked:
+            return JsonResponse({"ok": False, "message": locked}, status=423)
         return JsonResponse({"ok": False, "message": "아이디 또는 비밀번호가 일치하지 않습니다."}, status=400)
-    profile = _get_profile(user)
     if profile and profile.status == Profile.STATUS_SUSPENDED:
         return JsonResponse({"ok": False, "message": "정지된 계정입니다. 관리자에게 문의해 주세요."}, status=403)
     if profile and profile.status == Profile.STATUS_WITHDRAWN:
@@ -128,6 +269,8 @@ def login_api(request):
     if not user.is_active:
         return JsonResponse({"ok": False, "message": "정지된 계정입니다. 관리자에게 문의해 주세요."}, status=403)
 
+    _clear_login_fail(ip)
+    _clear_profile_failure(profile)
     login(request, user)
     payload = _profile_payload(user)
     return JsonResponse({"ok": True, "user": payload, "redirect": "/staff/" if payload["is_admin"] else "/main.html"})
@@ -137,12 +280,19 @@ def login_api(request):
 def signup_page(request):
     if request.user.is_authenticated:
         return redirect("/main.html")
-    return render(request, "signup.html")
+    return render(request, "signup.html", {"registration_open": registration_open()})
+
+
+@require_GET
+def public_config(request):
+    return JsonResponse({"registrationOpen": registration_open()})
 
 
 @csrf_exempt
 @require_POST
 def signup_api(request):
+    if not registration_open():
+        return JsonResponse({"ok": False, "message": "현재 정식 오픈 준비 중입니다."}, status=403)
     data = _json_body(request)
     user_id = (data.get("id") or "").strip()
     password = data.get("password") or ""
@@ -156,8 +306,8 @@ def signup_api(request):
         return JsonResponse({"ok": False, "message": "아이디, 비밀번호, 이름, 연락처는 필수입니다."}, status=400)
     if len(user_id) < 4:
         return JsonResponse({"ok": False, "message": "아이디는 4자 이상 입력해 주세요."}, status=400)
-    if len(password) < 4:
-        return JsonResponse({"ok": False, "message": "비밀번호는 4자 이상 입력해 주세요."}, status=400)
+    if password_error(password):
+        return JsonResponse({"ok": False, "message": PASSWORD_RULE}, status=400)
     if password_confirm and password != password_confirm:
         return JsonResponse({"ok": False, "message": "비밀번호가 서로 다릅니다."}, status=400)
     if not agree:
@@ -178,7 +328,7 @@ def signup_api(request):
         )
     if shared_expected() or shared_enabled():
         try:
-            create_shared_user(name=name, phone=digits, password=password, username=user_id)
+            create_shared_user(name=name, phone=digits, password=password, username=user_id, email=email)
         except SharedAuthError as exc:
             return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
 
@@ -232,62 +382,13 @@ def find_api(request):
 
     digits = normalize_phone(phone)
     if find_type == "password":
-        user_id = (data.get("id") or "").strip()
-        if not user_id or not phone:
-            return JsonResponse({"ok": False, "message": "아이디와 연락처를 입력해 주세요."}, status=400)
-
-        user = None
-        try:
-            user = User.objects.select_related("profile").get(username=user_id)
-            profile_phone = normalize_phone(getattr(_get_profile(user), "phone", "") or "")
-            if digits and profile_phone and digits != profile_phone:
-                user = None
-        except User.DoesNotExist:
-            user = find_local_by_login(user_id)
-            if user is not None:
-                profile_phone = normalize_phone(getattr(_get_profile(user), "phone", "") or "")
-                if digits and profile_phone and digits != profile_phone:
-                    user = None
-
-        shared = None
-        if shared_enabled():
-            try:
-                if digits:
-                    shared = get_shared_by_phone(digits)
-                if shared is None:
-                    shared = get_shared_by_username(user_id)
-            except SharedAuthError as exc:
-                return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
-            if shared is not None and digits and normalize_phone(shared.phone) != digits:
-                shared = None
-            if shared is not None and not shared_matches_login(shared, user_id):
-                return JsonResponse({"ok": False, "message": "일치하는 회원 정보가 없습니다."}, status=400)
-        if user is None and shared is not None:
-            hint = (shared.username or "").strip() or username_from_note(shared.herium_note) or user_id
-            user = sync_local_user(shared, username_hint=hint)
-        if user is None:
-            return JsonResponse({"ok": False, "message": "일치하는 회원 정보가 없습니다."}, status=400)
-
-        alphabet = string.ascii_letters + string.digits
-        temp = "".join(secrets.choice(alphabet) for _ in range(8))
-        user.set_password(temp)
-        user.save(update_fields=["password"])
-        if shared is not None:
-            update_shared_password(shared, temp)
-        elif shared_enabled() and digits:
-            try:
-                create_shared_user(
-                    name=(_get_profile(user).name if _get_profile(user) else user.first_name) or user.username,
-                    phone=digits,
-                    password=temp,
-                    username=user.username,
-                )
-            except SharedAuthError:
-                pass
-        return JsonResponse({
-            "ok": True,
-            "message": f"임시 비밀번호는 {temp} 입니다. 로그인 후 변경해 주세요.",
-        })
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": "비밀번호는 이 화면에서 바꾸지 않습니다. 헤리움 케어센터 054-334-9986으로 전화해 주세요.",
+            },
+            status=403,
+        )
 
     name = (data.get("name") or "").strip()
     if not name or not phone:
@@ -380,8 +481,8 @@ def profile_api(request):
     user = request.user
     shared = _shared_for_user(user)
     if new_password:
-        if len(new_password) < 4:
-            return JsonResponse({"ok": False, "message": "새 비밀번호는 4자 이상이어야 합니다."}, status=400)
+        if password_error(new_password):
+            return JsonResponse({"ok": False, "message": PASSWORD_RULE}, status=400)
         ok = False
         if shared is not None:
             from .scrypt_compat import verify_password
@@ -396,6 +497,12 @@ def profile_api(request):
             set_guardian_name(shared, name)
             if new_password:
                 update_shared_password(shared, new_password)
+            if email:
+                taken = get_shared_by_email(email)
+                if taken is not None and taken.id != shared.id:
+                    return JsonResponse({"ok": False, "message": "이미 사용 중인 이메일입니다."}, status=400)
+                shared.email = email
+                shared.save(update_fields=["email"], using="shared")
         except SharedAuthError as exc:
             return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
     if new_password:
@@ -419,3 +526,125 @@ def profile_api(request):
 def format_phone_or_digits(digits):
     from .shared_users import format_phone
     return format_phone(digits) or digits
+
+
+RESET_SENT = "가입된 이메일이라면 재설정 링크를 보냈습니다. 30분 안에 메일을 확인해 주세요."
+HELP_SENT = "요청을 접수했습니다. 고객센터(054-334-9986)에서 본인 확인 후 연락드립니다."
+
+
+def _valid_email(value):
+    text = (value or "").strip()
+    return "@" in text and "." in text.split("@")[-1] and " " not in text
+
+
+def mail_configured():
+    return bool(getattr(settings, "EMAIL_HOST", "") and getattr(settings, "EMAIL_HOST_USER", ""))
+
+
+@csrf_exempt
+@require_POST
+def password_reset_request(request):
+    ip = _client_ip(request)
+    _note_reset(ip)
+    if _reset_blocked(ip):
+        return JsonResponse({"ok": False, "message": "요청이 너무 많습니다. 10분 뒤에 다시 시도해 주세요."}, status=429)
+    data = _json_body(request)
+    email = (data.get("email") or "").strip()
+    if not _valid_email(email):
+        return JsonResponse({"ok": False, "message": "이메일 형식을 확인해 주세요."}, status=400)
+    if not mail_configured():
+        return JsonResponse(
+            {"ok": False, "message": "비밀번호 재설정 메일을 보낼 설정이 아직 없습니다. 관리자에게 문의해 주세요."},
+            status=503,
+        )
+    if not shared_enabled():
+        return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다."}, status=503)
+    try:
+        shared = get_shared_by_email(email)
+    except SharedAuthError as exc:
+        return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
+    if shared is not None:
+        token = issue_reset_token(shared.id)
+        link = settings.SITE_URL + "/reset-password.html?token=" + token
+        try:
+            send_mail(
+                "헤리움 케어센터 비밀번호 재설정",
+                "아래 주소에서 새 비밀번호를 정해 주세요. 이 링크는 30분 뒤에 만료됩니다.\n\n"
+                + link
+                + "\n\n본인이 요청하지 않았다면 이 메일을 무시하세요.",
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+        except Exception:
+            logger.exception("password reset mail failed")
+    return JsonResponse({"ok": True, "message": RESET_SENT})
+
+
+@require_POST
+def password_help_request(request):
+    ip = _client_ip(request)
+    _note_help(ip)
+    if _help_blocked(ip):
+        return JsonResponse({"ok": False, "message": "요청이 너무 많습니다. 10분 뒤에 다시 시도해 주세요."}, status=429)
+    data = _json_body(request)
+    name = (data.get("name") or "").strip()
+    digits = normalize_phone(data.get("phone") or "")
+    if len(name) < 2 or not is_mobile(digits):
+        return JsonResponse({"ok": False, "message": "이름과 휴대폰 번호를 확인해 주세요."}, status=400)
+    if shared_enabled():
+        try:
+            shared = member_without_email(name, digits)
+            if shared is not None:
+                open_password_help(shared.id, name, format_phone(digits) or digits, "herium")
+        except SharedAuthError:
+            logger.exception("password help lookup failed")
+            return JsonResponse(
+                {"ok": False, "message": "지금은 요청을 저장할 수 없습니다. 054-334-9986으로 전화해 주세요."},
+                status=503,
+            )
+        except Exception:
+            logger.exception("password help request failed")
+            return JsonResponse(
+                {"ok": False, "message": "지금은 요청을 저장할 수 없습니다. 054-334-9986으로 전화해 주세요."},
+                status=503,
+            )
+    return JsonResponse({"ok": True, "message": HELP_SENT})
+
+
+@csrf_exempt
+@require_POST
+def password_reset_confirm(request):
+    data = _json_body(request)
+    token = (data.get("token") or "").strip()
+    password = data.get("password") or ""
+    if not token:
+        return JsonResponse({"ok": False, "message": "재설정 링크가 올바르지 않습니다."}, status=400)
+    if password_error(password):
+        return JsonResponse({"ok": False, "message": PASSWORD_RULE}, status=400)
+    if not shared_enabled():
+        return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다."}, status=503)
+    user_id = take_reset_token(token)
+    if not user_id:
+        return JsonResponse(
+            {"ok": False, "message": "재설정 링크가 없거나 만료되었습니다. 비밀번호 찾기에서 다시 요청해 주세요."},
+            status=400,
+        )
+    from .models import SharedUser
+    shared = SharedUser.objects.using("shared").filter(id=user_id).first()
+    if shared is None:
+        return JsonResponse(
+            {"ok": False, "message": "재설정 링크가 없거나 만료되었습니다. 비밀번호 찾기에서 다시 요청해 주세요."},
+            status=400,
+        )
+    update_shared_password(shared, password)
+    clear_login_failure(shared)
+    local = find_local_by_login((shared.username or "").strip() or shared.phone)
+    if local is not None:
+        local.set_password(password)
+        local.save(update_fields=["password"])
+    return JsonResponse({"ok": True, "message": "비밀번호를 바꿨습니다. 다시 로그인해 주세요."})
+
+
+def reset_page(request):
+    return render(request, "reset-password.html")

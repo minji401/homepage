@@ -74,11 +74,37 @@ class Application(models.Model):
 
     kind = models.CharField("구분", max_length=20, choices=KIND_CHOICES)
     status = models.CharField("상태", max_length=20, choices=STATUS_CHOICES, default=STATUS_WAITING)
-    name = models.CharField("이름", max_length=80)
-    phone = models.CharField("연락처", max_length=30)
+    name = models.TextField("이름")
+    phone = models.TextField("연락처")
     title = models.CharField("제목", max_length=200, blank=True)
     body = models.TextField("내용", blank=True)
     extra = models.JSONField("부가정보", default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    @property
+    def name_plain(self):
+        from .pii import decrypt_text
+        return decrypt_text(self.name)
+
+    @property
+    def phone_plain(self):
+        from .pii import decrypt_text
+        return decrypt_text(self.phone)
+
+    @property
+    def body_plain(self):
+        from .pii import decrypt_text
+        return decrypt_text(self.body)
+
+
+class AuditLog(models.Model):
+    actor = models.CharField(max_length=80)
+    action = models.CharField(max_length=80)
+    target = models.CharField(max_length=120, blank=True)
+    ip = models.CharField(max_length=64, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

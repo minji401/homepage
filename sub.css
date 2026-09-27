@@ -1119,3 +1119,168 @@
     color: #333;
     font-weight: 700;
 }
+
+@media (max-width: 860px) {
+    .sub-visual {
+        min-width: 0;
+        height: auto;
+        padding: 52px 20px;
+    }
+    .sub-visual-text h2 { font-size: 1.65rem; }
+    .sub-visual-text p { font-size: 0.98rem; }
+    .sub-container {
+        width: auto;
+        margin: 0 16px 48px;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .side-menu { display: none; }
+    .sub-content { position: relative; z-index: 0; }
+    .content-title {
+        position: relative;
+        z-index: 40;
+        overflow: visible;
+        border-bottom: none;
+        padding-bottom: 0;
+        gap: 0;
+    }
+    .content-title h2 {
+        position: relative;
+        z-index: 0;
+        font-size: 1.45rem;
+        margin-top: 18px;
+    }
+    .page-body { position: relative; z-index: 0; }
+    .m-crumb {
+        display: flex;
+        align-items: stretch;
+        width: calc(100% + 32px);
+        margin: 0 -16px;
+        min-height: 50px;
+        background: #fff;
+        border-bottom: 1px solid #efe6d6;
+        box-shadow: 0 8px 18px rgba(74, 60, 40, 0.04);
+        position: relative;
+        z-index: 50;
+    }
+    .m-crumb-home {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 14px;
+        background: #b38b4d;
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+    .m-crumb-drop {
+        position: relative;
+        flex: 1 1 0;
+        min-width: 0;
+        border-left: 1px solid #f0e8da;
+    }
+    .m-crumb-btn {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 12px 12px;
+        border: 0;
+        background: #fff;
+        color: #3d3830;
+        font: inherit;
+        font-size: 0.86rem;
+        font-weight: 700;
+        text-align: left;
+    }
+    .m-crumb-btn span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .m-crumb-btn i {
+        flex: 0 0 auto;
+        font-size: 0.72rem;
+        color: #b38b4d;
+    }
+    .m-crumb-btn.is-open {
+        background: #faf8f2;
+        color: #8f6c38;
+    }
+    .m-crumb-btn.is-open i { transform: rotate(180deg); }
+    .m-crumb-list {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        min-width: 196px;
+        width: max-content;
+        max-width: min(280px, 78vw);
+        padding: 6px;
+        background: #fff;
+        border: 1px solid #efe6d6;
+        border-radius: 14px;
+        box-shadow: 0 18px 40px rgba(74, 60, 40, 0.16);
+        max-height: 320px;
+        overflow: auto;
+        z-index: 60;
+    }
+    .m-crumb-drop:last-child .m-crumb-list {
+        left: auto;
+        right: 0;
+    }
+    .m-crumb-list a {
+        display: block;
+        padding: 12px 14px;
+        color: #3d3830;
+        text-decoration: none;
+        font-size: 0.92rem;
+        border-radius: 10px;
+        white-space: nowrap;
+    }
+    .m-crumb-list a.is-on {
+        color: #8f6c38;
+        font-weight: 700;
+        background: #faf8f2;
+        box-shadow: inset 3px 0 0 #b38b4d;
+    }
+    .sub-tabs {
+        margin: 0 0 24px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .sub-tabs::-webkit-scrollbar { display: none; }
+    .sub-tabs button,
+    .sub-tabs a {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: 12px 12px;
+        font-size: 0.9rem;
+    }
+    .page-body img,
+    .sub-content img,
+    .sub-content iframe,
+    .sub-content video { max-width: 100%; }
+    .sub-content img,
+    .page-body img { height: auto; }
+    .page-table { width: 100%; }
+    .info-cards,
+    .facility-grid,
+    .partner-grid,
+    .gallery-grid,
+    .steps,
+    .steps.steps-4,
+    .steps.steps-6,
+    .page-form,
+    .kp-box,
+    .program-wheel { grid-template-columns: 1fr; }
+    .floor-map { grid-template-columns: repeat(2, 1fr); }
+    .map-wrap iframe { height: 240px; }
+    .board-search { flex-wrap: wrap; }
+    .board-search select,
+    .board-search input { width: 100%; border-right: 1px solid #d8d0c4; }
+    .page-form { padding: 16px; }
+}

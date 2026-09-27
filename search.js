@@ -59,7 +59,7 @@
         { type: "menu", tab: "community", title: "주간 식단표", body: "이번 주 조식, 중식, 석식 식단을 안내합니다.", path: "기관 소식 > 주간 식단표", url: "community/menu.html", date: "2026-09-08" },
         { type: "menu", tab: "community", title: "자주 묻는 질문", body: "입소, 면회, 이용요금 등 자주 묻는 질문과 답변입니다.", path: "기관 소식 > 자주 묻는 질문", url: "community/faq.html", date: "2026-06-12" },
         { type: "menu", tab: "community", title: "1:1 상담 및 문의", body: "입소 상담과 서비스 이용 문의를 받습니다.", path: "기관 소식 > 1:1 상담 및 문의", url: "community/inquiry.html", date: "2026-06-12" },
-        { type: "menu", tab: "community", title: "사이트맵", body: "헤리움 케어센터 홈페이지의 전체 메뉴와 페이지를 한눈에 볼 수 있습니다.", path: "사이트맵", url: "sitemap.html", date: "2026-09-22" },
+        { type: "menu", tab: "community", title: "전체 메뉴", body: "헤리움 케어센터 홈페이지의 전체 메뉴와 페이지를 한눈에 볼 수 있습니다.", path: "전체 메뉴", url: "sitemap.html", date: "2026-09-22" },
         { type: "board", tab: "community", title: "2026년 9월 프로그램 안내", body: "원예치료, 음악치료, 인지프로그램 등 9월 월간 프로그램 일정입니다.", path: "기관 소식 > 공지사항", url: "community/notice.html", date: "2026-09-01" },
         { type: "board", tab: "community", title: "시설 점검 안내", body: "소방설비 및 시설 안전 점검으로 일부 프로그램이 조정됩니다.", path: "기관 소식 > 공지사항", url: "community/notice.html", date: "2026-09-10" },
         { type: "board", tab: "volunteer", title: "자원봉사자 모집 공고", body: "말벗 봉사와 프로그램 보조 자원봉사자를 모집합니다.", path: "사랑나눔 > 자원봉사", url: "volunteer/intro.html", date: "2026-09-05" },
@@ -430,13 +430,13 @@
         document.querySelectorAll(".sp").forEach(function (el) {
             if (el.tagName === "A" && el.getAttribute("href")) {
                 if (!el.getAttribute("aria-label")) {
-                    el.setAttribute("aria-label", "사이트맵");
+                    el.setAttribute("aria-label", "전체 메뉴");
                 }
                 return;
             }
             el.setAttribute("role", "link");
             el.setAttribute("tabindex", "0");
-            el.setAttribute("aria-label", "사이트맵");
+            el.setAttribute("aria-label", "전체 메뉴");
             function go(e) {
                 e.preventDefault();
                 window.location.href = SITEMAP_PAGE;
@@ -450,7 +450,99 @@
         });
     }
 
+    function closeCrumbLists() {
+        document.querySelectorAll(".m-crumb-list").forEach(function (el) { el.hidden = true; });
+        document.querySelectorAll(".m-crumb-btn.is-open").forEach(function (el) { el.classList.remove("is-open"); });
+    }
+
+    function crumbButton(label, items) {
+        var wrap = document.createElement("div");
+        wrap.className = "m-crumb-drop";
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "m-crumb-btn";
+        var name = document.createElement("span");
+        name.textContent = label;
+        var icon = document.createElement("i");
+        icon.className = "fas fa-chevron-down";
+        icon.setAttribute("aria-hidden", "true");
+        btn.appendChild(name);
+        btn.appendChild(icon);
+        var list = document.createElement("div");
+        list.className = "m-crumb-list";
+        list.hidden = true;
+        items.forEach(function (item) {
+            var link = document.createElement("a");
+            link.href = item.href;
+            link.textContent = item.text;
+            if (item.text === label) link.className = "is-on";
+            list.appendChild(link);
+        });
+        btn.addEventListener("click", function (event) {
+            event.stopPropagation();
+            var willOpen = list.hidden;
+            closeCrumbLists();
+            list.hidden = !willOpen;
+            btn.classList.toggle("is-open", willOpen);
+        });
+        wrap.appendChild(btn);
+        wrap.appendChild(list);
+        return wrap;
+    }
+
+    function buildMobileCrumbs(crumb) {
+        var side = document.querySelector(".side-menu");
+        var sections = [];
+        document.querySelectorAll(".main-nav > ul > li > a").forEach(function (link) {
+            sections.push({ text: link.textContent.trim(), href: link.getAttribute("href") });
+        });
+        var pages = [];
+        if (side) {
+            side.querySelectorAll("li a").forEach(function (link) {
+                pages.push({ text: link.textContent.replace(/\s+/g, " ").trim(), href: link.getAttribute("href") });
+            });
+        }
+        if (!sections.length || !pages.length) return;
+        var sectionName = side && side.querySelector("h3") ? side.querySelector("h3").textContent.trim() : "";
+        var currentPage = "";
+        var active = side && side.querySelector("li.active a");
+        if (active) currentPage = active.textContent.replace(/\s+/g, " ").trim();
+        if (!currentPage) {
+            var matched = pages.filter(function (item) { return item.text === sectionName; })[0];
+            currentPage = matched ? matched.text : pages[0].text;
+        }
+        var home = document.querySelector(".logo a");
+        crumb.textContent = "";
+        crumb.classList.add("m-crumb");
+        var homeLink = document.createElement("a");
+        homeLink.className = "m-crumb-home";
+        homeLink.href = home ? home.getAttribute("href") : "main.html";
+        homeLink.innerHTML = '<i class="fas fa-home"></i> Home';
+        crumb.appendChild(homeLink);
+        crumb.appendChild(crumbButton(sectionName, sections));
+        crumb.appendChild(crumbButton(currentPage, pages));
+    }
+
+    function setupMobileCrumbs() {
+        var crumb = document.querySelector(".content-title .breadcrumb");
+        if (!crumb) return;
+        var original = crumb.innerHTML;
+        var mobileQuery = window.matchMedia("(max-width: 860px)");
+        function apply() {
+            if (mobileQuery.matches) {
+                if (!crumb.classList.contains("m-crumb")) buildMobileCrumbs(crumb);
+            } else if (crumb.classList.contains("m-crumb")) {
+                crumb.classList.remove("m-crumb");
+                crumb.innerHTML = original;
+            }
+        }
+        document.addEventListener("click", closeCrumbLists);
+        apply();
+        window.addEventListener("resize", apply);
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
+        setupMobileCrumbs();
         SearchOverlay.init();
         SearchResults.init();
         bindAllMenuLink();

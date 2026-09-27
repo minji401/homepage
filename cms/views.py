@@ -17,12 +17,14 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from accounts.models import Profile
 from .menu_import import parse_menu_table, rows_from_csv, rows_from_xlsx
+from .pii import clean_phone, clean_text, encrypt_text
 from .models import (
     SITE_FIELD_GROUPS,
     SITE_FIELD_KEYS,
     USAGE_AS_OF_KEY,
     WAITLIST_TYPES,
     Application,
+    AuditLog,
     Banner,
     Board,
     Comment,
@@ -64,6 +66,38 @@ def staff_required(view):
         return view(request, *args, **kwargs)
 
     return wrapper
+
+
+_RATE_HITS = {}
+
+
+def _client_ip(request):
+    forwarded = (request.META.get("HTTP_X_FORWARDED_FOR") or "").split(",")[0].strip()
+    return forwarded or request.META.get("REMOTE_ADDR") or ""
+
+
+def _too_many(bucket, ip, limit=8, window=600):
+    now = time.time()
+    key = f"{bucket}:{ip or 'unknown'}"
+    started, count = _RATE_HITS.get(key, (now, 0))
+    if now - started > window:
+        started, count = now, 0
+    count += 1
+    _RATE_HITS[key] = (started, count)
+    if len(_RATE_HITS) > 5000:
+        for name, row in list(_RATE_HITS.items()):
+            if now - row[0] > window:
+                del _RATE_HITS[name]
+    return count > limit
+
+
+def _audit(request, action, target=""):
+    AuditLog.objects.create(
+        actor=(getattr(request.user, "username", "") or "")[:80],
+        action=action[:80],
+        target=str(target)[:120],
+        ip=_client_ip(request)[:64],
+    )
 
 
 def _json_body(request):
@@ -239,6 +273,51 @@ def member_action(request, user_id):
                 profile.save(update_fields=["role"])
                 messages.success(request, "회원 권한을 변경했습니다.")
     return redirect(next_url)
+
+
+@staff_required
+def password_help(request):
+    from accounts.password_policy import PASSWORD_RULE, password_error
+    from accounts.shared_users import (
+        clear_login_failure,
+        close_password_help,
+        get_shared_by_id,
+        list_password_help,
+        update_shared_password,
+    )
+
+    if request.method == "POST":
+        request_id = (request.POST.get("id") or "").strip()
+        password = request.POST.get("password") or ""
+        confirm = request.POST.get("confirm") or ""
+        item = next((row for row in list_password_help() if row["id"] == request_id), None)
+        shared = get_shared_by_id(item["user_id"]) if item else None
+        if shared is None:
+            messages.error(request, "요청을 찾을 수 없습니다.")
+        elif password != confirm or password_error(password):
+            messages.error(request, PASSWORD_RULE if password == confirm else "비밀번호 확인이 일치하지 않습니다.")
+        else:
+            update_shared_password(shared, password)
+            clear_login_failure(shared)
+            local = User.objects.filter(username=(shared.username or "").strip()).first() if (shared.username or "").strip() else None
+            if local is not None:
+                from django.core.exceptions import ObjectDoesNotExist
+
+                local.set_password(password)
+                local.save(update_fields=["password"])
+                try:
+                    profile = local.profile
+                except ObjectDoesNotExist:
+                    profile = None
+                if profile is not None:
+                    profile.login_failures = 0
+                    profile.login_locked_until = None
+                    profile.save(update_fields=["login_failures", "login_locked_until"])
+            close_password_help(request_id)
+            _audit(request, "password_help_reset", request_id)
+            messages.success(request, "새 비밀번호를 저장했습니다. 회원에게 전화로만 안내하세요.")
+        return redirect("/staff/password-help/")
+    return render(request, "staff/password_help.html", {"items": list_password_help()})
 
 
 @staff_required
@@ -544,6 +623,7 @@ def applications(request):
     items = Application.objects.all()
     if kind:
         items = items.filter(kind=kind)
+    _audit(request, "view_applications", kind or "all")
     return render(request, "staff/applications.html", {"items": items, "kind": kind})
 
 
@@ -555,6 +635,7 @@ def application_action(request, app_id):
     if status in dict(Application.STATUS_CHOICES):
         item.status = status
         item.save(update_fields=["status"])
+        _audit(request, "application_status", f"{item.id}:{status}")
         messages.success(request, "신청 상태를 변경했습니다.")
     return redirect(request.POST.get("next") or "/staff/applications/")
 
@@ -693,24 +774,35 @@ def insights(request):
     })
 
 
-@csrf_exempt
 @require_POST
 def apply_api(request):
+    if _too_many("apply", _client_ip(request)):
+        return JsonResponse({"ok": False, "message": "잠시 후 다시 신청해 주세요."}, status=429)
     data = _json_body(request)
     kind = data.get("kind")
-    name = (data.get("name") or "").strip()
-    phone = (data.get("phone") or "").strip()
     if kind not in dict(Application.KIND_CHOICES):
         return JsonResponse({"ok": False, "message": "올바른 신청 구분이 아닙니다."}, status=400)
-    if not name or not phone:
+    try:
+        name = clean_text(data.get("name"), 40)
+        phone = clean_phone(data.get("phone"))
+        title = clean_text(data.get("title"), 200)
+        body = clean_text(data.get("body") or data.get("memo") or "", 4000)
+        extra = {}
+        for key in ("type", "time", "date", "day", "item", "address"):
+            if data.get(key):
+                extra[key] = clean_text(data.get(key), 200)
+    except ValueError as exc:
+        return JsonResponse({"ok": False, "message": str(exc)}, status=400)
+    if not name:
         return JsonResponse({"ok": False, "message": "이름과 연락처를 입력해 주세요."}, status=400)
-    extra = {key: data.get(key) for key in ("type", "time", "date", "day", "item") if data.get(key)}
+    if extra.get("address"):
+        extra["address"] = encrypt_text(extra["address"])
     Application.objects.create(
         kind=kind,
-        name=name,
-        phone=phone,
-        title=(data.get("title") or "")[:200],
-        body=data.get("body") or data.get("memo") or "",
+        name=encrypt_text(name),
+        phone=encrypt_text(phone),
+        title=title,
+        body=encrypt_text(body),
         extra=extra,
     )
     return JsonResponse({"ok": True, "message": "접수되었습니다. 담당자가 확인 후 연락드리겠습니다."})

@@ -24,6 +24,13 @@
         return "";
     }
 
+    function passwordRuleError(password) {
+        if (!password || password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+            return "비밀번호는 8자 이상이며 영문 대문자, 소문자, 숫자, 특수문자를 각각 하나 이상 포함해야 합니다.";
+        }
+        return "";
+    }
+
     function csrfHeaders() {
         return {
             "Content-Type": "application/json",
@@ -195,8 +202,9 @@
                     showMessage(message, "아이디는 4자 이상 입력해 주세요.", "error");
                     return;
                 }
-                if (data.password.length < 4) {
-                    showMessage(message, "비밀번호는 4자 이상 입력해 주세요.", "error");
+                const rule = passwordRuleError(data.password);
+                if (rule) {
+                    showMessage(message, rule, "error");
                     return;
                 }
                 if (data.password !== data.passwordConfirm) {
@@ -239,13 +247,22 @@
 
             const idField = form.querySelector(".js-find-id");
             const nameField = form.querySelector(".js-find-name");
+            const emailField = form.querySelector(".js-find-email");
+            const phoneField = form.querySelector(".js-find-phone");
             if (type === "password") {
-                if (idField) idField.hidden = false;
+                if (idField) idField.hidden = true;
                 if (nameField) nameField.hidden = true;
+                if (phoneField) phoneField.hidden = true;
+                if (emailField) emailField.hidden = false;
             } else {
                 if (idField) idField.hidden = true;
                 if (nameField) nameField.hidden = false;
+                if (phoneField) phoneField.hidden = false;
+                if (emailField) emailField.hidden = true;
             }
+            document.querySelectorAll(".js-password-help").forEach(function (el) {
+                el.hidden = type !== "password";
+            });
 
             form.addEventListener("submit", function (e) {
                 e.preventDefault();
@@ -254,17 +271,26 @@
                     phone: (form.querySelector('[name="phone"]').value || "").trim()
                 };
                 if (type === "password") {
-                    payload.id = (form.querySelector('[name="id"]').value || "").trim();
-                    if (!payload.id || !payload.phone) {
-                        showMessage(message, "아이디와 연락처를 입력해 주세요.", "error");
+                    payload.email = (form.querySelector('[name="email"]').value || "").trim();
+                    if (!payload.email) {
+                        showMessage(message, "이메일을 입력해 주세요.", "error");
                         return;
                     }
-                } else {
-                    payload.name = (form.querySelector('[name="name"]').value || "").trim();
-                    if (!payload.name || !payload.phone) {
-                        showMessage(message, "이름과 연락처를 입력해 주세요.", "error");
-                        return;
-                    }
+                    api("/accounts/password-reset/", {
+                        method: "POST",
+                        headers: csrfHeaders(),
+                        body: JSON.stringify({ email: payload.email })
+                    }).then(function (result) {
+                        showMessage(message, (result.data && result.data.message) || "요청을 처리하지 못했습니다.", result.ok ? "ok" : "error");
+                    }).catch(function () {
+                        showMessage(message, "서버에 연결할 수 없습니다. Django를 실행해 주세요.", "error");
+                    });
+                    return;
+                }
+                payload.name = (form.querySelector('[name="name"]').value || "").trim();
+                if (!payload.name || !payload.phone) {
+                    showMessage(message, "이름과 연락처를 입력해 주세요.", "error");
+                    return;
                 }
 
                 api("/accounts/find/", {
@@ -281,6 +307,28 @@
                     showMessage(message, "서버에 연결할 수 없습니다. Django를 실행해 주세요.", "error");
                 });
             });
+
+            const helpForm = document.getElementById("passwordHelpForm");
+            if (helpForm) {
+                helpForm.addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    const name = (helpForm.querySelector('[name="name"]').value || "").trim();
+                    const phone = (helpForm.querySelector('[name="phone"]').value || "").trim();
+                    if (name.length < 2 || !phone) {
+                        showMessage(message, "이름과 연락처를 입력해 주세요.", "error");
+                        return;
+                    }
+                    api("/accounts/password-help/", {
+                        method: "POST",
+                        headers: csrfHeaders(),
+                        body: JSON.stringify({ name: name, phone: phone })
+                    }).then(function (result) {
+                        showMessage(message, (result.data && result.data.message) || "요청을 처리하지 못했습니다.", result.ok ? "ok" : "error");
+                    }).catch(function () {
+                        showMessage(message, "서버에 연결할 수 없습니다. Django를 실행해 주세요.", "error");
+                    });
+                });
+            }
         }
     };
 
@@ -330,6 +378,11 @@
             });
             form.addEventListener("submit", function (e) {
                 e.preventDefault();
+                const nextPw = form.querySelector('[name="newPassword"]').value || "";
+                if (nextPw && passwordRuleError(nextPw)) {
+                    showMessage(message, passwordRuleError(nextPw), "error");
+                    return;
+                }
                 api("/accounts/profile/", {
                     method: "POST",
                     headers: csrfHeaders(),
@@ -353,6 +406,48 @@
         }
     };
 
+    const ResetPasswordForm = {
+        init: function () {
+            const form = document.getElementById("resetPasswordForm");
+            if (!form) return;
+            const message = document.getElementById("authMessage");
+            bindPasswordToggles(form);
+            const token = new URLSearchParams(window.location.search).get("token") || "";
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                const password = form.querySelector('[name="password"]').value || "";
+                const confirm = form.querySelector('[name="passwordConfirm"]').value || "";
+                const rule = passwordRuleError(password);
+                if (!token) {
+                    showMessage(message, "재설정 링크가 올바르지 않습니다. 비밀번호 찾기에서 다시 요청해 주세요.", "error");
+                    return;
+                }
+                if (rule) {
+                    showMessage(message, rule, "error");
+                    return;
+                }
+                if (password !== confirm) {
+                    showMessage(message, "비밀번호가 서로 다릅니다.", "error");
+                    return;
+                }
+                api("/accounts/password-reset/confirm/", {
+                    method: "POST",
+                    headers: csrfHeaders(),
+                    body: JSON.stringify({ token: token, password: password })
+                }).then(function (result) {
+                    if (!result.ok) {
+                        showMessage(message, result.data.message || "비밀번호를 바꾸지 못했습니다.", "error");
+                        return;
+                    }
+                    window.alert(result.data.message || "비밀번호를 바꿨습니다. 다시 로그인해 주세요.");
+                    window.location.href = BASE + "login.html";
+                }).catch(function () {
+                    showMessage(message, "서버에 연결할 수 없습니다.", "error");
+                });
+            });
+        }
+    };
+
     window.AuthService = AuthService;
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -360,8 +455,19 @@
         LoginForm.init();
         SignupForm.init();
         FindAccountForm.init();
+        ResetPasswordForm.init();
         GuardianForm.init();
         AccountForm.init();
+        fetch("/accounts/public-config/", { credentials: "same-origin" })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (!data || data.registrationOpen !== false) return;
+                document.querySelectorAll("a").forEach(function (link) {
+                    const href = link.getAttribute("href") || "";
+                    if (/(^|\/)signup\.html$/.test(href)) link.hidden = true;
+                });
+            })
+            .catch(function () {});
         document.querySelectorAll(".js-close-popup").forEach(function (btn) {
             btn.addEventListener("click", function () {
                 const popup = document.getElementById("sitePopup");

@@ -16,9 +16,9 @@
     {% for item in items %}
     <tr>
         <td>{{ item.get_kind_display }}</td>
-        <td>{{ item.name }}</td>
-        <td>{{ item.phone }}</td>
-        <td>{{ item.title }} {{ item.body|truncatechars:40 }}</td>
+        <td>{{ item.name_plain }}</td>
+        <td>{{ item.phone_plain }}</td>
+        <td>{{ item.title }} {{ item.body_plain|truncatechars:40 }}</td>
         <td>{{ item.get_status_display }}</td>
         <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
         <td>
