@@ -173,10 +173,10 @@
                         <input type="email" id="signupEmail" name="email" placeholder="email@example.com">
                     </div>
                 </div>
-                <label class="auth-check">
-                    <input type="checkbox" name="agree">
-                    <span>이용약관 및 개인정보 처리방침에 동의합니다.</span>
-                </label>
+                <div class="auth-check">
+                    <input type="checkbox" name="agree" id="signupAgree">
+                    <span><a href="terms.html">이용약관</a> 및 <a href="privacy.html">개인정보처리방침</a>에 동의합니다.</span>
+                </div>
                 <button type="submit" class="auth-submit">회원가입</button>
             </form>
             {% else %}
@@ -192,8 +192,8 @@
 <footer class="footer">
     <div class="footer-inner">
         <div class="footer-links">
-            <a href="#" class="highlight">개인정보처리방침</a>
-            <a href="#">이용약관</a>
+            <a href="privacy.html" class="highlight">개인정보처리방침</a>
+            <a href="terms.html">이용약관</a>
             <a href="#">이메일무단수집거부</a>
             <a href="sitemap.html">전체 메뉴</a>
             <a href="about/location.html">찾아오시는 길</a>

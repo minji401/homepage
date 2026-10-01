@@ -36,6 +36,8 @@ PAGE_TEMPLATES = [
     ("community/menu.html", "community/menu.html"),
     ("community/faq.html", "community/faq.html"),
     ("community/inquiry.html", "community/inquiry.html"),
+    ("privacy.html", "privacy.html"),
+    ("terms.html", "terms.html"),
 ]
 
 urlpatterns = [

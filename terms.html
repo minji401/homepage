@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>이용약관 | 헤리움 케어센터</title>
+    <link rel="stylesheet" href="main.css" type="text/css">
+    <link rel="stylesheet" href="sub.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="user-menu">
+        <a href="login.html">로그인</a>
+        <a href="signup.html">회원가입</a>
+    </div>
+</div>
+
+<div class="header-top-row">
+    <div class="header-top-inner">
+        <div class="logo">
+            <a href="main.html"><img src="img/logo.png" alt="홈페이지 로고"></a>
+        </div>
+        <div class="header-right">
+            <a href="#" class="js-open-search" aria-expanded="false" aria-controls="searchOverlay"><i class="fas fa-search"> 검색</i></a>
+            <a class="sp" href="sitemap.html">
+                <span class="all-menu-btn" title="전체 메뉴" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </span>
+                <span>전체 메뉴</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<header>
+    <div class="header-inner">
+        <nav class="main-nav">
+            <ul>
+                <li><a href="about/about.html">기관 소개</a>
+                    <ul class="dropdown">
+                        <li><a href="about/about.html">인사말</a></li>
+                        <li><a href="about/facility.html">시설 둘러보기</a></li>
+                        <li><a href="about/location.html">오시는 길</a></li>
+                        <li><a href="about/organization.html">조직표</a></li>
+                        <li><a href="about/disclosure.html">경영공시</a></li>
+                        <li><a href="about/system.html">제도소개</a></li>
+                        <li><a href="about/partners.html">협력기관</a></li>
+                    </ul>
+                </li>
+                <li><a href="service/nighttime.html">서비스 안내</a>
+                    <ul class="dropdown">
+                        <li><a href="service/nighttime.html">주야간보호</a></li>
+                        <li><a href="service/nursing.html">요양원</a></li>
+                        <li><a href="service/home_visit.html">가정방문급여</a></li>
+                        <li><a href="service/medical.html">의료기</a></li>
+                    </ul>
+                </li>
+                <li><a href="admission/procedure.html">이용 방법</a>
+                    <ul class="dropdown">
+                        <li><a href="admission/procedure.html">서비스 이용 절차</a></li>
+                        <li><a href="admission/fees.html">이용 요금 및 급여 안내</a></li>
+                        <li><a href="admission/status.html">이용 현황</a></li>
+                        <li><a href="admission/waitlist.html">대기자 명단</a></li>
+                        <li><a href="admission/period.html">장기요양등급 신청 안내</a></li>
+                        <li><a href="admission/tour.html">시설 방문/견학 신청</a></li>
+                        <li><a href="admission/requirements.html">입소 준비물 및 유의사항</a></li>
+                    </ul>
+                </li>
+                <li><a href="volunteer/intro.html">사랑나눔</a>
+                    <ul class="dropdown">
+                        <li><a href="volunteer/intro.html">자원봉사</a></li>
+                        <li><a href="volunteer/application.html">후원</a></li>
+                    </ul>
+                </li>
+                <li><a href="community/notice.html">기관 소식</a>
+                    <ul class="dropdown">
+                        <li><a href="community/notice.html">공지사항</a></li>
+                        <li><a href="community/gallery.html">활동 갤러리</a></li>
+                        <li><a href="community/menu.html">주간 식단표</a></li>
+                        <li><a href="community/faq.html">자주 묻는 질문</a></li>
+                        <li><a href="community/inquiry.html">1:1 상담 및 문의</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="search-overlay" id="searchOverlay" hidden>
+        <div class="search-overlay-inner">
+            <form class="search-overlay-form js-search-form" action="search.html" method="get">
+                <div class="search-overlay-field">
+                    <input type="search" name="q" class="js-overlay-input" placeholder="검색어를 입력해 주세요" autocomplete="off">
+                    <button type="submit" class="search-overlay-submit" aria-label="검색"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="search-recommend">
+                    <strong>추천검색어</strong>
+                    <div class="search-recommend-tags">
+                        <a href="search.html?q=입소안내">입소안내</a>
+                        <a href="search.html?q=이용요금">이용요금</a>
+                        <a href="search.html?q=주야간보호">주야간보호</a>
+                        <a href="search.html?q=방문요양">방문요양</a>
+                        <a href="search.html?q=오시는 길">오시는 길</a>
+                        <a href="search.html?q=자원봉사">자원봉사</a>
+                        <a href="search.html?q=식단표">식단표</a>
+                    </div>
+                </div>
+            </form>
+            <button type="button" class="search-overlay-close js-close-search" aria-label="검색창 닫기">
+                <i class="fas fa-times"></i>
+                <span>닫기</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+
+<div class="sub-visual">
+    <div class="sub-visual-text">
+        <h2>이용약관</h2>
+        <p>헤리움 웹사이트를 이용할 때의 조건입니다.</p>
+    </div>
+</div>
+<div class="policy-page">
+    <div class="policy-wrap">
+        <p class="policy-lead">이 약관은 헤리움 케어센터(이하 “헤리움”)가 헤리움 웹사이트(heriumcare.com)에서 제공하는 서비스의 이용 조건과 절차를 정합니다. 현대 의료기 제품 안내(hyundaimedi.com)를 함께 운영하는 범위도 포함합니다.</p>
+        <p class="policy-meta">시행일: 2026년 10월 1일</p>
+
+        <section class="policy-card">
+            <h3>1. 목적</h3>
+            <p>이 약관은 헤리움이 제공하는 시설 안내, 상담 신청, 회원 서비스, 의료기기 제품 구매·배송 안내를 이용할 때 헤리움과 이용자의 권리, 의무, 책임 사항을 정합니다.</p>
+        </section>
+        <section class="policy-card">
+            <h3>2. 서비스 내용</h3>
+            <ul>
+                <li>요양원, 주야간보호, 방문요양 등 시설·서비스 안내</li>
+                <li>회원가입, 상담 및 문의 접수</li>
+                <li>의료기기 제품 안내와 구매, 배송, 고객 응대</li>
+            </ul>
+            <p>서비스 내용은 운영 사정에 따라 바뀔 수 있으며, 중요한 변경은 사이트에 안내합니다.</p>
+        </section>
+        <section class="policy-card">
+            <h3>3. 이용자의 권리와 의무</h3>
+            <ul>
+                <li>이용자는 약관과 개인정보처리방침에 동의한 뒤 회원 서비스와 상담을 신청할 수 있습니다.</li>
+                <li>가입 정보와 상담 내용은 사실대로 적어야 합니다.</li>
+                <li>다른 사람의 정보를 도용하거나 사이트 운영을 방해하는 행위는 할 수 없습니다.</li>
+                <li>계정 비밀번호는 이용자 본인이 관리합니다.</li>
+            </ul>
+        </section>
+        <section class="policy-card">
+            <h3>4. 면책</h3>
+            <p>사이트에 실린 요양 급여, 이용 요금, 제품 안내는 이해를 돕기 위한 자료이며 진단이나 처방을 대신하지 않습니다. 가격과 급여 적용은 공단 기준과 실제 상담 결과에 따릅니다. 천재지변, 통신 장애 등 헤리움이 통제하기 어려운 사유로 서비스가 중단된 경우 헤리움은 그 책임을 지지 않습니다.</p>
+        </section>
+        <section class="policy-card">
+            <h3>5. 분쟁 해결</h3>
+            <p>서비스 이용과 관련한 문의는 헤리움 고객센터(054-334-9986)로 먼저 연락해 주시기 바랍니다. 합의가 이루어지지 않으면 대한민국 법령과 민사소송법이 정한 절차에 따릅니다.</p>
+        </section>
+        <div class="policy-links">
+            <a href="privacy.html">개인정보처리방침</a>
+            <a href="main.html">홈으로</a>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="privacy.html" class="highlight">개인정보처리방침</a>
+            <a href="terms.html">이용약관</a>
+            <a href="#">이메일무단수집거부</a>
+            <a href="sitemap.html">전체 메뉴</a>
+            <a href="about/location.html">찾아오시는 길</a>
+            <div class="footer-sns">
+                <a href="{% firstof info.blog_url "#" %}" class="footer-sns-btn" title="블로그" aria-label="블로그"><span>b</span></a>
+                <a href="{% firstof info.instagram_url "#" %}" class="footer-sns-btn" title="인스타그램" aria-label="인스타그램"><i class="fa-brands fa-instagram"></i></a>
+                <a href="service/medical.html" class="footer-sns-btn" title="의료기 판매" aria-label="의료기 판매"><i class="fa-solid fa-kit-medical"></i></a>
+            </div>
+        </div>
+        <div class="footer-info">
+            <div class="footer-logo">
+                <img src="img/logo2.png" alt="하단 로고">
+            </div>
+            <div class="info-text">
+                <p>
+                    <span>주소 : {{ info.address|default:"영천시 역전로 16(완산동 1081-5)" }}</span>
+                    <span>대표자 : {{ info.owner|default:"강시중" }}</span>
+                    <span>사업자등록번호 : {{ info.biz_no|default:"123-45-67890" }}</span>
+                </p>
+                <p>
+                    <span>대표전화 : {{ info.phone|default:"054-334-9986" }}</span>
+                    <span>팩스 : {{ info.fax|default:"054-334-9985" }}</span>
+                    <span>이메일 : {{ info.email|default:"info@example.com" }}</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="search.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>

@@ -11,6 +11,8 @@ PUBLIC_SITEMAP_PATHS = [
     "login.html",
     "signup.html",
     "find-account.html",
+    "privacy.html",
+    "terms.html",
     "about/about.html",
     "about/facility.html",
     "about/location.html",

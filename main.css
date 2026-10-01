@@ -1102,6 +1102,7 @@ body.is-search-open header .dropdown { display: none !important; }
     color: #666;
 }
 .auth-check input { margin-top: 3px; accent-color: #b38b4d; }
+.auth-check a { color: #8f6c38; text-decoration: underline; text-underline-offset: 2px; }
 
 .auth-submit {
     width: 100%;

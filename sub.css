@@ -161,6 +161,40 @@
     color: #777;
     font-size: 0.92rem;
 }
+.policy-page { background: #faf8f2; font-family: 'Noto Sans KR', 'Arial', sans-serif; }
+.policy-wrap { max-width: 860px; margin: 0 auto; padding: 36px 20px 64px; }
+.policy-lead { color: #555; line-height: 1.8; margin: 0 0 8px; }
+.policy-meta { color: #888; font-size: 0.92rem; margin: 0 0 18px; }
+.policy-card {
+    background: #fff;
+    border: 1px solid #eee8dc;
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 14px;
+}
+.policy-card h3 {
+    margin: 0 0 10px;
+    padding-left: 12px;
+    border-left: 4px solid #b38b4d;
+    font-size: 1.15rem;
+    color: #333;
+}
+.policy-card p, .policy-card li { color: #555; line-height: 1.8; }
+.policy-card ul { margin: 8px 0 0; padding-left: 1.2em; }
+.policy-card li + li { margin-top: 4px; }
+.policy-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.policy-links a {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid #e4d7bf;
+    background: #fff;
+    color: #8f6c38;
+    font-weight: 700;
+}
+.page-form .check a { color: #8f6c38; text-decoration: underline; text-underline-offset: 2px; }
 
 .info-cards {
     display: grid;
