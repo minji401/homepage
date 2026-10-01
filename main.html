@@ -303,11 +303,17 @@
     
     <div class="slide-container">
         <div class="slide-wrapper">
+            {% if cms_gallery_slides %}
+            {% for post in cms_gallery_slides %}
+            <div class="slide-item"><img src="{{ post.image }}?v={{ img_v }}" alt="{{ post.title }}"></div>
+            {% endfor %}
+            {% else %}
             <div class="slide-item"><img src="img/gallery1.jpg?v={{ img_v }}" alt="활동 사진 1"></div>
             <div class="slide-item"><img src="img/gallery2.jpg?v={{ img_v }}" alt="활동 사진 2"></div>
             <div class="slide-item"><img src="img/gallery3.jpg?v={{ img_v }}" alt="활동 사진 3"></div>
             <div class="slide-item"><img src="img/gallery4.jpg?v={{ img_v }}" alt="활동 사진 4"></div>
             <div class="slide-item"><img src="img/gallery5.jpg?v={{ img_v }}" alt="활동 사진 5"></div>
+            {% endif %}
         </div>
         <div class="gallery-controls">
             <button type="button" id="gallery-prev" aria-label="이전 사진"><i class="fas fa-chevron-left"></i></button>

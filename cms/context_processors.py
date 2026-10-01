@@ -37,6 +37,7 @@ def public_cms(request):
         for item in gallery:
             key = item.category if item.category in grouped else "nursing"
             grouped[key].append(item)
+        gallery_slides = [item for item in gallery if (item.image or "").strip()]
         day_total = 0
         if usage.get("day_general"):
             day_total += usage["day_general"].capacity
@@ -59,6 +60,7 @@ def public_cms(request):
             "cms_faq_posts": Post.objects.filter(board__slug="faq", is_hidden=False),
             "cms_menu_posts": Post.objects.filter(board__slug="menu", is_hidden=False).order_by("-is_pinned", "-created_at"),
             "cms_gallery": grouped,
+            "cms_gallery_slides": gallery_slides,
             "cms_has_gallery": bool(gallery),
             "usage": usage,
             "usage_day_total": day_total,
@@ -67,4 +69,4 @@ def public_cms(request):
             "img_v": _img_version(),
         }
     except Exception:
-        return {"cms": {}, "info": {}, "cms_has_gallery": False, "cms_gallery": {"night": [], "nursing": [], "home": []}, "cms_menu_posts": [], "usage": {}, "usage_day_total": 0, "usage_as_of": "", "diet_days": [], "img_v": "1"}
+        return {"cms": {}, "info": {}, "cms_has_gallery": False, "cms_gallery": {"night": [], "nursing": [], "home": []}, "cms_gallery_slides": [], "cms_menu_posts": [], "usage": {}, "usage_day_total": 0, "usage_as_of": "", "diet_days": [], "img_v": "1"}

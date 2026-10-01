@@ -7,9 +7,12 @@ const galleryItemsToShow = 3;
 const gallerySlideWidth = 460;
 const galleryMobileQuery = window.matchMedia('(max-width: 860px)');
 
-for (let i = 0; i < galleryItemsToShow; i++) {
-    const clone = galleryItems[i].cloneNode(true);
-    galleryWrapper.appendChild(clone);
+if (galleryWrapper) {
+    const galleryCloneCount = Math.min(galleryItemsToShow, galleryItems.length);
+    for (let i = 0; i < galleryCloneCount; i++) {
+        const clone = galleryItems[i].cloneNode(true);
+        galleryWrapper.appendChild(clone);
+    }
 }
 
 let galleryIndex = 0;
@@ -77,17 +80,19 @@ function prevGallerySlide() {
     paintGallery(true);
 }
 
-paintGallery(false);
-setInterval(nextGallerySlide, 3000);
-
-const galleryPrev = document.getElementById('gallery-prev');
-const galleryNext = document.getElementById('gallery-next');
-if (galleryPrev) galleryPrev.addEventListener('click', prevGallerySlide);
-if (galleryNext) galleryNext.addEventListener('click', nextGallerySlide);
-window.addEventListener('resize', function () {
-    galleryIndex = 0;
+if (galleryWrapper && galleryTotal) {
     paintGallery(false);
-});
+    setInterval(nextGallerySlide, 3000);
+
+    const galleryPrev = document.getElementById('gallery-prev');
+    const galleryNext = document.getElementById('gallery-next');
+    if (galleryPrev) galleryPrev.addEventListener('click', prevGallerySlide);
+    if (galleryNext) galleryNext.addEventListener('click', nextGallerySlide);
+    window.addEventListener('resize', function () {
+        galleryIndex = 0;
+        paintGallery(false);
+    });
+}
 
 
 /* ==========================================================================
