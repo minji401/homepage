@@ -37,6 +37,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+{% if cms_popup %}
+<div class="site-popup" id="sitePopup" data-hide-key="herium_popup_{{ cms_popup.pk }}_{{ cms_popup.updated_at|date:'YmdHis' }}">
+    <div class="site-popup-box">
+        {% if cms_popup.image %}
+        <img src="{{ cms_popup.image }}" alt="{{ cms_popup.title|default:'안내' }}">
+        {% endif %}
+        <div class="site-popup-foot">
+            <label><input type="checkbox" id="popupHideToday"> 오늘 하루 창 그만 보기</label>
+            <button type="button" class="js-close-popup">CLOSE</button>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="top-bar">
     <div class="user-menu">
@@ -148,7 +161,7 @@
 </header>
 
 <div class="main-visual-row">
-    <div class="box">
+    <div class="box"{% if hero_photo %} style="--hero-photo: url('{{ hero_photo }}?v={{ img_v }}')"{% endif %}>
         <div>
             <h1>{% if cms.main_headline %}{{ cms.main_headline|safe }}{% else %}<span>따스한 손길</span>로 전하는 <span>사랑</span>, <br><span>헤리움 케어센터</span>가 함께합니다.{% endif %}</h1>
         </div>
@@ -182,33 +195,27 @@
     </div>
 
     <div class="main-slider">
-        {% if hero_photo %}
-        <div class="hero-static">
-            <img src="{{ hero_photo }}?v={{ img_v }}" alt="헤리움 케어센터">
+        <div class="slider-wrapper">
+            {% if cms_banners %}
+            {% for banner in cms_banners %}
+            <div class="slider-item"><img src="{{ banner.image }}?v={{ img_v }}" alt="{{ banner.title }}"></div>
+            {% endfor %}
+            {% else %}
+            <div class="slider-item"><img src="img/1.png" alt="메인 배너 1"></div>
+            <div class="slider-item"><img src="img/2.png" alt="메인 배너 2"></div>
+            <div class="slider-item"><img src="img/3.jpg" alt="메인 배너 3"></div>
+            {% endif %}
         </div>
-        {% else %}
-            <div class="slider-wrapper">
-                {% if cms_banners %}
-                {% for banner in cms_banners %}
-                <div class="slider-item"><img src="{{ banner.image }}?v={{ img_v }}" alt="{{ banner.title }}"></div>
-                {% endfor %}
-                {% else %}
-                <div class="slider-item"><img src="img/1.png" alt="메인 배너 1"></div>
-                <div class="slider-item"><img src="img/2.png" alt="메인 배너 2"></div>
-                <div class="slider-item"><img src="img/3.jpg" alt="메인 배너 3"></div>
-                {% endif %}
-            </div>
         <div class="slider-controls">
             <div class="slider-counter">
                 <span id="slide-current">1</span> / <span id="slide-total">3</span>
             </div>
             <div class="control-buttons">
-                <button id="slider-prev" class="slider-btn"><i class="fas fa-chevron-left"></i></button>
-                <button id="slider-toggle" class="slider-btn"><i class="fas fa-pause"></i></button>
-                <button id="slider-next" class="slider-btn"><i class="fas fa-chevron-right"></i></button>
+                <button id="slider-prev" class="slider-btn" type="button" aria-label="이전 배너"><i class="fas fa-chevron-left"></i></button>
+                <button id="slider-toggle" class="slider-btn" type="button" aria-label="배너 자동재생"><i class="fas fa-pause"></i></button>
+                <button id="slider-next" class="slider-btn" type="button" aria-label="다음 배너"><i class="fas fa-chevron-right"></i></button>
             </div>
         </div>
-        {% endif %}
     </div>
 
     <nav class="m-shortcuts" aria-label="자주 찾는 메뉴">
@@ -364,26 +371,15 @@
 <script src="main.js"></script>
 <script src="search.js"></script>
 <script src="auth.js"></script>
-{% if cms_popup %}
-<div class="site-popup" id="sitePopup">
-    <div class="site-popup-box">
-        <img src="{{ cms_popup.image }}" alt="{{ cms_popup.title }}">
-        <div class="site-popup-foot">
-            <label><input type="checkbox" id="popupHideToday"> 오늘 하루 창 그만 보기</label>
-            <button type="button" class="js-close-popup">CLOSE</button>
-        </div>
-    </div>
-</div>
 <script>
 (function () {
+    var el = document.getElementById("sitePopup");
+    if (!el) return;
+    var key = el.getAttribute("data-hide-key") || "herium_popup_hide";
     var d = new Date();
     var today = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-    if (localStorage.getItem("herium_popup_hide") === today) {
-        var el = document.getElementById("sitePopup");
-        if (el) el.remove();
-    }
+    if (localStorage.getItem(key) === today) el.remove();
 })();
 </script>
-{% endif %}
 </body>
 </html>

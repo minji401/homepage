@@ -505,7 +505,8 @@
                 if (hideToday && hideToday.checked) {
                     const d = new Date();
                     const today = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-                    localStorage.setItem("herium_popup_hide", today);
+                    const key = (popup && popup.getAttribute("data-hide-key")) || "herium_popup_hide";
+                    localStorage.setItem(key, today);
                 }
                 if (popup) popup.remove();
             });

@@ -538,6 +538,8 @@ def content(request):
                     messages.error(request, "jpg, png, gif, webp 이미지만 올릴 수 있습니다.")
                     return redirect("/staff/content/")
                 popup.image = saved
+            if popup.image and not popup.image.startswith(("http://", "https://", "/")):
+                popup.image = "/" + popup.image
             popup.save()
             if popup.is_active and not popup.image:
                 popup.is_active = False
