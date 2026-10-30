@@ -21,11 +21,11 @@ class Command(BaseCommand):
         admin_user.is_superuser = True
         admin_user.is_active = True
         admin_password = os.environ.get("ADMIN_PASSWORD", "").strip()
-        if os.environ.get("RENDER"):
-            if admin_password:
-                admin_user.set_password(admin_password)
-                self.stdout.write("admin 비밀번호를 ADMIN_PASSWORD로 맞췄습니다.")
-            elif created:
+        if admin_password:
+            admin_user.set_password(admin_password)
+            self.stdout.write("admin 비밀번호를 ADMIN_PASSWORD로 맞췄습니다.")
+        elif os.environ.get("RENDER"):
+            if created:
                 admin_user.set_unusable_password()
                 self.stdout.write("RENDER 환경에는 ADMIN_PASSWORD가 없어 admin 로그인 비밀번호를 만들지 않았습니다.")
         elif created:
@@ -33,7 +33,7 @@ class Command(BaseCommand):
         admin_user.save()
         Profile.objects.update_or_create(
             user=admin_user,
-            defaults={"name": "관리자", "phone": "054-334-9986", "role": Profile.ROLE_ADMIN, "status": Profile.STATUS_ACTIVE},
+            defaults={"name": "관리자", "phone": "", "role": Profile.ROLE_ADMIN, "status": Profile.STATUS_ACTIVE},
         )
         if admin_password:
             try:

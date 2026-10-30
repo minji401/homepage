@@ -647,10 +647,27 @@ def withdraw_shared_user(shared):
     return shared
 
 
+def _is_staff_local(user):
+    if user is None:
+        return False
+    if user.is_staff or user.is_superuser:
+        return True
+    profile = getattr(user, "profile", None)
+    return bool(profile and profile.role == Profile.ROLE_ADMIN)
+
+
 def login_with_shared(request, login_id, password):
     login_id = (login_id or "").strip()
     local = find_local_by_login(login_id)
-    shared = resolve_shared_login(login_id, local)
+    if _is_staff_local(local):
+        django_staff = authenticate(request, username=local.username, password=password)
+        if django_staff is not None:
+            _ensure_local_status(django_staff)
+            login(request, django_staff)
+            return django_staff
+        shared = resolve_shared_login(login_id, None)
+    else:
+        shared = resolve_shared_login(login_id, local)
     username_hint = _username_hint(login_id, local, shared)
 
     if shared is not None:
