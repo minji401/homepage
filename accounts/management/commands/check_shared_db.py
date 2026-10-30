@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db.utils import OperationalError, ProgrammingError
 
 from accounts.models import SharedUser
 from accounts.shared_users import ensure_shared_schema, shared_enabled, shared_expected
@@ -36,6 +37,8 @@ class Command(BaseCommand):
                 self.stdout.write(
                     f"users latest: phone_prefix={phone[:3]} hash_prefix={hashed[:8]}"
                 )
+        except (OperationalError, ProgrammingError):
+            self.stdout.write("users table: not ready yet")
         except Exception as exc:
             self.stderr.write(f"users table: ERROR {type(exc).__name__}: {exc}")
             raise

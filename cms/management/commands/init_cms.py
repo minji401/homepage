@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
+from django.db.utils import OperationalError, ProgrammingError
 from django.utils import timezone
 
 from accounts.models import Profile
@@ -43,6 +44,8 @@ class Command(BaseCommand):
                     shared = get_shared_by_username("admin")
                     if shared is not None:
                         update_shared_password(shared, admin_password)
+            except (OperationalError, ProgrammingError):
+                pass
             except Exception as exc:
                 self.stderr.write("공유 DB admin 비밀번호 동기화 실패: %s" % exc)
 

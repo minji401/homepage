@@ -7,4 +7,7 @@ class AccountsConfig(AppConfig):
     verbose_name = "회원"
 
     def ready(self):
-        from . import signals  # noqa: F401
+        try:
+            from . import signals  # noqa: F401
+        except Exception:
+            pass

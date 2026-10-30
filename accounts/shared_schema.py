@@ -3,8 +3,39 @@
 from __future__ import annotations
 
 from django.db import connections
+from django.db.utils import OperationalError, ProgrammingError
 
 TABLES = [
+    """
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user',
+      herium_linked INTEGER NOT NULL DEFAULT 0,
+      herium_relation TEXT,
+      herium_note TEXT,
+      created_at TEXT NOT NULL
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS orders (
+      id TEXT PRIMARY KEY,
+      number TEXT NOT NULL UNIQUE,
+      user_id TEXT,
+      type TEXT NOT NULL,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      address TEXT NOT NULL DEFAULT '',
+      memo TEXT NOT NULL DEFAULT '',
+      topics TEXT NOT NULL DEFAULT '[]',
+      items TEXT NOT NULL DEFAULT '[]',
+      total INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'received',
+      created_at TEXT NOT NULL
+    )
+    """,
     """
     CREATE TABLE IF NOT EXISTS care_consultations (
       id TEXT PRIMARY KEY,
@@ -128,26 +159,34 @@ def ensure_integration_schema():
 
     if "shared" not in getattr(settings, "DATABASES", {}):
         return
-    apply_shared_schema(connections["shared"])
+    try:
+        apply_shared_schema(connections["shared"])
+    except (OperationalError, ProgrammingError):
+        return
 
 
 def apply_shared_schema(connection):
     vendor = connection.vendor
-    with connection.cursor() as cursor:
-        for sql in TABLES:
-            cursor.execute(sql)
-        for table, cols in (("users", USER_COLUMNS), ("orders", ORDER_COLUMNS), ("care_consultations", CONSULT_COLUMNS)):
-            try:
-                existing = _existing_columns(cursor, vendor, table)
-            except Exception:
-                continue
-            for name, coltype in cols:
-                if name in existing:
+    try:
+        with connection.cursor() as cursor:
+            for sql in TABLES:
+                cursor.execute(sql)
+            for table, cols in (("users", USER_COLUMNS), ("orders", ORDER_COLUMNS), ("care_consultations", CONSULT_COLUMNS)):
+                try:
+                    existing = _existing_columns(cursor, vendor, table)
+                except (OperationalError, ProgrammingError):
                     continue
-                if vendor == "postgresql":
-                    cursor.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {name} {coltype}")
-                else:
+                if not existing:
+                    continue
+                for name, coltype in cols:
+                    if name in existing:
+                        continue
                     try:
-                        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {name} {coltype}")
-                    except Exception:
-                        pass
+                        if vendor == "postgresql":
+                            cursor.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {name} {coltype}")
+                        else:
+                            cursor.execute(f"ALTER TABLE {table} ADD COLUMN {name} {coltype}")
+                    except (OperationalError, ProgrammingError):
+                        continue
+    except (OperationalError, ProgrammingError):
+        return

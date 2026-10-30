@@ -2,9 +2,14 @@ from django.db import migrations, models
 
 
 def apply_shared_tables(apps, schema_editor):
+    from django.db.utils import OperationalError, ProgrammingError
+
     from accounts.shared_schema import ensure_integration_schema
 
-    ensure_integration_schema()
+    try:
+        ensure_integration_schema()
+    except (OperationalError, ProgrammingError):
+        pass
 
 
 class Migration(migrations.Migration):

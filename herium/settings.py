@@ -8,6 +8,25 @@ logger = logging.getLogger("herium")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def _load_env_files():
+    for name in (".env", ".env.local"):
+        path = BASE_DIR / name
+        if not path.is_file():
+            continue
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and os.environ.get(key) is None:
+                os.environ[key] = value
+
+
+_load_env_files()
+
 _DEV_SECRET = "django-insecure-herium-local-dev-only-change-later"
 SECRET_KEY = os.environ.get("SECRET_KEY", "" if os.environ.get("RENDER") else _DEV_SECRET)
 if os.environ.get("RENDER") and (not SECRET_KEY or SECRET_KEY == _DEV_SECRET):
@@ -77,13 +96,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "herium.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
-
 
 def _postgres_from_url(url):
     url = (url or "").strip().strip('"').strip("'")
@@ -109,43 +121,26 @@ def _postgres_from_url(url):
     }
 
 
-def _medical_sqlite_path():
-    parent = BASE_DIR.parent
-    direct = parent / "medical _device"
-    if (direct / "server" / "db.js").exists():
-        return direct / "server" / "data" / "hyundai.db"
-    try:
-        children = list(parent.iterdir())
-    except OSError:
-        children = []
-    for child in children:
-        if child.is_dir() and (child / "server" / "db.js").exists() and "medical" in child.name.lower():
-            return child / "server" / "data" / "hyundai.db"
-    return direct / "server" / "data" / "hyundai.db"
-
-
-_shared_url = (os.environ.get("DATABASE_URL") or os.environ.get("SHARED_DATABASE_URL") or "").strip()
 _running_tests = "test" in sys.argv
-if _shared_url:
-    _shared_db = _postgres_from_url(_shared_url)
-    if _shared_db:
-        DATABASES["shared"] = _shared_db
-        DATABASE_ROUTERS = ["accounts.db_router.SharedDatabaseRouter"]
-        logger.info("shared postgres configured name=%s host_set=%s", _shared_db["NAME"], bool(_shared_db["HOST"]))
-    else:
-        logger.error("DATABASE_URL is set but could not be parsed (missing database name)")
-elif os.environ.get("RENDER"):
-    logger.error("RENDER is set but DATABASE_URL is missing; herium signup will not write users")
-elif not _running_tests:
-    _shared_sqlite = _medical_sqlite_path()
-    _shared_sqlite.parent.mkdir(parents=True, exist_ok=True)
-    DATABASES["shared"] = {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": _shared_sqlite,
-        "OPTIONS": {"timeout": 20},
+_db_url = (os.environ.get("DATABASE_URL") or os.environ.get("SHARED_DATABASE_URL") or "").strip()
+_pg = _postgres_from_url(_db_url)
+
+if _running_tests:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
+    }
+elif _pg:
+    DATABASES = {
+        "default": dict(_pg),
+        "shared": dict(_pg),
     }
     DATABASE_ROUTERS = ["accounts.db_router.SharedDatabaseRouter"]
-    logger.info("shared sqlite configured")
+    logger.info("postgres configured name=%s host_set=%s", _pg["NAME"], bool(_pg["HOST"]))
+else:
+    raise RuntimeError("DATABASE_URL이 필요합니다. SQLite는 쓰지 않고 Neon Postgres만 사용합니다.")
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},

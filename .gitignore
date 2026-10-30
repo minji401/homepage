@@ -6,3 +6,9 @@ db.sqlite3
 *.log
 .DS_Store
 _nav2.py
+.neon
+node_modules/
+.env.local
+.env
+sqlite_to_neon.json
+sqlite_to_neon_noprofile.json

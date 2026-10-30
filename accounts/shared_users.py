@@ -11,7 +11,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.db import IntegrityError, connections
-from django.db.utils import DatabaseError
+from django.db.utils import DatabaseError, OperationalError, ProgrammingError
 
 from .models import Profile, SharedUser
 from .password_policy import LOCK_LIMIT, lock_message, lock_until
@@ -105,6 +105,14 @@ def ensure_shared_schema():
     global _schema_ready
     if _schema_ready or not shared_enabled():
         return
+    try:
+        _ensure_shared_schema()
+    except (OperationalError, ProgrammingError):
+        return
+
+
+def _ensure_shared_schema():
+    global _schema_ready
     connection = connections["shared"]
     vendor = connection.vendor
     with connection.cursor() as cursor:
@@ -172,14 +180,17 @@ def ensure_shared_schema():
         )
     apply_shared_schema(connection)
     ensure_integration_schema()
-    for row in _shared_qs().all().iterator():
-        if (row.username or "").strip():
-            continue
-        parsed = username_from_note(row.herium_note)
-        if not parsed:
-            continue
-        row.username = parsed
-        row.save(update_fields=["username"], using="shared")
+    try:
+        for row in _shared_qs().all().iterator():
+            if (row.username or "").strip():
+                continue
+            parsed = username_from_note(row.herium_note)
+            if not parsed:
+                continue
+            row.username = parsed
+            row.save(update_fields=["username"], using="shared")
+    except (OperationalError, ProgrammingError):
+        return
     _schema_ready = True
 
 
