@@ -41,10 +41,10 @@ from .models import (
 )
 
 CONTENT_BOARDS = {
-    "notice": {"name": "공지사항", "has_image": False, "has_category": False},
-    "menu": {"name": "식단표", "has_image": True, "has_category": False},
-    "gallery": {"name": "갤러리", "has_image": True, "has_category": True},
-    "faq": {"name": "자주 묻는 질문", "has_image": False, "has_category": False},
+    "notice": {"name": "공지사항", "has_image": False, "has_category": False, "has_attachment": True, "has_multiple": False},
+    "menu": {"name": "식단표", "has_image": True, "has_category": False, "has_attachment": True, "has_multiple": False},
+    "gallery": {"name": "갤러리", "has_image": True, "has_category": True, "has_attachment": True, "has_multiple": True},
+    "faq": {"name": "자주 묻는 질문", "has_image": False, "has_category": False, "has_attachment": False, "has_multiple": False},
 }
 GALLERY_CATEGORIES = [
     ("night", "주야간보호"),
@@ -118,11 +118,12 @@ def _ensure_board(slug):
 
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
+FILE_EXTS = IMAGE_EXTS | {".pdf", ".doc", ".docx", ".hwp", ".hwpx", ".xls", ".xlsx", ".ppt", ".pptx", ".zip", ".txt"}
 
 
-def _save_upload(upload, folder="posts"):
+def _save_upload(upload, folder="posts", allowed=None):
     suffix = Path(upload.name).suffix.lower()
-    if suffix not in IMAGE_EXTS:
+    if suffix not in (allowed or IMAGE_EXTS):
         return ""
     dest_dir = Path(settings.MEDIA_ROOT) / folder
     dest_dir.mkdir(parents=True, exist_ok=True)
@@ -405,8 +406,12 @@ def post_edit(request, post_id=None, slug=None):
             post.category = request.POST.get("category") or ""
             post.is_pinned = request.POST.get("is_pinned") == "on"
             post.is_hidden = request.POST.get("is_hidden") == "on"
-            upload = request.FILES.get("image")
-            if upload:
+            uploads = list(request.FILES.getlist("images"))
+            single = request.FILES.get("image")
+            if single:
+                uploads.append(single)
+            saved_urls = []
+            for upload in uploads:
                 saved = _save_upload(upload)
                 if not saved:
                     messages.error(request, "jpg, png, gif, webp 이미지만 올릴 수 있습니다.")
@@ -417,7 +422,38 @@ def post_edit(request, post_id=None, slug=None):
                         "meta": meta,
                         "categories": GALLERY_CATEGORIES,
                     })
-                post.image = saved
+                saved_urls.append(saved)
+            extra = list(post.extra_images or [])
+            if not isinstance(extra, list):
+                extra = []
+            remove = request.POST.getlist("remove_image")
+            if post.image and post.image in remove:
+                post.image = ""
+            extra = [url for url in extra if url not in remove]
+            if saved_urls:
+                if not post.image:
+                    post.image = saved_urls[0]
+                    extra.extend(saved_urls[1:])
+                else:
+                    extra.extend(saved_urls)
+            post.extra_images = extra
+            attachment = request.FILES.get("attachment")
+            if attachment:
+                saved = _save_upload(attachment, folder="files", allowed=FILE_EXTS)
+                if not saved:
+                    messages.error(request, "올릴 수 없는 첨부파일 형식입니다.")
+                    return render(request, "staff/post_form.html", {
+                        "post": post,
+                        "slug": slug,
+                        "board": board,
+                        "meta": meta,
+                        "categories": GALLERY_CATEGORIES,
+                    })
+                post.attachment = saved
+                post.attachment_name = attachment.name[:200]
+            if request.POST.get("clear_attachment") == "on":
+                post.attachment = ""
+                post.attachment_name = ""
             post.save()
             messages.success(request, "저장되었습니다.")
             return redirect(f"/staff/posts/{slug}/")
@@ -427,6 +463,18 @@ def post_edit(request, post_id=None, slug=None):
         "board": board,
         "meta": meta,
         "categories": GALLERY_CATEGORIES,
+    })
+
+
+def public_post(request, post_id):
+    post = get_object_or_404(Post.objects.select_related("board"), pk=post_id)
+    if post.is_hidden and not (request.user.is_authenticated and request.user.is_staff):
+        return redirect(post.list_url())
+    return render(request, "community/post.html", {
+        "post": post,
+        "photos": post.image_list(),
+        "board_name": post.board.name if post.board_id else "소식",
+        "list_url": post.list_url(),
     })
 
 
@@ -497,6 +545,27 @@ def content(request):
                 messages.error(request, "팝업 사진을 올린 뒤에 메인에 표시할 수 있습니다.")
             else:
                 messages.success(request, "팝업을 저장했습니다.")
+        elif section == "brand":
+            labels = {
+                "logo": "상단 로고",
+                "logo_footer": "하단 로고",
+                "hero_photo": "메인 대표 사진",
+            }
+            saved_any = False
+            for key, label in labels.items():
+                upload = request.FILES.get(key)
+                if not upload:
+                    continue
+                saved = _save_upload(upload, "brand")
+                if not saved:
+                    messages.error(request, "jpg, png, gif, webp 이미지만 올릴 수 있습니다.")
+                    return redirect("/staff/content/")
+                item, _created = SiteContent.objects.get_or_create(key=key, defaults={"label": label, "body": saved})
+                item.label = label
+                item.body = saved
+                item.save()
+                saved_any = True
+            messages.success(request, "로고와 메인 사진을 저장했습니다." if saved_any else "올릴 파일을 선택해 주세요.")
         elif section == "banner":
             banner = get_object_or_404(Banner, pk=request.POST.get("id"))
             banner.title = request.POST.get("title") or banner.title
@@ -554,6 +623,9 @@ def content(request):
         "site_groups": site_groups,
         "popup": Popup.objects.first(),
         "banners": Banner.objects.all(),
+        "logo": contents_by_key.get("logo"),
+        "logo_footer": contents_by_key.get("logo_footer"),
+        "hero_photo": contents_by_key.get("hero_photo"),
     })
 
 

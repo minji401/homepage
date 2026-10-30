@@ -46,25 +46,32 @@ class Profile(models.Model):
 
 
 class SharedUser(models.Model):
-    """현대 의료기 Postgres users 테이블. managed=False — DROP/변경 금지."""
+    """공유 PostgreSQL users 테이블. managed=False — DROP/컬럼 파괴 금지."""
+
+    ROLE_USER = "user"
+    ROLE_ADMIN = "admin"
+    ROLE_CHOICES = [
+        (ROLE_USER, "USER"),
+        (ROLE_ADMIN, "ADMIN"),
+    ]
 
     id = models.CharField(primary_key=True, max_length=80)
-    name = models.TextField()
+    name = models.TextField("이름")
     guardian_name = models.TextField(null=True, blank=True)
-    phone = models.TextField(unique=True)
-    username = models.TextField(null=True, blank=True)
-    email = models.TextField(null=True, blank=True)
-    password_hash = models.TextField()
+    phone = models.TextField("연락처", unique=True)
+    username = models.TextField("로그인 아이디", null=True, blank=True)
+    email = models.TextField("이메일", null=True, blank=True)
+    password_hash = models.TextField("비밀번호 해시")
     login_failures = models.IntegerField(default=0)
     login_locked_until = models.TextField(null=True, blank=True)
-    role = models.TextField(default="user")
+    role = models.TextField("역할", default=ROLE_USER, choices=ROLE_CHOICES)
     herium_linked = models.IntegerField(default=0)
     herium_relation = models.TextField(null=True, blank=True)
     herium_note = models.TextField(null=True, blank=True)
     marketing_agreed = models.IntegerField(default=0)
-    age_14_agreed = models.IntegerField(default=0)
+    age_14_agreed = models.IntegerField("만 14세 이상 확인", default=0)
     withdrawn_at = models.TextField(null=True, blank=True)
-    created_at = models.TextField()
+    created_at = models.TextField("가입일시")
 
     class Meta:
         managed = False
@@ -75,3 +82,208 @@ class SharedUser(models.Model):
     def __str__(self):
         return f"{self.name} ({self.phone})"
 
+    @property
+    def is_over_14(self):
+        return int(self.age_14_agreed or 0) == 1
+
+    @is_over_14.setter
+    def is_over_14(self, value):
+        self.age_14_agreed = 1 if value else 0
+
+
+class SharedSiteContent(models.Model):
+    id = models.CharField(primary_key=True, max_length=80)
+    content_key = models.TextField("키", unique=True)
+    title = models.TextField("제목", null=True, blank=True)
+    content = models.TextField("내용", null=True, blank=True)
+    image_url = models.TextField("이미지 URL", null=True, blank=True)
+    updated_at = models.TextField("수정일시")
+
+    class Meta:
+        managed = False
+        db_table = "site_contents"
+        verbose_name = "공유 CMS"
+        verbose_name_plural = "공유 CMS"
+
+    def __str__(self):
+        return self.content_key
+
+
+class CareConsultation(models.Model):
+    STATUS_PENDING = "PENDING"
+    STATUS_CONFIRMED = "CONFIRMED"
+    STATUS_CANCELLED = "CANCELLED"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "대기"),
+        (STATUS_CONFIRMED, "확정"),
+        (STATUS_CANCELLED, "취소"),
+    ]
+    CARE_LEVELS = [
+        ("1_2등급", "1~2등급"),
+        ("3_5등급", "3~5등급"),
+        ("신청중_미인정", "신청중 또는 미인정"),
+    ]
+    MOBILITY = [
+        ("자립보행", "자립보행"),
+        ("부축필요", "부축필요"),
+        ("와상", "와상"),
+    ]
+    SLOTS = [
+        ("오전(10-12)", "오전 10~12"),
+        ("오후(14-16)", "오후 14~16"),
+        ("오후(16-18)", "오후 16~18"),
+        ("시간무관", "시간무관"),
+    ]
+
+    id = models.CharField(primary_key=True, max_length=80)
+    user_id = models.CharField("회원 ID", max_length=80, null=True, blank=True)
+    applicant_name = models.TextField("신청자명")
+    applicant_phone = models.TextField("연락처")
+    relation_type = models.TextField("어르신과의 관계", default="")
+    care_level = models.TextField("장기요양등급", default="", choices=CARE_LEVELS)
+    mobility_status = models.TextField("보행상태", default="", choices=MOBILITY)
+    preferred_date = models.TextField("희망일자", null=True, blank=True)
+    preferred_time_slot = models.TextField("희망시간대", null=True, blank=True, choices=SLOTS)
+    privacy_agreed = models.IntegerField("개인정보수집동의", default=0)
+    confirmed_datetime = models.TextField("확정일시", null=True, blank=True)
+    status = models.TextField("상담상태", default=STATUS_PENDING, choices=STATUS_CHOICES)
+    sms_sent_at = models.TextField("확정문자발송일시", null=True, blank=True)
+    sms_content = models.TextField("확정문자내용", null=True, blank=True)
+    sms_ok = models.IntegerField(null=True, blank=True)
+    admin_memo = models.TextField(null=True, blank=True)
+    created_at = models.TextField("신청일시")
+
+    class Meta:
+        managed = False
+        db_table = "care_consultations"
+        verbose_name = "입소 상담"
+        verbose_name_plural = "입소 상담"
+
+    def __str__(self):
+        return f"{self.applicant_name} ({self.status})"
+
+
+class CareSchedule(models.Model):
+    CATEGORIES = [
+        ("상담", "상담"),
+        ("봉사", "봉사"),
+        ("시설행사", "시설행사"),
+        ("기타", "기타"),
+    ]
+
+    id = models.CharField(primary_key=True, max_length=80)
+    consultation_id = models.CharField("상담 ID", max_length=80, null=True, blank=True)
+    title = models.TextField("일정 제목")
+    start_datetime = models.TextField("시작일시")
+    end_datetime = models.TextField("종료일시")
+    category = models.TextField("분류", default="기타", choices=CATEGORIES)
+    memo = models.TextField("메모", null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = "care_schedules"
+        verbose_name = "요양원 일정"
+        verbose_name_plural = "요양원 일정"
+
+    def __str__(self):
+        return self.title
+
+
+class Product(models.Model):
+    id = models.CharField(primary_key=True, max_length=80)
+    name = models.TextField("상품명")
+    price = models.IntegerField("판매가")
+    sale_price = models.IntegerField("할인가", null=True, blank=True)
+    stock = models.IntegerField("재고", default=0)
+    category = models.TextField("카테고리", default="")
+    thumbnail_url = models.TextField("대표이미지 URL", default="")
+    description = models.TextField("설명", default="")
+    is_hygiene_product = models.IntegerField("위생/피부접촉용품", default=0)
+    is_active = models.IntegerField("노출", default=1)
+    created_at = models.TextField("등록일시")
+
+    class Meta:
+        managed = False
+        db_table = "products"
+        verbose_name = "의료기 상품"
+        verbose_name_plural = "의료기 상품"
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def sale_status(self):
+        if not int(self.is_active or 0):
+            return "숨김"
+        if int(self.stock or 0) <= 0:
+            return "품절"
+        return "판매중"
+
+
+class ShopProfile(models.Model):
+    id = models.CharField(primary_key=True, max_length=80)
+    user_id = models.CharField("회원 ID", max_length=80, unique=True)
+    recipient_name = models.TextField("수령인명", default="")
+    recipient_phone = models.TextField("연락처", default="")
+    zipcode = models.TextField("우편번호", default="")
+    address_basic = models.TextField("기본주소", default="")
+    address_detail = models.TextField("상세주소", default="")
+
+    class Meta:
+        managed = False
+        db_table = "shop_profiles"
+        verbose_name = "배송 프로필"
+        verbose_name_plural = "배송 프로필"
+
+    def __str__(self):
+        return self.recipient_name or self.user_id
+
+
+class Order(models.Model):
+    id = models.CharField(primary_key=True, max_length=80)
+    number = models.TextField("주문번호", unique=True)
+    user_id = models.CharField("회원 ID", max_length=80, null=True, blank=True)
+    type = models.TextField(default="order")
+    name = models.TextField("주문자명")
+    phone = models.TextField("연락처")
+    address = models.TextField("주소", default="")
+    memo = models.TextField(default="")
+    topics = models.TextField(default="[]")
+    items = models.TextField(default="[]")
+    total = models.IntegerField("총결제금액", default=0)
+    status = models.TextField("주문상태", default="PENDING")
+    created_at = models.TextField("주문일시")
+    payment_key = models.TextField("토스 결제키", null=True, blank=True)
+    zipcode = models.TextField("우편번호", null=True, blank=True)
+    address_basic = models.TextField("기본주소", null=True, blank=True)
+    address_detail = models.TextField("상세주소", null=True, blank=True)
+    tracking_number = models.TextField("운송장번호", null=True, blank=True)
+    recipient_name = models.TextField("수령인명", null=True, blank=True)
+    recipient_phone = models.TextField("수령인 연락처", null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = "orders"
+        verbose_name = "주문"
+        verbose_name_plural = "주문"
+
+    def __str__(self):
+        return self.number
+
+
+class OrderItem(models.Model):
+    id = models.CharField(primary_key=True, max_length=80)
+    order_id = models.CharField("주문 ID", max_length=80)
+    product_id = models.CharField("상품 ID", max_length=80, null=True, blank=True)
+    product_name = models.TextField("상품명")
+    unit_price = models.IntegerField("단가")
+    quantity = models.IntegerField("수량")
+
+    class Meta:
+        managed = False
+        db_table = "order_items"
+        verbose_name = "주문 품목"
+        verbose_name_plural = "주문 품목"
+
+    def __str__(self):
+        return f"{self.product_name} x {self.quantity}"

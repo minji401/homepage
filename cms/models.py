@@ -26,6 +26,9 @@ class Post(models.Model):
     )
     author_name = models.CharField("작성자", max_length=50, blank=True)
     image = models.CharField("이미지", max_length=300, blank=True)
+    extra_images = models.JSONField("추가 사진", default=list, blank=True)
+    attachment = models.CharField("첨부파일", max_length=400, blank=True)
+    attachment_name = models.CharField("첨부파일명", max_length=200, blank=True)
     category = models.CharField("분류", max_length=30, blank=True)
     is_pinned = models.BooleanField("상단 고정", default=False)
     is_hidden = models.BooleanField("숨김", default=False)
@@ -37,6 +40,28 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+    def image_list(self):
+        urls = []
+        if self.image:
+            urls.append(self.image)
+        extra = self.extra_images or []
+        if isinstance(extra, str):
+            extra = [part.strip() for part in extra.split(",") if part.strip()]
+        for url in extra:
+            if url and url not in urls:
+                urls.append(url)
+        return urls
+
+    def list_url(self):
+        slug = self.board.slug if self.board_id else "notice"
+        mapping = {
+            "notice": "/community/notice.html",
+            "gallery": "/community/gallery.html",
+            "menu": "/community/menu.html",
+            "faq": "/community/faq.html",
+        }
+        return mapping.get(slug, "/community/notice.html")
 
 
 class Comment(models.Model):

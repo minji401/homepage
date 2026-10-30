@@ -10,7 +10,7 @@
     <meta property="og:title" content="헤리움 케어센터 | 영천 요양원·주야간보호">
     <meta property="og:description" content="영천 요양원과 주야간보호, 치매전담 주야간보호, 치매특화 프로그램을 운영하는 평가 A 장기요양기관 헤리움 케어센터입니다. 영천시 역전로 16.">
     <meta property="og:url" content="https://heriumcare.com/main.html">
-    <meta property="og:image" content="https://heriumcare.com/img/logo.png">
+    <meta property="og:image" content="https://heriumcare.com{{ site_logo }}">
     <meta name="naver-site-verification" content="635af78fc618944050fdd7b896fbdb6177cfbd4e">
     <script type="application/ld+json">
     {
@@ -50,7 +50,7 @@
     <div class="header-top-inner">
         <!-- 로고 -->
         <div class="logo">
-            <a href="main.html"><img src="img/logo.png" alt="헤리움 케어센터, 영천 요양원·주야간보호"></a>
+            <a href="main.html"><img src="{{ site_logo }}" alt="헤리움 케어센터, 영천 요양원·주야간보호"></a>
         </div>
 
         <!-- 우측 검색 & 전체메뉴 -->
@@ -182,6 +182,11 @@
     </div>
 
     <div class="main-slider">
+        {% if hero_photo %}
+        <div class="hero-static">
+            <img src="{{ hero_photo }}?v={{ img_v }}" alt="헤리움 케어센터">
+        </div>
+        {% else %}
             <div class="slider-wrapper">
                 {% if cms_banners %}
                 {% for banner in cms_banners %}
@@ -193,18 +198,17 @@
                 <div class="slider-item"><img src="img/3.jpg" alt="메인 배너 3"></div>
                 {% endif %}
             </div>
-
         <div class="slider-controls">
             <div class="slider-counter">
                 <span id="slide-current">1</span> / <span id="slide-total">3</span>
             </div>
-        
             <div class="control-buttons">
                 <button id="slider-prev" class="slider-btn"><i class="fas fa-chevron-left"></i></button>
                 <button id="slider-toggle" class="slider-btn"><i class="fas fa-pause"></i></button>
                 <button id="slider-next" class="slider-btn"><i class="fas fa-chevron-right"></i></button>
             </div>
         </div>
+        {% endif %}
     </div>
 
     <nav class="m-shortcuts" aria-label="자주 찾는 메뉴">
@@ -233,15 +237,12 @@
             <div class="notice-list">
                 <ul>
                     {% for notice in cms_notices %}
-                    <li><a href="community/notice.html"><p class="title">{% if notice.is_pinned %}[공지] {% endif %}{{ notice.title }}</p><p class="date">{{ notice.created_at|date:"Y.m.d" }}</p></a></li>
+                    <li><a href="/community/post/{{ notice.id }}/"><p class="title">{% if notice.is_pinned %}[공지] {% endif %}{{ notice.title }}</p><p class="date">{{ notice.created_at|date:"Y.m.d" }}</p></a></li>
                     {% empty %}
                     <li><a href="community/notice.html"><p class="title">2024년 6월 프로그램 안내</p><p class="date">2024.06.01</p></a></li>
                     <li><a href="community/notice.html"><p class="title">시설 점검 안내</p><p class="date">2024.06.01</p></a></li>
                     <li><a href="volunteer/intro.html"><p class="title">자원봉사자 모집 공고</p><p class="date">2024.06.01</p></a></li>
                     {% endfor %}
-                </ul>
-                    <li><a href="admission/procedure.html"><p class="title">입소 절차 변경 안내</p><p class="date">2024.06.01</p></a></li>
-                    <li><a href="admission/requirements.html"><p class="title">신규 면회 수칙 안내</p><p class="date">2024.06.01</p></a></li>
                 </ul>
             </div>
         </div>
@@ -340,7 +341,7 @@
         
         <div class="footer-info">
             <div class="footer-logo">
-                <img src="img/logo2.png" alt="하단 로고">
+                <img src="{{ site_logo_footer }}" alt="하단 로고">
             </div>
             <div class="info-text">
                 <p>

@@ -18,13 +18,15 @@ from .models import (
 
 
 def _img_version():
-    folder = Path(settings.BASE_DIR) / "img"
     newest = 0
-    if folder.exists():
+    folders = [Path(settings.BASE_DIR) / "img", Path(settings.MEDIA_ROOT) / "brand"]
+    for folder in folders:
+        if not folder.exists():
+            continue
         for item in folder.iterdir():
             if item.is_file():
                 newest = max(newest, int(item.stat().st_mtime))
-    return str(newest)
+    return str(newest or 1)
 
 
 def public_cms(request):
@@ -52,6 +54,9 @@ def public_cms(request):
         return {
             "cms": contents,
             "info": info,
+            "site_logo": contents.get("logo") or "/img/logo.png",
+            "site_logo_footer": contents.get("logo_footer") or "/img/logo2.png",
+            "hero_photo": contents.get("hero_photo") or "",
             "cms_popup": Popup.objects.filter(is_active=True).exclude(image="").first(),
             "cms_banners": Banner.objects.filter(is_active=True),
             "cms_notices": Post.objects.filter(board__slug="notice", is_hidden=False).order_by("-is_pinned", "-created_at")[:4],
@@ -69,4 +74,4 @@ def public_cms(request):
             "img_v": _img_version(),
         }
     except Exception:
-        return {"cms": {}, "info": {}, "cms_has_gallery": False, "cms_gallery": {"night": [], "nursing": [], "home": []}, "cms_gallery_slides": [], "cms_menu_posts": [], "usage": {}, "usage_day_total": 0, "usage_as_of": "", "diet_days": [], "img_v": "1"}
+        return {"cms": {}, "info": {}, "site_logo": "/img/logo.png", "site_logo_footer": "/img/logo2.png", "hero_photo": "", "cms_has_gallery": False, "cms_gallery": {"night": [], "nursing": [], "home": []}, "cms_gallery_slides": [], "cms_menu_posts": [], "usage": {}, "usage_day_total": 0, "usage_as_of": "", "diet_days": [], "img_v": "1"}

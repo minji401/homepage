@@ -188,6 +188,8 @@ a { color: #b38b4d; text-decoration: none; }
     border-radius: 10px;
     background: #faf8f2;
 }
+.preview-list { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 16px; }
+.preview-list .preview-img { max-width: 120px; max-height: 90px; }
 .preview-img,
 #imagePreview,
 #popupPreview {

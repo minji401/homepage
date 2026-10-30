@@ -3,6 +3,35 @@
 {% block heading %}사이트 정보{% endblock %}
 {% block content %}
 <section class="staff-section">
+    <h2>로고 · 메인 대표 사진</h2>
+    <p class="staff-help">상단 로고와 메인 화면을 가장 먼저 보여주는 대표 사진을 여기서 바꿉니다. 대표 사진은 슬라이드와 별개입니다.</p>
+    <form method="post" class="staff-form" enctype="multipart/form-data">{% csrf_token %}
+        <input type="hidden" name="section" value="brand">
+        <label>상단 로고
+            <input type="file" name="logo" accept="image/*" class="js-image-input" data-preview="#logoPreview">
+        </label>
+        <div class="preview-wrap">
+            <img id="logoPreview" class="preview-img" src="{{ logo.body|default:'/img/logo.png' }}" alt="상단 로고 미리보기">
+        </div>
+        <label>하단 로고
+            <input type="file" name="logo_footer" accept="image/*" class="js-image-input" data-preview="#logoFooterPreview">
+        </label>
+        <div class="preview-wrap">
+            <img id="logoFooterPreview" class="preview-img" src="{{ logo_footer.body|default:'/img/logo2.png' }}" alt="하단 로고 미리보기">
+        </div>
+        <label>메인 대표 사진 <span class="staff-help">홈 분위기용 큰 사진입니다. 슬라이드에는 들어가지 않습니다.</span>
+            <input type="file" name="hero_photo" accept="image/*" class="js-image-input" data-preview="#heroPreview">
+        </label>
+        <div class="preview-wrap" style="width:220px;height:160px">
+            <img id="heroPreview" class="preview-img" src="{{ hero_photo.body|default:'' }}" alt="메인 대표 사진 미리보기" {% if not hero_photo.body %}hidden{% endif %}>
+        </div>
+        <div class="form-actions">
+            <button type="submit">로고·대표 사진 저장</button>
+        </div>
+    </form>
+</section>
+
+<section class="staff-section">
     <h2>메인 팝업</h2>
     <p class="staff-help">컴퓨터에서 안내 이미지를 올리면 메인 화면에 팝업으로 보여 줍니다. 주소 입력은 필요 없습니다.</p>
     <form method="post" class="staff-form" enctype="multipart/form-data">{% csrf_token %}

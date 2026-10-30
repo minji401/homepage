@@ -362,11 +362,30 @@
 .facility-card,
 .partner-card,
 .gallery-card {
+    display: block;
     overflow: hidden;
     background: #fff;
     border: 1px solid #eee8dc;
     border-radius: 14px;
+    color: inherit;
+    text-decoration: none;
 }
+.post-article { max-width: 820px; }
+.post-meta { color: #888; font-size: 0.92rem; margin: 0 0 8px; }
+.post-title { margin: 0 0 18px; font-size: 1.45rem; color: #333; word-break: keep-all; }
+.post-photos img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0 0 16px;
+    border-radius: 16px;
+    background: #f6f3ec;
+}
+.post-body { color: #444; font-size: 1.02rem; line-height: 1.8; word-break: keep-all; }
+.post-file { margin-top: 22px; padding: 14px 16px; background: #faf8f2; border-radius: 12px; }
+.post-file a { color: #8f6c38; font-weight: 700; }
+.post-back { margin-top: 28px; }
+.post-back a { color: #8f6c38; }
 .facility-card img,
 .gallery-card img {
     display: block;

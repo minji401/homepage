@@ -156,6 +156,7 @@ if (galleryWrapper && galleryTotal) {
 const sliderWrapper = document.querySelector('.main-slider .slider-wrapper');
 const sliderItems = document.querySelectorAll('.main-slider .slider-item');
 const slideTotalIndex = sliderItems.length; // 원본 개수 (3)
+if (sliderWrapper && sliderItems.length) {
 
 const btnPrev = document.getElementById('slider-prev');
 const btnNext = document.getElementById('slider-next');
@@ -249,3 +250,4 @@ btnToggle.addEventListener('click', () => {
 
 // 최초 실행
 startSliderTimer();
+}

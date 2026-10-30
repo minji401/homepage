@@ -25,7 +25,7 @@
     <div class="header-top-inner">
         <!-- 로고 -->
         <div class="logo">
-            <a href="../main.html"><img src="../img/logo.png" alt="홈페이지 로고"></a>
+            <a href="../main.html"><img src="{{ site_logo }}" alt="홈페이지 로고"></a>
         </div>
 
         <!-- 우측 검색 & 전체메뉴 -->
@@ -172,7 +172,7 @@
                     {% for post in cms_notice_posts %}
                     <tr data-title="{{ post.title }}" data-body="{{ post.body }}">
                         <td>{{ forloop.revcounter }}</td>
-                        <td class="left">{% if post.is_pinned %}<span class="badge">공지</span> &nbsp;{% endif %}<a href="#">{{ post.title }}</a></td>
+                        <td class="left">{% if post.is_pinned %}<span class="badge">공지</span> &nbsp;{% endif %}<a href="/community/post/{{ post.id }}/">{{ post.title }}</a>{% if post.attachment %} <i class="fa-solid fa-paperclip clip"></i>{% endif %}</td>
                         <td>{{ post.created_at|date:"Y.m.d" }}</td>
                     </tr>
                     {% empty %}
@@ -208,7 +208,7 @@
         
         <div class="footer-info">
             <div class="footer-logo">
-                <img src="../img/logo2.png" alt="하단 로고">
+                <img src="{{ site_logo_footer }}" alt="하단 로고">
             </div>
             <div class="info-text">
                 <p>

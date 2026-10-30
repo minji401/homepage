@@ -25,7 +25,7 @@
     <div class="header-top-inner">
         <!-- 로고 -->
         <div class="logo">
-            <a href="../main.html"><img src="../img/logo.png" alt="홈페이지 로고"></a>
+            <a href="../main.html"><img src="{{ site_logo }}" alt="홈페이지 로고"></a>
         </div>
 
         <!-- 우측 검색 & 전체메뉴 -->
@@ -173,10 +173,10 @@
                 <div class="gallery-grid">
                     {% if cms_has_gallery %}
                     {% for post in cms_gallery.night %}
-                    <figure class="gallery-card" data-title="{{ post.title }}" data-body="{{ post.body }}">
+                    <a class="gallery-card" href="/community/post/{{ post.id }}/" data-title="{{ post.title }}" data-body="{{ post.body }}">
                         <img src="{{ post.image|default:'../img/gallery1.jpg' }}" alt="{{ post.title }}">
                         <figcaption><strong>{{ post.title }}</strong><span>{{ post.body }}</span></figcaption>
-                    </figure>
+                    </a>
                     {% empty %}
                     <p class="empty-hint">등록된 주야간보호 사진이 없습니다.</p>
                     {% endfor %}
@@ -200,10 +200,10 @@
                 <div class="gallery-grid">
                     {% if cms_has_gallery %}
                     {% for post in cms_gallery.nursing %}
-                    <figure class="gallery-card" data-title="{{ post.title }}" data-body="{{ post.body }}">
+                    <a class="gallery-card" href="/community/post/{{ post.id }}/" data-title="{{ post.title }}" data-body="{{ post.body }}">
                         <img src="{{ post.image|default:'../img/gallery4.jpg' }}" alt="{{ post.title }}">
                         <figcaption><strong>{{ post.title }}</strong><span>{{ post.body }}</span></figcaption>
-                    </figure>
+                    </a>
                     {% empty %}
                     <p class="empty-hint">등록된 요양원 사진이 없습니다.</p>
                     {% endfor %}
@@ -227,10 +227,10 @@
                 <div class="gallery-grid">
                     {% if cms_has_gallery %}
                     {% for post in cms_gallery.home %}
-                    <figure class="gallery-card" data-title="{{ post.title }}" data-body="{{ post.body }}">
+                    <a class="gallery-card" href="/community/post/{{ post.id }}/" data-title="{{ post.title }}" data-body="{{ post.body }}">
                         <img src="{{ post.image|default:'../img/2.png' }}" alt="{{ post.title }}">
                         <figcaption><strong>{{ post.title }}</strong><span>{{ post.body }}</span></figcaption>
-                    </figure>
+                    </a>
                     {% empty %}
                     <p class="empty-hint">등록된 가정방문급여 사진이 없습니다.</p>
                     {% endfor %}
@@ -274,7 +274,7 @@
         
         <div class="footer-info">
             <div class="footer-logo">
-                <img src="../img/logo2.png" alt="하단 로고">
+                <img src="{{ site_logo_footer }}" alt="하단 로고">
             </div>
             <div class="info-text">
                 <p>
