@@ -19,21 +19,32 @@ class Command(BaseCommand):
         )
         admin_user.is_staff = True
         admin_user.is_superuser = True
-        if created:
-            if os.environ.get("RENDER"):
-                admin_password = os.environ.get("ADMIN_PASSWORD", "").strip()
-                if admin_password:
-                    admin_user.set_password(admin_password)
-                else:
-                    admin_user.set_unusable_password()
-                    self.stdout.write("RENDER 환경에는 ADMIN_PASSWORD가 없어 admin 로그인 비밀번호를 만들지 않았습니다.")
-            else:
-                admin_user.set_password("1234")
+        admin_user.is_active = True
+        admin_password = os.environ.get("ADMIN_PASSWORD", "").strip()
+        if os.environ.get("RENDER"):
+            if admin_password:
+                admin_user.set_password(admin_password)
+                self.stdout.write("admin 비밀번호를 ADMIN_PASSWORD로 맞췄습니다.")
+            elif created:
+                admin_user.set_unusable_password()
+                self.stdout.write("RENDER 환경에는 ADMIN_PASSWORD가 없어 admin 로그인 비밀번호를 만들지 않았습니다.")
+        elif created:
+            admin_user.set_password("1234")
         admin_user.save()
         Profile.objects.update_or_create(
             user=admin_user,
             defaults={"name": "관리자", "phone": "054-334-9986", "role": Profile.ROLE_ADMIN, "status": Profile.STATUS_ACTIVE},
         )
+        if admin_password:
+            try:
+                from accounts.shared_users import get_shared_by_username, shared_enabled, update_shared_password
+
+                if shared_enabled():
+                    shared = get_shared_by_username("admin")
+                    if shared is not None:
+                        update_shared_password(shared, admin_password)
+            except Exception as exc:
+                self.stderr.write("공유 DB admin 비밀번호 동기화 실패: %s" % exc)
 
         if not os.environ.get("RENDER"):
             hatsal, created = User.objects.get_or_create(
