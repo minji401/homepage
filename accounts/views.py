@@ -1,5 +1,7 @@
+import hmac
 import json
 import logging
+import os
 import time
 
 from django.conf import settings
@@ -210,6 +212,38 @@ def login_page(request):
     return render(request, "login.html")
 
 
+def _password_matches(given, expected):
+    left = (given or "").encode("utf-8")
+    right = (expected or "").encode("utf-8")
+    if len(left) != len(right):
+        return False
+    return hmac.compare_digest(left, right)
+
+
+def _login_env_admin(request, user_id, password):
+    expected = (os.environ.get("ADMIN_PASSWORD") or "").strip()
+    if not expected or user_id.strip().lower() != "admin":
+        return None
+    if not _password_matches(password, expected):
+        return None
+    user, _created = User.objects.get_or_create(
+        username="admin",
+        defaults={"first_name": "관리자", "email": "admin@example.com", "is_staff": True, "is_superuser": True},
+    )
+    user.set_password(password)
+    user.is_staff = True
+    user.is_superuser = True
+    user.is_active = True
+    user.save()
+    Profile.objects.update_or_create(
+        user=user,
+        defaults={"name": "관리자", "phone": "", "role": Profile.ROLE_ADMIN, "status": Profile.STATUS_ACTIVE},
+    )
+    user.backend = "django.contrib.auth.backends.ModelBackend"
+    login(request, user)
+    return user
+
+
 @csrf_exempt
 @require_POST
 def login_api(request):
@@ -225,6 +259,13 @@ def login_api(request):
             {"ok": False, "message": "로그인 시도가 너무 많습니다. 10분 뒤에 다시 시도해 주세요."},
             status=429,
         )
+
+    staff = _login_env_admin(request, user_id, password)
+    if staff is not None:
+        _clear_login_fail(ip)
+        payload = _profile_payload(staff)
+        payload["needs_guardian"] = False
+        return JsonResponse({"ok": True, "user": payload, "redirect": "/staff/"})
 
     if shared_expected() and not shared_enabled():
         return JsonResponse(
