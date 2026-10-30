@@ -157,6 +157,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / "static_collected"] if (BASE_DIR / "static_collected").exists() else []
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -176,6 +177,10 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
 SITE_URL = os.environ.get("SITE_URL", "https://heriumcare.com").rstrip("/")
+JWT_SECRET = os.environ.get("JWT_SECRET") or os.environ.get("DATA_ENCRYPTION_KEY") or SECRET_KEY
+SMS_API_URL = os.environ.get("SMS_API_URL", "")
+SMS_API_KEY = os.environ.get("SMS_API_KEY", "")
+SMS_SENDER = os.environ.get("SMS_SENDER", "")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587") or "587")

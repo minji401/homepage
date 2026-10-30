@@ -32,10 +32,15 @@
     }
 
     function csrfHeaders() {
-        return {
+        const headers = {
             "Content-Type": "application/json",
             "X-CSRFToken": getCookie("csrftoken")
         };
+        try {
+            const token = localStorage.getItem("sso_access_token");
+            if (token) headers.Authorization = "Bearer " + token;
+        } catch (_e) {}
+        return headers;
     }
 
     function parseApiResponse(res) {
@@ -158,6 +163,9 @@
                         showMessage(message, result.data.message || "로그인에 실패했습니다.", "error");
                         return;
                     }
+                    if (result.data.user && result.data.user.token) {
+                        try { localStorage.setItem("sso_access_token", result.data.user.token); } catch (_e) {}
+                    }
                     window.location.href = result.data.redirect || BASE + "main.html";
                 }).catch(function () {
                     showMessage(message, "서버에 연결할 수 없습니다. Django를 실행해 주세요.", "error");
@@ -191,7 +199,9 @@
                     name: (form.querySelector('[name="name"]').value || "").trim(),
                     phone: (form.querySelector('[name="phone"]').value || "").trim(),
                     email: (form.querySelector('[name="email"]').value || "").trim(),
-                    agree: form.querySelector('[name="agree"]').checked
+                    agree: form.querySelector('[name="agree"]').checked,
+                    age14: form.querySelector('[name="age14"]') ? form.querySelector('[name="age14"]').checked : false,
+                    marketing: form.querySelector('[name="marketing"]') ? form.querySelector('[name="marketing"]').checked : false
                 };
 
                 if (!data.id || !data.password || !data.name || !data.phone) {
@@ -209,6 +219,10 @@
                 }
                 if (data.password !== data.passwordConfirm) {
                     showMessage(message, "비밀번호가 서로 다릅니다.", "error");
+                    return;
+                }
+                if (!data.age14) {
+                    showMessage(message, "만 14세 이상만 가입할 수 있습니다.", "error");
                     return;
                 }
                 if (!data.agree) {
@@ -403,6 +417,22 @@
                     form.querySelector('[name="newPassword"]').value = "";
                 });
             });
+            const withdraw = document.getElementById("withdrawForm");
+            if (withdraw) {
+                withdraw.addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    if (!window.confirm("정말 탈퇴하시겠습니까? 이름과 연락처는 바로 삭제됩니다.")) return;
+                    api("/accounts/withdraw/", {
+                        method: "POST",
+                        headers: csrfHeaders(),
+                        body: "{}"
+                    }).then(function (result) {
+                        alert((result.data && result.data.message) || "탈퇴가 완료되었습니다.");
+                        try { localStorage.removeItem("sso_access_token"); } catch (_e) {}
+                        window.location.href = BASE + "main.html";
+                    });
+                });
+            }
         }
     };
 

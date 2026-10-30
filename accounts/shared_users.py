@@ -15,7 +15,8 @@ from django.db.utils import DatabaseError
 
 from .models import Profile, SharedUser
 from .password_policy import LOCK_LIMIT, lock_message, lock_until
-from .scrypt_compat import hash_password, verify_password
+from .passwords import hash_password, needs_rehash, verify_password
+from .shared_schema import apply_shared_schema, ensure_integration_schema
 
 logger = logging.getLogger("herium.shared")
 
@@ -95,8 +96,10 @@ _USER_COLUMNS = (
     ("guardian_name", "TEXT"),
     ("login_failures", "INTEGER NOT NULL DEFAULT 0"),
     ("login_locked_until", "TEXT"),
+    ("marketing_agreed", "INTEGER NOT NULL DEFAULT 0"),
+    ("age_14_agreed", "INTEGER NOT NULL DEFAULT 0"),
+    ("withdrawn_at", "TEXT"),
 )
-
 
 def ensure_shared_schema():
     global _schema_ready
@@ -167,6 +170,8 @@ def ensure_shared_schema():
             )
             """
         )
+    apply_shared_schema(connection)
+    ensure_integration_schema()
     for row in _shared_qs().all().iterator():
         if (row.username or "").strip():
             continue
@@ -412,6 +417,10 @@ def resolve_shared_login(login_id, local=None):
     login_id = (login_id or "").strip()
     if not shared_enabled() or not login_id:
         return None
+    if "@" in login_id:
+        shared = get_shared_by_email(login_id)
+        if shared is not None:
+            return shared
     digits = normalize_phone(login_id)
     if is_mobile(digits):
         shared = get_shared_by_phone(digits)
@@ -566,7 +575,7 @@ def sync_local_user(shared, username_hint=""):
     return user
 
 
-def create_shared_user(*, name, phone, password, username="", relation="", as_guardian=True, email=""):
+def create_shared_user(*, name, phone, password, username="", relation="", as_guardian=True, email="", age_14=False, marketing=False):
     digits = normalize_phone(phone)
     if len(digits) < 10:
         raise SharedAuthError("올바른 휴대폰 번호를 입력해 주세요.")
@@ -598,10 +607,17 @@ def create_shared_user(*, name, phone, password, username="", relation="", as_gu
         herium_linked=1 if as_guardian else 0,
         herium_relation=relation or None,
         herium_note=note,
+        marketing_agreed=1 if marketing else 0,
+        age_14_agreed=1 if age_14 else 0,
         created_at=datetime.now(timezone.utc).isoformat(),
     )
     try:
         shared.save(using="shared", force_insert=True)
+        with connections["shared"].cursor() as cursor:
+            cursor.execute(
+                "UPDATE users SET age_14_agreed = %s, marketing_agreed = %s WHERE id = %s",
+                [1 if age_14 else 0, 1 if marketing else 0, shared.id],
+            )
     except IntegrityError as exc:
         raise SharedAuthError("이미 가입된 번호입니다.") from exc
     except DatabaseError as exc:
@@ -617,6 +633,20 @@ def update_shared_password(shared, password):
     return shared
 
 
+def withdraw_shared_user(shared):
+    now = datetime.now(timezone.utc).isoformat()
+    masked_phone = ("w" + str(shared.id).replace("-", "")[-10:]).ljust(11, "0")[:11]
+    shared.name = "탈퇴회원"
+    shared.guardian_name = None
+    shared.email = None
+    shared.password_hash = "!"
+    shared.phone = masked_phone
+    shared.withdrawn_at = now
+    shared.herium_note = _note_with_flag(shared.herium_note, "withdrawn=1")
+    shared.save(using="shared")
+    return shared
+
+
 def login_with_shared(request, login_id, password):
     login_id = (login_id or "").strip()
     local = find_local_by_login(login_id)
@@ -627,6 +657,10 @@ def login_with_shared(request, login_id, password):
         ensure_login_open(shared)
 
     if shared is not None and verify_password(password, shared.password_hash):
+        if shared.withdrawn_at:
+            raise SharedAuthError("탈퇴 처리된 계정입니다.", 403)
+        if needs_rehash(shared.password_hash):
+            update_shared_password(shared, password)
         clear_login_failure(shared)
         needs_guardian_prompt(shared)
         mark_herium_linked(

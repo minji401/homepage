@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import care_views, views
 
 urlpatterns = [
     path("staff/", views.dashboard, name="staff_dashboard"),
@@ -17,7 +17,15 @@ urlpatterns = [
     path("staff/content/", views.content, name="staff_content"),
     path("staff/usage/", views.usage, name="staff_usage"),
     path("staff/meals/", views.meals, name="staff_meals"),
+    path("staff/calendar/", care_views.calendar_page, name="staff_calendar"),
+    path("staff/calendar/data/", care_views.calendar_api, name="staff_calendar_data"),
+    path("staff/calendar/events/", care_views.schedule_api, name="staff_schedule_create"),
+    path("staff/calendar/events/<str:item_id>/", care_views.schedule_api, name="staff_schedule_item"),
+    path("staff/consultations/<str:item_id>/confirm/", care_views.confirm_consult, name="staff_consult_confirm"),
+    path("staff/consultations/<str:item_id>/sms/", care_views.sms_send, name="staff_consult_sms"),
+    path("staff/consultations/<str:item_id>/sms-preview/", care_views.sms_preview, name="staff_consult_sms_preview"),
     path("staff/applications/", views.applications, name="staff_applications"),
+    path("api/care/consultations/", care_views.consult_create, name="care_consult_create"),
     path("staff/applications/<int:app_id>/", views.application_action, name="staff_application_action"),
     path("staff/insights/", views.insights, name="staff_insights"),
     path("api/apply/", views.apply_api, name="apply_api"),

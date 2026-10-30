@@ -174,8 +174,16 @@
                     </div>
                 </div>
                 <div class="auth-check">
+                    <input type="checkbox" name="age14" id="signupAge14">
+                    <span>[필수] 만 14세 이상입니다.</span>
+                </div>
+                <div class="auth-check">
                     <input type="checkbox" name="agree" id="signupAgree">
                     <span><a href="terms.html">이용약관</a> 및 <a href="privacy.html">개인정보처리방침</a>에 동의합니다.</span>
+                </div>
+                <div class="auth-check">
+                    <input type="checkbox" name="marketing" id="signupMarketing">
+                    <span>[선택] 혜택·안내 문자 수신에 동의합니다.</span>
                 </div>
                 <button type="submit" class="auth-submit">회원가입</button>
             </form>
@@ -209,6 +217,7 @@
             </div>
             <div class="info-text">
                 <p>
+                    <span>기관명 : {{ info.company|default:"헤리움 케어센터" }}</span>
                     <span>주소 : {{ info.address|default:"영천시 역전로 16(완산동 1081-5)" }}</span>
                     <span>대표자 : {{ info.owner|default:"강시중" }}</span>
                     <span>사업자등록번호 : {{ info.biz_no|default:"123-45-67890" }}</span>

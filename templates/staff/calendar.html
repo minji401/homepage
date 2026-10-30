@@ -1,0 +1,149 @@
+{% extends "staff/base.html" %}
+{% block title %}상담 캘린더{% endblock %}
+{% block heading %}상담·일정 캘린더{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
+<div class="cal-layout">
+    <aside class="cal-pending">
+        <h2>대기/미확정</h2>
+        <p class="staff-help">카드를 캘린더로 끌어 일정을 확정합니다.</p>
+        <div id="pendingList"></div>
+    </aside>
+    <section>
+        <div id="careCalendar"></div>
+    </section>
+</div>
+<div class="modal-overlay" id="smsModal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="smsTitle">
+        <h2 id="smsTitle">확정 문자 발송</h2>
+        <label>수신 번호 <input id="smsTo" type="tel"></label>
+        <label>내용 <textarea id="smsText" rows="6"></textarea></label>
+        <p class="staff-help" id="smsHelp"></p>
+        <div class="form-actions">
+            <button type="button" id="smsSend">전송</button>
+            <button type="button" class="btn-site" id="smsClose">닫기</button>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script>
+(function () {
+    const pendingEl = document.getElementById("pendingList");
+    const modal = document.getElementById("smsModal");
+    const smsTo = document.getElementById("smsTo");
+    const smsText = document.getElementById("smsText");
+    let smsId = "";
+    const csrf = (document.cookie.match(/(?:^|; )csrftoken=([^;]+)/) || [])[1] || "";
+    function headers() {
+        return { "Content-Type": "application/json", "X-CSRFToken": decodeURIComponent(csrf) };
+    }
+    function closeModal() {
+        modal.hidden = true;
+        smsId = "";
+    }
+    function openModal() {
+        modal.hidden = false;
+        smsTo.focus();
+    }
+    document.getElementById("smsClose").onclick = closeModal;
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !modal.hidden) closeModal();
+    });
+    function load() {
+        return fetch("/staff/calendar/data/", { credentials: "same-origin" }).then(function (r) { return r.json(); });
+    }
+    const calendar = new FullCalendar.Calendar(document.getElementById("careCalendar"), {
+        initialView: "dayGridMonth",
+        locale: "ko",
+        headerToolbar: { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" },
+        editable: true,
+        droppable: true,
+        events: function (info, success) {
+            load().then(function (data) {
+                renderPending(data.pending || []);
+                success(data.events || []);
+            });
+        },
+        eventDrop: function (info) {
+            fetch("/staff/calendar/events/" + info.event.id + "/", {
+                method: "PATCH",
+                credentials: "same-origin",
+                headers: headers(),
+                body: JSON.stringify({
+                    title: info.event.title,
+                    start: info.event.startStr,
+                    end: info.event.endStr || info.event.startStr,
+                    category: (info.event.extendedProps || {}).category,
+                    consultation_id: (info.event.extendedProps || {}).consultation_id
+                })
+            });
+        },
+        eventClick: function (info) {
+            const cid = (info.event.extendedProps || {}).consultation_id;
+            if (!cid) return;
+            if (!confirm("이 상담의 확정 문자를 작성할까요?")) return;
+            fetch("/staff/consultations/" + cid + "/sms-preview/", { credentials: "same-origin" })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    smsId = cid;
+                    smsTo.value = data.to || "";
+                    smsText.value = data.text || "";
+                    document.getElementById("smsHelp").textContent = data.configured ? "전송 전에 문구를 확인해 주세요." : "문자 API가 없으면 전송이 거절됩니다.";
+                    openModal();
+                });
+        }
+    });
+    calendar.render();
+    function renderPending(items) {
+        pendingEl.innerHTML = items.length ? items.map(function (row) {
+            return '<div class="pending-card" draggable="true" data-id="' + row.id + '"><strong>' + (row.applicant_name || "") +
+                '</strong><span>' + (row.care_level || "") + ' · ' + (row.mobility_status || "") + '</span><span>' +
+                (row.preferred_date || "날짜 미정") + ' ' + (row.preferred_time_slot || "") +
+                '</span><button type="button" data-sms="' + row.id + '">확정 문자 발송</button></div>';
+        }).join("") : '<p class="empty">대기 건이 없습니다.</p>';
+        pendingEl.querySelectorAll(".pending-card").forEach(function (card) {
+            card.addEventListener("dragstart", function (e) {
+                e.dataTransfer.setData("text/plain", card.getAttribute("data-id"));
+            });
+        });
+        pendingEl.querySelectorAll("[data-sms]").forEach(function (btn) {
+            btn.onclick = function () {
+                const id = btn.getAttribute("data-sms");
+                fetch("/staff/consultations/" + id + "/sms-preview/", { credentials: "same-origin" })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        smsId = id;
+                        smsTo.value = data.to || "";
+                        smsText.value = data.text || "";
+                        openModal();
+                    });
+            };
+        });
+    }
+    document.getElementById("careCalendar").addEventListener("drop", function (e) {
+        const id = e.dataTransfer && e.dataTransfer.getData("text/plain");
+        if (!id) return;
+        const start = prompt("확정 일시 (예: 2026-11-03T10:00)", new Date().toISOString().slice(0, 16));
+        if (!start) return;
+        fetch("/staff/consultations/" + id + "/confirm/", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: headers(),
+            body: JSON.stringify({ start: start })
+        }).then(function () { calendar.refetchEvents(); });
+    });
+    document.getElementById("smsSend").onclick = function () {
+        if (!smsId) return;
+        fetch("/staff/consultations/" + smsId + "/sms/", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: headers(),
+            body: JSON.stringify({ to: smsTo.value, text: smsText.value })
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            alert(data.message || (data.ok ? "발송했습니다." : "발송하지 못했습니다."));
+            if (data.ok) closeModal();
+        });
+    };
+})();
+</script>
+{% endblock %}

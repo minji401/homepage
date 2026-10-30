@@ -14,7 +14,10 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from herium.middleware import registration_open
+from .models import Profile
 from .password_policy import PASSWORD_RULE, password_error, lock_message, lock_until
+from .jwt_auth import issue_token
+from .passwords import verify_password
 from .shared_users import (
     SharedAuthError,
     clear_login_failure,
@@ -38,6 +41,7 @@ from .shared_users import (
     update_shared_password,
     update_shared_phone,
     username_from_note,
+    withdraw_shared_user,
 )
 
 
@@ -178,9 +182,17 @@ def _get_profile(user):
 def _profile_payload(user):
     profile = _get_profile(user)
     is_admin = bool(user.is_staff or (profile and profile.role == Profile.ROLE_ADMIN))
+    shared = None
+    if shared_enabled():
+        shared = resolve_shared_login(user.username, user)
     return {
         "authenticated": True,
         "id": user.username,
+        "user_id": shared.id if shared is not None else str(user.pk),
+        "token": issue_token(
+            shared.id if shared is not None else str(user.pk),
+            "ADMIN" if is_admin else "USER",
+        ),
         "name": (profile.name if profile and profile.name else "") or "",
         "phone": profile.phone if profile else "",
         "email": user.email or "",
@@ -301,6 +313,8 @@ def signup_api(request):
     phone = (data.get("phone") or "").strip()
     email = (data.get("email") or "").strip()
     agree = data.get("agree") in (True, "true", "on", "1", 1)
+    age14 = data.get("age14") in (True, "true", "on", "1", 1)
+    marketing = data.get("marketing") in (True, "true", "on", "1", 1)
 
     if not user_id or not password or not name or not phone:
         return JsonResponse({"ok": False, "message": "아이디, 비밀번호, 이름, 연락처는 필수입니다."}, status=400)
@@ -312,6 +326,8 @@ def signup_api(request):
         return JsonResponse({"ok": False, "message": "비밀번호가 서로 다릅니다."}, status=400)
     if not agree:
         return JsonResponse({"ok": False, "message": "이용약관 및 개인정보 처리에 동의해 주세요."}, status=400)
+    if not age14:
+        return JsonResponse({"ok": False, "message": "만 14세 이상만 가입할 수 있습니다."}, status=400)
     digits = normalize_phone(phone)
     if len(digits) < 10:
         return JsonResponse({"ok": False, "message": "올바른 휴대폰 번호를 입력해 주세요."}, status=400)
@@ -328,7 +344,15 @@ def signup_api(request):
         )
     if shared_expected() or shared_enabled():
         try:
-            create_shared_user(name=name, phone=digits, password=password, username=user_id, email=email)
+            create_shared_user(
+                name=name,
+                phone=digits,
+                password=password,
+                username=user_id,
+                email=email,
+                age_14=True,
+                marketing=marketing,
+            )
         except SharedAuthError as exc:
             return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
 
@@ -485,7 +509,6 @@ def profile_api(request):
             return JsonResponse({"ok": False, "message": PASSWORD_RULE}, status=400)
         ok = False
         if shared is not None:
-            from .scrypt_compat import verify_password
             ok = verify_password(current, shared.password_hash)
         if not ok:
             ok = authenticate(request, username=user.username, password=current) is not None
@@ -521,6 +544,29 @@ def profile_api(request):
     if cache is not None:
         cache["profile"] = profile
     return JsonResponse({"ok": True, "message": "개인정보를 저장했습니다.", "user": _profile_payload(user)})
+
+
+@csrf_exempt
+@require_POST
+def withdraw_api(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"ok": False, "message": "로그인이 필요합니다."}, status=401)
+    user = request.user
+    shared = _shared_for_user(user)
+    if shared is not None:
+        withdraw_shared_user(shared)
+    profile = _get_profile(user)
+    if profile:
+        profile.name = "탈퇴회원"
+        profile.phone = ""
+        profile.status = Profile.STATUS_WITHDRAWN
+        profile.save(update_fields=["name", "phone", "status"])
+    user.first_name = "탈퇴회원"
+    user.is_active = False
+    user.set_unusable_password()
+    user.save()
+    logout(request)
+    return JsonResponse({"ok": True, "message": "탈퇴가 완료되었습니다. 주문·결제 기록은 관계 법령에 따라 보관됩니다."})
 
 
 def format_phone_or_digits(digits):

@@ -261,6 +261,15 @@ a { color: #b38b4d; text-decoration: none; }
 .staff-info-grid { display: grid; gap: 12px; }
 .staff-info-grid label { display: grid; gap: 6px; }
 
+.cal-layout { display: grid; grid-template-columns: 280px 1fr; gap: 18px; }
+.cal-pending { background: #fff; border: 1px solid #eee8dc; border-radius: 14px; padding: 16px; }
+.pending-card { display: grid; gap: 4px; padding: 10px; border: 1px dashed #e4d7bf; border-radius: 10px; margin-bottom: 8px; cursor: grab; }
+.pending-card span { color: #666; font-size: 0.86rem; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 80; }
+.modal-overlay[hidden] { display: none; }
+.modal-box { width: min(520px, calc(100% - 32px)); background: #fff; border-radius: 16px; padding: 22px; display: grid; gap: 10px; }
+.modal-box textarea, .modal-box input { width: 100%; }
+.inline-add { display: inline-flex; margin-left: 10px; padding: 4px 10px; border-radius: 999px; background: #b38b4d; color: #fff; font-size: 0.82rem; font-weight: 700; }
 @media (max-width: 1280px) {
     .staff-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .dash-cols,

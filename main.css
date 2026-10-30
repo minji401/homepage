@@ -1104,6 +1104,10 @@ body.is-search-open header .dropdown { display: none !important; }
 .auth-check input { margin-top: 3px; accent-color: #b38b4d; }
 .auth-check a { color: #8f6c38; text-decoration: underline; text-underline-offset: 2px; }
 
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid #5a3d14;
+    outline-offset: 2px;
+}
 .auth-submit {
     width: 100%;
     height: 52px;

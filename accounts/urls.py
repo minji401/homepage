@@ -13,5 +13,6 @@ urlpatterns = [
     path("password-help/", views.password_help_request, name="password_help_request"),
     path("guardian/", views.guardian_api, name="guardian_api"),
     path("profile/", views.profile_api, name="profile_api"),
+    path("withdraw/", views.withdraw_api, name="withdraw_api"),
     path("public-config/", views.public_config, name="public_config"),
 ]

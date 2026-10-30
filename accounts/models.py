@@ -61,6 +61,9 @@ class SharedUser(models.Model):
     herium_linked = models.IntegerField(default=0)
     herium_relation = models.TextField(null=True, blank=True)
     herium_note = models.TextField(null=True, blank=True)
+    marketing_agreed = models.IntegerField(default=0)
+    age_14_agreed = models.IntegerField(default=0)
+    withdrawn_at = models.TextField(null=True, blank=True)
     created_at = models.TextField()
 
     class Meta:

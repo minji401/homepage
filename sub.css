@@ -195,6 +195,8 @@
     font-weight: 700;
 }
 .page-form .check a { color: #8f6c38; text-decoration: underline; text-underline-offset: 2px; }
+.inline-add { display: inline-flex; margin-left: 10px; padding: 4px 10px; border-radius: 999px; background: #b38b4d; color: #fff; font-size: 0.82rem; font-weight: 700; }
+.care-done { margin-top: 24px; color: #2b261f; }
 
 .info-cards {
     display: grid;
