@@ -176,6 +176,8 @@ a { color: #b38b4d; text-decoration: none; }
 }
 .staff-media-fields { display: grid; gap: 10px; min-width: 0; }
 .banner-delete { margin: 0 0 18px; }
+.banner-delete-form { display: none; }
+.staff-media-fields .danger { justify-self: start; }
 
 .preview-wrap {
     width: 160px;

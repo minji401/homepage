@@ -52,41 +52,40 @@
 
 <section class="staff-section">
     <h2>메인 배너</h2>
-    <p class="staff-help">메인 슬라이드에 쓰일 사진을 컴퓨터에서 바로 올립니다.</p>
-    {% for banner in banners %}
-    <form method="post" class="staff-media-card" enctype="multipart/form-data">{% csrf_token %}
-        <input type="hidden" name="section" value="banner">
-        <input type="hidden" name="id" value="{{ banner.id }}">
-        <img class="preview-img" id="bannerPreview{{ banner.id }}" src="{{ banner.image }}" alt="{{ banner.title }}">
-        <div class="staff-media-fields">
-            <label>제목 <input name="title" value="{{ banner.title }}"></label>
-            <label>새 이미지 <input type="file" name="image_file" accept="image/*" class="js-image-input" data-preview="#bannerPreview{{ banner.id }}"></label>
-            <label>순서 <input name="sort_order" type="number" value="{{ banner.sort_order }}"></label>
-            <label class="check"><input type="checkbox" name="is_active" {% if banner.is_active %}checked{% endif %}> 사용</label>
-            <div class="form-actions">
-                <button type="submit">저장</button>
+    <p class="staff-help">슬라이드 사진을 한 화면에서 고친 뒤 아래 버튼으로 한 번에 저장합니다. 새 사진은 여러 장을 한꺼번에 고를 수 있습니다.</p>
+    <form method="post" id="banners-save" class="staff-form" enctype="multipart/form-data">{% csrf_token %}
+        <input type="hidden" name="section" value="banners">
+        {% for banner in banners %}
+        <div class="staff-media-card">
+            <img class="preview-img" id="bannerPreview{{ banner.id }}" src="{{ banner.image }}" alt="{{ banner.title }}">
+            <div class="staff-media-fields">
+                <label>제목 <input name="title_{{ banner.id }}" value="{{ banner.title }}"></label>
+                <label>새 이미지 <input type="file" name="image_{{ banner.id }}" accept="image/*" class="js-image-input" data-preview="#bannerPreview{{ banner.id }}"></label>
+                <label>순서 <input name="sort_order_{{ banner.id }}" type="number" value="{{ banner.sort_order }}"></label>
+                <label class="check"><input type="checkbox" name="is_active_{{ banner.id }}" {% if banner.is_active %}checked{% endif %}> 사용</label>
+                <button type="submit" class="danger" form="banner-del-{{ banner.id }}" data-confirm="이 배너를 삭제할까요?">삭제</button>
             </div>
         </div>
-    </form>
-    <form method="post" class="inline banner-delete">{% csrf_token %}
-        <input type="hidden" name="section" value="banner_delete">
-        <input type="hidden" name="id" value="{{ banner.id }}">
-        <button type="submit" class="danger" data-confirm="이 배너를 삭제할까요?">삭제</button>
-    </form>
-    {% empty %}
-    <p class="staff-help">등록된 배너가 없습니다.</p>
-    {% endfor %}
-
-    <h3 class="staff-subhead">배너 추가</h3>
-    <form method="post" class="staff-form" enctype="multipart/form-data">{% csrf_token %}
-        <input type="hidden" name="section" value="banner_add">
-        <label>제목 <input name="title" placeholder="메인 배너"></label>
-        <label>이미지 파일 <input type="file" name="image_file" accept="image/*" required></label>
-        <label>순서 <input name="sort_order" type="number" value="{{ banners|length|add:1 }}"></label>
+        {% empty %}
+        <p class="staff-help">등록된 배너가 없습니다. 아래에서 사진을 추가하세요.</p>
+        {% endfor %}
+        <h3 class="staff-subhead">배너 추가</h3>
+        <label>이미지 여러 장
+            <input type="file" name="new_images" accept="image/*" multiple class="js-image-input" data-preview="#bannerNewPreview">
+        </label>
+        <div class="preview-wrap" style="width:220px;height:140px">
+            <img id="bannerNewPreview" class="preview-img" alt="새 배너 미리보기" hidden>
+        </div>
         <div class="form-actions">
-            <button type="submit">배너 추가</button>
+            <button type="submit">배너 모두 저장</button>
         </div>
     </form>
+    {% for banner in banners %}
+    <form method="post" id="banner-del-{{ banner.id }}" class="banner-delete-form">{% csrf_token %}
+        <input type="hidden" name="section" value="banner_delete">
+        <input type="hidden" name="id" value="{{ banner.id }}">
+    </form>
+    {% endfor %}
 </section>
 
 <form method="post" class="staff-form staff-info-form">{% csrf_token %}

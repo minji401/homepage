@@ -629,6 +629,42 @@ def content(request):
                 item.save()
                 saved_any = True
             messages.success(request, "로고와 메인 사진을 저장했습니다." if saved_any else "올릴 파일을 선택해 주세요.")
+        elif section == "banners":
+            invalid = False
+            for banner in list(Banner.objects.all()):
+                banner.title = (request.POST.get(f"title_{banner.id}") or banner.title).strip() or "메인 배너"
+                banner.is_active = request.POST.get(f"is_active_{banner.id}") == "on"
+                try:
+                    banner.sort_order = int(request.POST.get(f"sort_order_{banner.id}") or banner.sort_order)
+                except (TypeError, ValueError):
+                    pass
+                upload = request.FILES.get(f"image_{banner.id}")
+                if upload:
+                    saved = _save_upload(upload, "banners")
+                    if not saved:
+                        invalid = True
+                        continue
+                    banner.image = saved
+                banner.save()
+            next_order = (Banner.objects.order_by("-sort_order").values_list("sort_order", flat=True).first() or 0) + 1
+            added = 0
+            for upload in request.FILES.getlist("new_images"):
+                saved = _save_upload(upload, "banners")
+                if not saved:
+                    invalid = True
+                    continue
+                Banner.objects.create(
+                    title="메인 배너",
+                    image=saved,
+                    sort_order=next_order,
+                    is_active=True,
+                )
+                next_order += 1
+                added += 1
+            if invalid:
+                messages.error(request, "jpg, png, gif, webp 이미지만 올릴 수 있습니다. 나머지 배너는 저장했습니다.")
+            else:
+                messages.success(request, "배너를 한 번에 저장했습니다." + (f" 새 사진 {added}장을 추가했습니다." if added else ""))
         elif section == "banner":
             banner = get_object_or_404(Banner, pk=request.POST.get("id"))
             banner.title = request.POST.get("title") or banner.title
