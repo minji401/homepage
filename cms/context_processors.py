@@ -20,6 +20,20 @@ from .models import (
 logger = logging.getLogger("herium")
 
 
+def is_staff_upload(url):
+    value = (url or "").split("?")[0].strip()
+    if not value:
+        return False
+    if "/img/" in value or value.startswith("img/"):
+        return False
+    return (
+        value.startswith("/uploads/")
+        or "cloudinary.com" in value
+        or value.startswith("http://")
+        or value.startswith("https://")
+    )
+
+
 def _img_version():
     newest = 0
     try:
@@ -47,6 +61,8 @@ def _active_popup():
             popup = Popup.objects.filter(is_active=True).order_by("-updated_at", "-id").first()
         if popup and popup.image and not popup.image.startswith(("http://", "https://", "/")):
             popup.image = "/" + popup.image
+        if popup and popup.image and not is_staff_upload(popup.image):
+            popup.image = ""
         return popup
     except Exception:
         logger.exception("cms popup load failed")
@@ -81,20 +97,26 @@ def public_cms(request):
         usage = ensure_usage_stats()
         info = ensure_site_info()
         contents = {item.key: item.body for item in SiteContent.objects.all()}
-        gallery = list(Post.objects.filter(board__slug="gallery", is_hidden=False).order_by("-created_at"))
+        gallery = [
+            item
+            for item in Post.objects.filter(board__slug="gallery", is_hidden=False).order_by("-created_at")
+            if is_staff_upload(item.image) or any(is_staff_upload(url) for url in item.image_list())
+        ]
         grouped = {"night": [], "nursing": [], "home": []}
         for item in gallery:
             key = item.category if item.category in grouped else "nursing"
             grouped[key].append(item)
-        gallery_slides = [item for item in gallery if (item.image or "").strip()]
+        gallery_slides = [item for item in gallery if is_staff_upload(item.image)]
         hero_photo = (contents.get("hero_photo") or "").strip()
+        if hero_photo and not is_staff_upload(hero_photo):
+            hero_photo = ""
         hero_path = hero_photo.split("?")[0]
         banners = []
         for banner in Banner.objects.filter(is_active=True).order_by("sort_order", "id"):
             image = (banner.image or "").split("?")[0]
             if hero_path and image and image == hero_path:
                 continue
-            if image:
+            if is_staff_upload(image):
                 banners.append(banner)
         day_total = 0
         if usage.get("day_general"):

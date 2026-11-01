@@ -294,11 +294,10 @@ header:hover .dropdown {
     border: 1px solid #eee; 
     border-radius: 40px; 
     overflow: hidden; /* 영역 밖으로 나가는 이미지 숨기기 */
-    --hero-photo: url("img/grandmother.png?v=20260917");
 }
 
 /* 환영 박스 안 대표 사진. 오른쪽 배너 슬라이드와는 별개입니다. */
-.box::before {
+.box.has-hero-photo::before {
     content: "";
     position: absolute;
     top: 0;

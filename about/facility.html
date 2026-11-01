@@ -165,9 +165,11 @@
             </div>
 
             <div class="tab-panel is-active" id="tab-overview">
+                {% if hero_photo %}
                 <div class="facility-hero">
-                    <img src="../img/2.png" alt="헤리움 케어센터 전경">
+                    <img src="{{ hero_photo }}?v={{ img_v }}" alt="헤리움 케어센터 전경">
                 </div>
+                {% endif %}
                 <dl class="spec-list">
                     <div class="spec-row">
                         <i class="fa-solid fa-location-dot"></i>
@@ -244,38 +246,14 @@
 
             <div class="tab-panel" id="tab-gallery">
                 <div class="gallery-grid gallery-grid-2">
-                    <figure class="gallery-card">
-                        <img src="../img/2.png" alt="센터 전경">
-                        <figcaption><strong>센터 전경</strong></figcaption>
-                    </figure>
-                    <figure class="gallery-card">
-                        <img src="../img/1.png" alt="생활실">
-                        <figcaption><strong>생활실</strong></figcaption>
-                    </figure>
-                    <figure class="gallery-card">
-                        <img src="../img/gallery1.jpg" alt="프로그램실">
-                        <figcaption><strong>프로그램실</strong></figcaption>
-                    </figure>
-                    <figure class="gallery-card">
-                        <img src="../img/gallery2.jpg" alt="물리치료실">
-                        <figcaption><strong>물리치료실</strong></figcaption>
-                    </figure>
-                    <figure class="gallery-card">
-                        <img src="../img/gallery3.jpg" alt="식당">
-                        <figcaption><strong>식당</strong></figcaption>
-                    </figure>
-                    <figure class="gallery-card">
-                        <img src="../img/3.jpg" alt="휴게실">
-                        <figcaption><strong>휴게실</strong></figcaption>
-                    </figure>
-                    <figure class="gallery-card">
-                        <img src="../img/gallery4.jpg" alt="주야간보호">
-                        <figcaption><strong>주야간보호</strong></figcaption>
-                    </figure>
-                    <figure class="gallery-card">
-                        <img src="../img/gallery5.jpg" alt="상담실">
-                        <figcaption><strong>상담실</strong></figcaption>
-                    </figure>
+                    {% for post in cms_gallery_slides %}
+                    <a class="gallery-card" href="/community/post/{{ post.id }}/">
+                        <img src="{{ post.image }}?v={{ img_v }}" alt="{{ post.title }}">
+                        <figcaption><strong>{{ post.title }}</strong></figcaption>
+                    </a>
+                    {% empty %}
+                    <p class="empty-hint">관리자에서 올린 시설 사진이 아직 없습니다.</p>
+                    {% endfor %}
                 </div>
             </div>
         </div>

@@ -161,7 +161,7 @@
 </header>
 
 <div class="main-visual-row">
-    <div class="box"{% if hero_photo %} style="--hero-photo: url('{{ hero_photo }}?v={{ img_v }}')"{% endif %}>
+    <div class="box{% if hero_photo %} has-hero-photo{% endif %}"{% if hero_photo %} style="--hero-photo: url('{{ hero_photo }}?v={{ img_v }}')"{% endif %}>
         <div>
             <h1>{% if cms.main_headline %}{{ cms.main_headline|safe }}{% else %}<span>따스한 손길</span>로 전하는 <span>사랑</span>, <br><span>헤리움 케어센터</span>가 함께합니다.{% endif %}</h1>
         </div>
@@ -194,21 +194,16 @@
         <div class="box2"></div>
     </div>
 
+    {% if cms_banners %}
     <div class="main-slider">
         <div class="slider-wrapper">
-            {% if cms_banners %}
             {% for banner in cms_banners %}
             <div class="slider-item"><img src="{{ banner.image }}?v={{ img_v }}" alt="{{ banner.title }}"></div>
             {% endfor %}
-            {% else %}
-            <div class="slider-item"><img src="img/1.png" alt="메인 배너 1"></div>
-            <div class="slider-item"><img src="img/2.png" alt="메인 배너 2"></div>
-            <div class="slider-item"><img src="img/3.jpg" alt="메인 배너 3"></div>
-            {% endif %}
         </div>
         <div class="slider-controls">
             <div class="slider-counter">
-                <span id="slide-current">1</span> / <span id="slide-total">3</span>
+                <span id="slide-current">1</span> / <span id="slide-total">{{ cms_banners|length }}</span>
             </div>
             <div class="control-buttons">
                 <button id="slider-prev" class="slider-btn" type="button" aria-label="이전 배너"><i class="fas fa-chevron-left"></i></button>
@@ -217,6 +212,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <nav class="m-shortcuts" aria-label="자주 찾는 메뉴">
         <a href="service/nighttime.html"><i class="fa-solid fa-cloud-sun"></i><span>주야간보호</span></a>
@@ -316,18 +312,16 @@
             <div class="slide-item"><img src="{{ post.image }}?v={{ img_v }}" alt="{{ post.title }}"></div>
             {% endfor %}
             {% else %}
-            <div class="slide-item"><img src="img/gallery1.jpg?v={{ img_v }}" alt="활동 사진 1"></div>
-            <div class="slide-item"><img src="img/gallery2.jpg?v={{ img_v }}" alt="활동 사진 2"></div>
-            <div class="slide-item"><img src="img/gallery3.jpg?v={{ img_v }}" alt="활동 사진 3"></div>
-            <div class="slide-item"><img src="img/gallery4.jpg?v={{ img_v }}" alt="활동 사진 4"></div>
-            <div class="slide-item"><img src="img/gallery5.jpg?v={{ img_v }}" alt="활동 사진 5"></div>
+            <p class="empty-hint">관리자에서 올린 갤러리 사진이 아직 없습니다.</p>
             {% endif %}
         </div>
+        {% if cms_gallery_slides %}
         <div class="gallery-controls">
             <button type="button" id="gallery-prev" aria-label="이전 사진"><i class="fas fa-chevron-left"></i></button>
-            <span><span id="gallery-current">1</span> / <span id="gallery-total">5</span></span>
+            <span><span id="gallery-current">1</span> / <span id="gallery-total">{{ cms_gallery_slides|length }}</span></span>
             <button type="button" id="gallery-next" aria-label="다음 사진"><i class="fas fa-chevron-right"></i></button>
         </div>
+        {% endif %}
     </div>
 </div>
 

@@ -171,83 +171,38 @@
             </div>
             <div class="tab-panel is-active" id="tab-night">
                 <div class="gallery-grid">
-                    {% if cms_has_gallery %}
                     {% for post in cms_gallery.night %}
                     <a class="gallery-card" href="/community/post/{{ post.id }}/" data-title="{{ post.title }}" data-body="{{ post.body }}">
-                        <img src="{{ post.image|default:'../img/gallery1.jpg' }}" alt="{{ post.title }}">
+                        <img src="{{ post.image }}" alt="{{ post.title }}">
                         <figcaption><strong>{{ post.title }}</strong><span>{{ post.body }}</span></figcaption>
                     </a>
                     {% empty %}
                     <p class="empty-hint">등록된 주야간보호 사진이 없습니다.</p>
                     {% endfor %}
-                    {% else %}
-                    <figure class="gallery-card" data-title="원예 프로그램" data-body="주야간보호 화분 손 운동">
-                        <img src="../img/gallery1.jpg" alt="원예 프로그램">
-                        <figcaption><strong>원예 프로그램</strong><span>화분을 가꾸며 손 운동과 감각을 깨웁니다.</span></figcaption>
-                    </figure>
-                    <figure class="gallery-card" data-title="음악 활동" data-body="주야간보호 노래 리듬">
-                        <img src="../img/gallery2.jpg" alt="음악 활동">
-                        <figcaption><strong>음악 활동</strong><span>노래와 리듬 악기로 즐거운 오후의 시간.</span></figcaption>
-                    </figure>
-                    <figure class="gallery-card" data-title="이달의 생일 잔치" data-body="주야간보호 생일 케이크">
-                        <img src="../img/gallery3.jpg" alt="생일 잔치">
-                        <figcaption><strong>이달의 생일 잔치</strong><span>케이크와 축하 노래로 한 달을 기념합니다.</span></figcaption>
-                    </figure>
-                    {% endif %}
                 </div>
             </div>
             <div class="tab-panel" id="tab-nursing">
                 <div class="gallery-grid">
-                    {% if cms_has_gallery %}
                     {% for post in cms_gallery.nursing %}
                     <a class="gallery-card" href="/community/post/{{ post.id }}/" data-title="{{ post.title }}" data-body="{{ post.body }}">
-                        <img src="{{ post.image|default:'../img/gallery4.jpg' }}" alt="{{ post.title }}">
+                        <img src="{{ post.image }}" alt="{{ post.title }}">
                         <figcaption><strong>{{ post.title }}</strong><span>{{ post.body }}</span></figcaption>
                     </a>
                     {% empty %}
                     <p class="empty-hint">등록된 요양원 사진이 없습니다.</p>
                     {% endfor %}
-                    {% else %}
-                    <figure class="gallery-card" data-title="야외 산책" data-body="요양원 정원 산책">
-                        <img src="../img/gallery4.jpg" alt="산책">
-                        <figcaption><strong>야외 산책</strong><span>날씨 좋은 날 정원과 주변 길을 걷습니다.</span></figcaption>
-                    </figure>
-                    <figure class="gallery-card" data-title="만들기 활동" data-body="요양원 계절 소품">
-                        <img src="../img/gallery5.jpg" alt="만들기">
-                        <figcaption><strong>만들기 활동</strong><span>계절 소품을 만들며 성취감을 나눕니다.</span></figcaption>
-                    </figure>
-                    <figure class="gallery-card" data-title="함께하는 식사" data-body="요양원 식사 영양">
-                        <img src="../img/1.png" alt="식사 시간">
-                        <figcaption><strong>함께하는 식사</strong><span>영양 식단과 따뜻한 식탁 예절을 지킵니다.</span></figcaption>
-                    </figure>
-                    {% endif %}
                 </div>
             </div>
             <div class="tab-panel" id="tab-home">
                 <div class="gallery-grid">
-                    {% if cms_has_gallery %}
                     {% for post in cms_gallery.home %}
                     <a class="gallery-card" href="/community/post/{{ post.id }}/" data-title="{{ post.title }}" data-body="{{ post.body }}">
-                        <img src="{{ post.image|default:'../img/2.png' }}" alt="{{ post.title }}">
+                        <img src="{{ post.image }}" alt="{{ post.title }}">
                         <figcaption><strong>{{ post.title }}</strong><span>{{ post.body }}</span></figcaption>
                     </a>
                     {% empty %}
                     <p class="empty-hint">등록된 가정방문급여 사진이 없습니다.</p>
                     {% endfor %}
-                    {% else %}
-                    <figure class="gallery-card" data-title="방문요양 일상 지원" data-body="가정방문 방문요양 식사 이동">
-                        <img src="../img/2.png" alt="방문요양">
-                        <figcaption><strong>방문요양 일상 지원</strong><span>자택에서 식사·이동·위생을 돕습니다.</span></figcaption>
-                    </figure>
-                    <figure class="gallery-card" data-title="방문목욕" data-body="가정방문 방문목욕">
-                        <img src="../img/3.jpg" alt="방문목욕">
-                        <figcaption><strong>방문목욕</strong><span>이동식 목욕 차량으로 위생 관리를 지원합니다.</span></figcaption>
-                    </figure>
-                    <figure class="gallery-card" data-title="가정 내 말벗 케어" data-body="가정방문 말벗 정서">
-                        <img src="../img/gallery2.jpg" alt="말벗 케어">
-                        <figcaption><strong>가정 내 말벗 케어</strong><span>방문 중 대화와 정서 돌봄을 함께합니다.</span></figcaption>
-                    </figure>
-                    {% endif %}
                 </div>
             </div>
             <p class="board-empty">검색 결과가 없습니다.</p>
