@@ -2,7 +2,7 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from accounts.views import account_page, find_page, guardian_page, login_page, reset_page, signup_page
-from .views import SitePageView, robots_txt, sitemap_xml
+from .views import SitePageView
 
 PAGE_TEMPLATES = [
     ("main.html", "main.html"),
@@ -42,8 +42,6 @@ PAGE_TEMPLATES = [
 
 urlpatterns = [
     path("", RedirectView.as_view(url="/main.html", permanent=False)),
-    path("sitemap.xml", sitemap_xml, name="sitemap_xml"),
-    path("robots.txt", robots_txt, name="robots_txt"),
     path("login.html", login_page, name="login_page"),
     path("signup.html", signup_page, name="signup_page"),
     path("find-account.html", find_page, name="find_page"),

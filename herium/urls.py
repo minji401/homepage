@@ -1,9 +1,13 @@
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.http import HttpResponse
 from django.urls import include, path, re_path
 from django.utils.cache import patch_cache_control
 from django.views.static import serve as static_serve
+
+from pages.sitemaps import SITEMAPS
+from pages.views import robots_txt
 
 
 def serve(request, path, document_root=None, show_indexes=False):
@@ -13,6 +17,8 @@ def serve(request, path, document_root=None, show_indexes=False):
 
 urlpatterns = [
     path("healthz", lambda request: HttpResponse("ok", content_type="text/plain")),
+    path("robots.txt", robots_txt, name="robots_txt"),
+    path("sitemap.xml", sitemap, {"sitemaps": SITEMAPS}, name="sitemap_xml"),
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),
     path("", include("cms.urls")),
