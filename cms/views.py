@@ -1,6 +1,8 @@
 from datetime import date, timedelta
 from functools import wraps
+from io import BytesIO
 from pathlib import Path
+import logging
 import re
 import time
 
@@ -16,6 +18,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from accounts.models import Profile
+
+logger = logging.getLogger("herium")
 from .menu_import import parse_menu_table, rows_from_csv, rows_from_xlsx
 from .pii import clean_phone, clean_text, encrypt_text
 from .models import (
@@ -122,6 +126,40 @@ IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
 FILE_EXTS = IMAGE_EXTS | {".pdf", ".doc", ".docx", ".hwp", ".hwpx", ".xls", ".xlsx", ".ppt", ".pptx", ".zip", ".txt"}
 
 
+def _cloudinary_configured():
+    if getattr(settings, "CLOUDINARY_URL", ""):
+        return True
+    return bool(
+        getattr(settings, "CLOUDINARY_CLOUD_NAME", "")
+        and getattr(settings, "CLOUDINARY_API_KEY", "")
+        and getattr(settings, "CLOUDINARY_API_SECRET", "")
+    )
+
+
+def _upload_cloudinary(payload, folder, name, suffix):
+    import cloudinary
+    import cloudinary.uploader
+
+    if settings.CLOUDINARY_URL:
+        cloudinary.config(secure=True)
+    else:
+        cloudinary.config(
+            cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+            api_key=settings.CLOUDINARY_API_KEY,
+            api_secret=settings.CLOUDINARY_API_SECRET,
+            secure=True,
+        )
+    resource_type = "image" if suffix in IMAGE_EXTS else "raw"
+    result = cloudinary.uploader.upload(
+        BytesIO(payload),
+        folder=f"herium/{folder}",
+        public_id=Path(name).stem,
+        resource_type=resource_type,
+        overwrite=True,
+    )
+    return (result.get("secure_url") or result.get("url") or "").strip()
+
+
 def _save_upload(upload, folder="posts", allowed=None):
     suffix = Path(upload.name).suffix.lower()
     if suffix not in (allowed or IMAGE_EXTS):
@@ -129,6 +167,13 @@ def _save_upload(upload, folder="posts", allowed=None):
     safe = re.sub(r"[^A-Za-z0-9._-]", "_", Path(upload.name).name)
     name = f"{int(time.time())}_{safe}"[:180]
     payload = b"".join(chunk for chunk in upload.chunks())
+    if _cloudinary_configured():
+        try:
+            url = _upload_cloudinary(payload, folder, name, suffix)
+            if url:
+                return url
+        except Exception:
+            logger.exception("Cloudinary upload failed; using database storage")
     stored = StoredUpload.objects.create(
         folder=folder,
         filename=name,

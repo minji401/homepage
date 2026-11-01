@@ -166,6 +166,15 @@ MEDIA_URL = "/uploads/"
 MEDIA_ROOT = BASE_DIR / "uploads"
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
+CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
+CLOUDINARY_CLOUD_NAME = (
+    os.environ.get("CLOUDINARY_CLOUD_NAME")
+    or os.environ.get("CLOUD_NAME")
+    or os.environ.get("cloud_name")
+    or ""
+).strip()
+CLOUDINARY_API_KEY = (os.environ.get("CLOUDINARY_API_KEY") or os.environ.get("api_key") or "").strip()
+CLOUDINARY_API_SECRET = (os.environ.get("CLOUDINARY_API_SECRET") or os.environ.get("api_secret") or "").strip()
 
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"

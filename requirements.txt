@@ -1,5 +1,6 @@
 bcrypt>=4.2
 bcrypt>=4.0
+cloudinary>=1.41
 cryptography>=43
 Django>=5.1,<5.3
 gunicorn
