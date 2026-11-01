@@ -386,3 +386,19 @@ class VisitLog(models.Model):
 
     class Meta:
         ordering = ["-visited_at"]
+
+
+class StoredUpload(models.Model):
+    """Render 디스크가 비워져도 남도록 Neon(Postgres)에 파일을 둡니다."""
+
+    folder = models.CharField(max_length=40, default="posts")
+    filename = models.CharField(max_length=200)
+    content_type = models.CharField(max_length=120, default="application/octet-stream")
+    data = models.BinaryField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-id"]
+
+    def public_url(self):
+        return f"/uploads/db/{self.pk}/{self.filename}"

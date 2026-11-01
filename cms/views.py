@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.db.models.functions import TruncDate, TruncMonth
-from django.http import HttpResponseForbidden, JsonResponse
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -33,6 +33,7 @@ from .models import (
     Post,
     SearchTerm,
     SiteContent,
+    StoredUpload,
     UsageStat,
     VisitLog,
     WaitlistEntry,
@@ -125,15 +126,30 @@ def _save_upload(upload, folder="posts", allowed=None):
     suffix = Path(upload.name).suffix.lower()
     if suffix not in (allowed or IMAGE_EXTS):
         return ""
+    safe = re.sub(r"[^A-Za-z0-9._-]", "_", Path(upload.name).name)
+    name = f"{int(time.time())}_{safe}"[:180]
+    payload = b"".join(chunk for chunk in upload.chunks())
+    stored = StoredUpload.objects.create(
+        folder=folder,
+        filename=name,
+        content_type=(getattr(upload, "content_type", "") or "application/octet-stream")[:120],
+        data=payload,
+    )
     dest_dir = Path(settings.MEDIA_ROOT) / folder
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    safe = re.sub(r"[^A-Za-z0-9._-]", "_", upload.name)
-    name = f"{int(time.time())}_{safe}"
-    dest = dest_dir / name
-    with dest.open("wb") as out:
-        for chunk in upload.chunks():
-            out.write(chunk)
-    return f"/uploads/{folder}/{name}"
+    try:
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        (dest_dir / name).write_bytes(payload)
+    except OSError:
+        pass
+    return stored.public_url()
+
+
+def serve_stored_upload(_request, file_id, name):
+    stored = get_object_or_404(StoredUpload, pk=file_id)
+    response = HttpResponse(bytes(stored.data), content_type=stored.content_type or "application/octet-stream")
+    response["Cache-Control"] = "public, max-age=86400"
+    response["Content-Disposition"] = f'inline; filename="{stored.filename}"'
+    return response
 
 
 def _author_name(user):

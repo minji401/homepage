@@ -4,7 +4,7 @@
 {% block content %}
 <section class="staff-section">
     <h2>로고 · 메인 대표 사진</h2>
-    <p class="staff-help">상단 로고와 메인 화면을 가장 먼저 보여주는 대표 사진을 여기서 바꿉니다. 대표 사진은 슬라이드와 별개입니다.</p>
+    <p class="staff-help">상단 로고와 메인 화면을 가장 먼저 보여주는 대표 사진을 여기서 바꿉니다. 대표 사진은 슬라이드와 별개입니다. 올린 파일은 데이터베이스에 저장되므로 배포 후에도 유지됩니다.</p>
     <form method="post" class="staff-form" enctype="multipart/form-data">{% csrf_token %}
         <input type="hidden" name="section" value="brand">
         <label>상단 로고

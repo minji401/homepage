@@ -26,6 +26,7 @@ urlpatterns = [
     path("staff/consultations/<str:item_id>/sms-preview/", care_views.sms_preview, name="staff_consult_sms_preview"),
     path("staff/applications/", views.applications, name="staff_applications"),
     path("community/post/<int:post_id>/", views.public_post, name="public_post"),
+    path("uploads/db/<int:file_id>/<str:name>", views.serve_stored_upload, name="stored_upload"),
     path("api/care/consultations/", care_views.consult_create, name="care_consult_create"),
     path("staff/applications/<int:app_id>/", views.application_action, name="staff_application_action"),
     path("staff/insights/", views.insights, name="staff_insights"),
