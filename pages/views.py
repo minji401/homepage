@@ -19,6 +19,12 @@ def robots_txt(_request):
         "Allow: /\n"
         "Disallow: /admin/\n"
         "Disallow: /staff/\n"
+        "\n"
+        "User-agent: Yeti\n"
+        "Allow: /\n"
+        "Disallow: /admin/\n"
+        "Disallow: /staff/\n"
+        "\n"
         "Sitemap: https://heriumcare.com/sitemap.xml\n"
     )
-    return HttpResponse(body, content_type="text/plain; charset=utf-8")
+    return HttpResponse(body, content_type="text/plain")
