@@ -32,15 +32,47 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "" if os.environ.get("RENDER") else _D
 if os.environ.get("RENDER") and (not SECRET_KEY or SECRET_KEY == _DEV_SECRET):
     raise RuntimeError("RENDER 환경에는 SECRET_KEY 환경변수가 필요합니다.")
 DEBUG = os.environ.get("DEBUG", "false" if os.environ.get("RENDER") else "true").lower() in ("1", "true", "yes")
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get(
-        "ALLOWED_HOSTS",
-        "heriumcare.com,www.heriumcare.com,localhost,127.0.0.1",
-    ).split(",")
-    if host.strip()
+
+
+def _normalize_host(value):
+    host = (value or "").strip().strip('"').strip("'").lower()
+    if not host:
+        return ""
+    if "://" in host:
+        host = (urlparse(host).hostname or "").strip().lower()
+    else:
+        host = host.split("/")[0].strip()
+        if "@" in host:
+            host = host.rsplit("@", 1)[-1]
+        host = host.split(":")[0].strip()
+    if host.startswith("*."):
+        host = "." + host[2:]
+    return host
+
+
+def _split_host_values(raw):
+    text = (raw or "").replace("\n", ",").replace(";", ",")
+    hosts = []
+    for part in text.split(","):
+        host = _normalize_host(part.strip())
+        if host:
+            hosts.append(host)
+    return hosts
+
+
+_REQUIRED_HOSTS = [
+    "heriumcare.com",
+    "www.heriumcare.com",
+    ".heriumcare.com",
+    ".onrender.com",
+    "localhost",
+    "127.0.0.1",
 ]
-_render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+ALLOWED_HOSTS = []
+for _host in _REQUIRED_HOSTS + _split_host_values(os.getenv("ALLOWED_HOSTS") or ""):
+    if _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
+_render_host = _normalize_host(os.environ.get("RENDER_EXTERNAL_HOSTNAME", ""))
 if _render_host and _render_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_render_host)
 if not DEBUG:
