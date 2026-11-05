@@ -108,11 +108,13 @@ class SecurityHeadersMiddleware:
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Content-Security-Policy"] = "; ".join([
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://dapi.kakao.com https://t1.daumcdn.net https://oapi.map.naver.com https://maps.googleapis.com",
             "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
             "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:",
-            "img-src 'self' data: https://res.cloudinary.com https://*.cloudinary.com",
-            "connect-src 'self'",
+            "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://*.googleapis.com https://*.gstatic.com https://maps.gstatic.com https://*.ggpht.com https://*.kakao.com https://*.kakaocdn.net https://*.daumcdn.net https://*.pstatic.net https://*.naver.com",
+            "connect-src 'self' https://dapi.kakao.com https://*.kakao.com https://oapi.map.naver.com https://*.naver.com https://maps.googleapis.com",
+            "frame-src 'self' https://www.google.com https://maps.google.com https://www.google.com/maps https://map.kakao.com https://dapi.kakao.com https://map.naver.com https://www.google.com/maps/embed",
+            "child-src 'self' https://www.google.com https://maps.google.com https://map.kakao.com https://map.naver.com",
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "object-src 'none'",

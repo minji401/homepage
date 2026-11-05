@@ -158,8 +158,8 @@
 
         <div class="page-body">
             <p class="page-lead">{{ info.location_lead|default:"헤리움 케어센터는 영천시 완산동에 있습니다. 방문 전 전화로 예약해 주시면 안내가 더 수월합니다." }}</p>
-            <div class="map-wrap">
-                <iframe src="https://maps.google.com/maps?q={{ info.map_query|default:'경상북도 영천시 역전로 16'|urlencode }}&t=&z=16&ie=UTF8&iwloc=&output=embed" loading="lazy" title="{{ info.center_name|default:'헤리움 케어센터' }} 위치"></iframe>
+            <div class="map-wrap" id="map">
+                <iframe src="https://maps.google.com/maps?q={{ info.map_query|default:'경상북도 영천시 역전로 16'|urlencode }}&t=&z=16&ie=UTF8&iwloc=&output=embed" width="100%" height="400" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen title="{{ info.center_name|default:'헤리움 케어센터' }} 위치"></iframe>
             </div>
             <table class="page-table">
                 <tr><th>주소</th><td class="left">{{ info.address_full|default:"경상북도 영천시 역전로 16 (완산동 1081-5)" }}</td></tr>

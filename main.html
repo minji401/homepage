@@ -163,7 +163,7 @@
 <div class="main-visual-row">
     <div class="box{% if hero_photo %} has-hero-photo{% endif %}"{% if hero_photo %} style="--hero-photo: url('{{ hero_photo }}?v={{ img_v }}')"{% endif %}>
         <div>
-            <h1>{% if cms.main_headline %}{{ cms.main_headline }}{% else %}<span>따스한 손길</span>로 전하는 <span>사랑</span>, <br><span>헤리움 케어센터</span>가 함께합니다.{% endif %}</h1>
+            <h1>{% if cms.main_headline %}{{ cms.main_headline|safe }}{% else %}<span>따스한 손길</span>로 전하는 <span>사랑</span>,<br><span>헤리움 케어센터</span>가 함께합니다.{% endif %}</h1>
         </div>
 
         <!-- 퀵 아이콘 이미지를 FontAwesome 아이콘으로 변경 -->

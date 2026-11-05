@@ -422,16 +422,23 @@
     font-size: 1.4rem;
 }
 
-.map-wrap {
+.map-wrap,
+#map {
     overflow: hidden;
     margin: 8px 0 20px;
+    width: 100%;
+    min-height: 400px;
+    height: 400px;
     border: 1px solid #eee8dc;
     border-radius: 14px;
+    background: #ffffff;
 }
-.map-wrap iframe {
+.map-wrap iframe,
+#map iframe {
     display: block;
     width: 100%;
-    height: 360px;
+    height: 400px;
+    min-height: 400px;
     border: 0;
 }
 
@@ -1333,7 +1340,10 @@
     .kp-box,
     .program-wheel { grid-template-columns: 1fr; }
     .floor-map { grid-template-columns: repeat(2, 1fr); }
-    .map-wrap iframe { height: 240px; }
+    .map-wrap,
+    #map,
+    .map-wrap iframe,
+    #map iframe { height: 280px; min-height: 280px; }
     .board-search { flex-wrap: wrap; }
     .board-search select,
     .board-search input { width: 100%; border-right: 1px solid #d8d0c4; }
