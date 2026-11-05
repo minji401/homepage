@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from django.conf import settings
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login as django_login
 from django.contrib.auth.models import User
 from django.db import IntegrityError, connections
 from django.db.utils import DatabaseError, OperationalError, ProgrammingError
@@ -19,6 +19,15 @@ from .passwords import hash_password, needs_rehash, verify_password
 from .shared_schema import apply_shared_schema, ensure_integration_schema
 
 logger = logging.getLogger("herium.shared")
+
+
+_MODEL_BACKEND = "django.contrib.auth.backends.ModelBackend"
+
+
+def login(request, user):
+    if not getattr(user, "backend", None):
+        user.backend = _MODEL_BACKEND
+    django_login(request, user)
 
 
 class SharedAuthError(Exception):
@@ -238,7 +247,7 @@ def issue_reset_token(user_id):
     raw = secrets.token_urlsafe(32)
     digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()
     now = datetime.now(timezone.utc)
-    expires = now + timedelta(minutes=30)
+    expires = now + timedelta(seconds=3600)
     now_s = now.isoformat()
     token_id = "pr_" + uuid4().hex
     ensure_shared_schema()
@@ -413,6 +422,7 @@ def shared_matches_login(shared, login_id):
     candidates = {
         (shared.username or "").strip().lower(),
         username_from_note(shared.herium_note).lower(),
+        (getattr(shared, "email", None) or "").strip().lower(),
         (shared.phone or "").strip(),
         normalize_phone(shared.phone),
         (shared.name or "").strip().lower(),
@@ -474,10 +484,13 @@ def find_local_by_login(login_id):
     login_id = (login_id or "").strip()
     if not login_id:
         return None
-    try:
-        return User.objects.select_related("profile").get(username=login_id)
-    except User.DoesNotExist:
-        return find_local_by_phone(login_id)
+    found = User.objects.select_related("profile").filter(username__iexact=login_id).first()
+    if found:
+        return found
+    found = User.objects.select_related("profile").filter(email__iexact=login_id).first()
+    if found:
+        return found
+    return find_local_by_phone(login_id)
 
 
 def needs_guardian_prompt(shared, user=None):

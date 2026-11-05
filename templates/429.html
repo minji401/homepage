@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>로그인이 잠시 잠겼습니다 | 헤리움 케어센터</title>
+    <style>
+        body { margin: 0; font-family: "Noto Sans KR", sans-serif; background: #f6f4f0; color: #333; }
+        .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+        .card { width: min(480px, 100%); background: #fff; border: 1px solid #f0f0f0; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.06); padding: 36px 28px; text-align: center; }
+        p { margin: 0 0 12px; line-height: 1.6; word-break: keep-all; }
+        h1 { font-size: 1.4rem; margin: 8px 0 12px; }
+        a { display: inline-block; margin-top: 12px; padding: 10px 18px; border-radius: 999px; background: #b38b4d; color: #fff; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <h1>로그인이 잠시 잠겼습니다</h1>
+            <p>{{ message|default:"비밀번호를 여러 번 틀려 잠시 후 다시 시도해 주세요." }}</p>
+            <a href="/login.html">로그인으로 돌아가기</a>
+        </div>
+    </div>
+</body>
+</html>

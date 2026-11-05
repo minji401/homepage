@@ -86,19 +86,31 @@ class Application(models.Model):
         (KIND_VOLUNTEER, "자원봉사"),
         (KIND_DONATE, "후원"),
     ]
+    STATUS_RECEIVED = "received"
     STATUS_WAITING = "waiting"
     STATUS_DONE = "done"
     STATUS_APPROVED = "approved"
     STATUS_REJECTED = "rejected"
     STATUS_CHOICES = [
-        (STATUS_WAITING, "대기"),
-        (STATUS_DONE, "상담 완료"),
+        (STATUS_RECEIVED, "접수완료"),
+        (STATUS_WAITING, "상담대기"),
+        (STATUS_DONE, "상담완료"),
         (STATUS_APPROVED, "승인"),
         (STATUS_REJECTED, "반려"),
     ]
 
     kind = models.CharField("구분", max_length=20, choices=KIND_CHOICES)
-    status = models.CharField("상태", max_length=20, choices=STATUS_CHOICES, default=STATUS_WAITING)
+    status = models.CharField("상태", max_length=20, choices=STATUS_CHOICES, default=STATUS_RECEIVED)
+    user = models.ForeignKey(
+        "auth.User",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="care_applications",
+        verbose_name="신청 회원",
+    )
+    patient_id = models.CharField("어르신 프로필 ID", max_length=80, blank=True)
+    senior_name = models.CharField("대상 어르신", max_length=50, blank=True)
     name = models.TextField("이름")
     phone = models.TextField("연락처")
     title = models.CharField("제목", max_length=200, blank=True)
@@ -197,16 +209,16 @@ class DailyMenu(models.Model):
     def __str__(self):
         return self.date.isoformat()
 
+    def meal_rows(self):
+        return [
+            {"label": "아침", "text": (self.breakfast or "").strip(), "tone": ""},
+            {"label": "점심", "text": (self.lunch or "").strip(), "tone": "highlight"},
+            {"label": "저녁", "text": (self.dinner or "").strip(), "tone": ""},
+            {"label": "간식", "text": (self.snack or "").strip(), "tone": "snack"},
+        ]
+
     def banner_items(self):
-        meals = []
-        if self.breakfast:
-            meals.append(("아침", self.breakfast))
-        if self.lunch:
-            meals.append(("점심", self.lunch))
-        if self.dinner:
-            meals.append(("저녁", self.dinner))
-        if self.snack:
-            meals.append(("간식", self.snack))
+        meals = [(row["label"], row["text"]) for row in self.meal_rows() if row["text"]]
         if not meals:
             return ["식단 준비 중"]
         if len(meals) == 1:
@@ -214,10 +226,12 @@ class DailyMenu(models.Model):
         return [f"{label} {text}" for label, text in meals]
 
     def as_banner(self):
+        weekdays = "월화수목금토일"
         return {
             "date": self.date.isoformat(),
-            "label": f"{self.date.month}월 {self.date.day}일",
+            "label": f"{self.date.month}월 {self.date.day}일 ({weekdays[self.date.weekday()]})",
             "items": self.banner_items(),
+            "meals": self.meal_rows(),
         }
 
 

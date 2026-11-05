@@ -12,10 +12,18 @@ from django.core.mail import send_mail
 from django.db.utils import OperationalError
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from herium.audit import log_event
 from herium.middleware import registration_open
+from .forms import (
+    LoginApiForm,
+    PasswordResetConfirmForm,
+    PasswordResetRequestForm,
+    SignupApiForm,
+    first_form_error,
+)
 from .models import Profile
 from .password_policy import PASSWORD_RULE, password_error, lock_message, lock_until
 from .jwt_auth import issue_token
@@ -244,14 +252,16 @@ def _login_env_admin(request, user_id, password):
     return user
 
 
-@csrf_exempt
 @require_POST
 def login_api(request):
     data = _json_body(request)
-    user_id = (data.get("id") or data.get("username") or "").strip()
-    password = data.get("password") or ""
-    if not user_id or not password:
-        return JsonResponse({"ok": False, "message": "아이디와 비밀번호를 입력해 주세요."}, status=400)
+    form = LoginApiForm(data)
+    if not form.is_valid():
+        return JsonResponse({"ok": False, "message": first_form_error(form)}, status=400)
+    user_id = form.cleaned_data["login_id"]
+    password = form.cleaned_data["password"]
+    data = dict(data)
+    data["next"] = form.cleaned_data.get("next") or ""
 
     ip = _client_ip(request)
     if _login_blocked(ip):
@@ -278,6 +288,7 @@ def login_api(request):
         except SharedAuthError as exc:
             if exc.status in (400, 423):
                 _note_login_fail(ip)
+                log_event("login_failed", request, user=user_id[:80], reason="shared")
             return JsonResponse({"ok": False, "message": exc.message}, status=exc.status)
         _clear_login_fail(ip)
         payload = _profile_payload(user)
@@ -291,14 +302,16 @@ def login_api(request):
             redirect = "/staff/"
         else:
             redirect = "/main.html"
+        next_url = (data.get("next") or "").strip()
+        if next_url.startswith("/") and not next_url.startswith("//") and not needs:
+            redirect = next_url
         return JsonResponse({"ok": True, "user": payload, "redirect": redirect})
 
     try:
-        existing = User.objects.select_related("profile").get(username=user_id)
-    except User.DoesNotExist:
         existing = find_local_by_login(user_id)
         if existing is None:
             _note_login_fail(ip)
+            log_event("login_failed", request, user=user_id[:80], reason="unknown")
             return JsonResponse({"ok": False, "message": "아이디 또는 비밀번호가 일치하지 않습니다."}, status=400)
     except OperationalError:
         return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요."}, status=503)
@@ -308,9 +321,12 @@ def login_api(request):
     if locked:
         _note_login_fail(ip)
         return JsonResponse({"ok": False, "message": locked}, status=423)
-    user = authenticate(request, username=existing.username, password=password)
+    user = authenticate(request, username=user_id, password=password) or authenticate(
+        request, username=existing.username, password=password
+    )
     if user is None:
         _note_login_fail(ip)
+        log_event("login_failed", request, user=user_id[:80], reason="password")
         locked = _note_profile_failure(profile)
         if locked:
             return JsonResponse({"ok": False, "message": locked}, status=423)
@@ -341,40 +357,23 @@ def public_config(request):
     return JsonResponse({"registrationOpen": registration_open()})
 
 
-@csrf_exempt
 @require_POST
 def signup_api(request):
     if not registration_open():
         return JsonResponse({"ok": False, "message": "현재 정식 오픈 준비 중입니다."}, status=403)
     data = _json_body(request)
-    user_id = (data.get("id") or "").strip()
-    password = data.get("password") or ""
-    password_confirm = data.get("passwordConfirm") or data.get("password_confirm") or ""
-    name = (data.get("name") or "").strip()
-    phone = (data.get("phone") or "").strip()
-    email = (data.get("email") or "").strip()
-    agree = data.get("agree") in (True, "true", "on", "1", 1)
-    age14 = data.get("age14") in (True, "true", "on", "1", 1)
-    marketing = data.get("marketing") in (True, "true", "on", "1", 1)
-
-    if not user_id or not password or not name or not phone:
-        return JsonResponse({"ok": False, "message": "아이디, 비밀번호, 이름, 연락처는 필수입니다."}, status=400)
-    if len(user_id) < 4:
-        return JsonResponse({"ok": False, "message": "아이디는 4자 이상 입력해 주세요."}, status=400)
-    if password_error(password):
-        return JsonResponse({"ok": False, "message": PASSWORD_RULE}, status=400)
-    if password_confirm and password != password_confirm:
-        return JsonResponse({"ok": False, "message": "비밀번호가 서로 다릅니다."}, status=400)
-    if not agree:
-        return JsonResponse({"ok": False, "message": "이용약관 및 개인정보 처리에 동의해 주세요."}, status=400)
-    if not age14:
-        return JsonResponse({"ok": False, "message": "만 14세 이상만 가입할 수 있습니다."}, status=400)
-    digits = normalize_phone(phone)
-    if len(digits) < 10:
-        return JsonResponse({"ok": False, "message": "올바른 휴대폰 번호를 입력해 주세요."}, status=400)
+    form = SignupApiForm(data)
+    if not form.is_valid():
+        return JsonResponse({"ok": False, "message": first_form_error(form)}, status=400)
+    email = form.cleaned_data["email"]
+    password = form.cleaned_data["password"]
+    name = form.cleaned_data["name"].strip()
+    digits = form.cleaned_data["phone"]
+    marketing = bool(form.cleaned_data.get("marketing"))
+    user_id = email
     try:
-        if User.objects.filter(username=user_id).exists():
-            return JsonResponse({"ok": False, "message": "이미 사용 중인 아이디입니다."}, status=400)
+        if User.objects.filter(username__iexact=user_id).exists() or User.objects.filter(email__iexact=email).exists():
+            return JsonResponse({"ok": False, "message": "이미 사용 중인 이메일입니다."}, status=400)
     except OperationalError:
         return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요."}, status=503)
 
@@ -407,10 +406,12 @@ def signup_api(request):
         user=user,
         defaults={"name": name, "phone": digits, "role": Profile.ROLE_MEMBER, "status": Profile.STATUS_ACTIVE},
     )
-    return JsonResponse({"ok": True})
+    user.backend = "django.contrib.auth.backends.ModelBackend"
+    login(request, user)
+    payload = _profile_payload(user)
+    return JsonResponse({"ok": True, "user": payload, "redirect": "/mypage/"})
 
 
-@csrf_exempt
 @require_POST
 def logout_api(request):
     logout(request)
@@ -438,7 +439,6 @@ def find_page(request):
     return render(request, "find-account.html")
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def find_api(request):
     data = _json_body(request)
@@ -587,7 +587,6 @@ def profile_api(request):
     return JsonResponse({"ok": True, "message": "개인정보를 저장했습니다.", "user": _profile_payload(user)})
 
 
-@csrf_exempt
 @require_POST
 def withdraw_api(request):
     if not request.user.is_authenticated:
@@ -628,7 +627,6 @@ def mail_configured():
     return bool(getattr(settings, "EMAIL_HOST", "") and getattr(settings, "EMAIL_HOST_USER", ""))
 
 
-@csrf_exempt
 @require_POST
 def password_reset_request(request):
     ip = _client_ip(request)
@@ -636,9 +634,10 @@ def password_reset_request(request):
     if _reset_blocked(ip):
         return JsonResponse({"ok": False, "message": "요청이 너무 많습니다. 10분 뒤에 다시 시도해 주세요."}, status=429)
     data = _json_body(request)
-    email = (data.get("email") or "").strip()
-    if not _valid_email(email):
-        return JsonResponse({"ok": False, "message": "이메일 형식을 확인해 주세요."}, status=400)
+    form = PasswordResetRequestForm(data)
+    if not form.is_valid():
+        return JsonResponse({"ok": False, "message": first_form_error(form)}, status=400)
+    email = form.cleaned_data["email"].strip()
     if not mail_configured():
         return JsonResponse(
             {"ok": False, "message": "비밀번호 재설정 메일을 보낼 설정이 아직 없습니다. 관리자에게 문의해 주세요."},
@@ -656,7 +655,7 @@ def password_reset_request(request):
         try:
             send_mail(
                 "헤리움 케어센터 비밀번호 재설정",
-                "아래 주소에서 새 비밀번호를 정해 주세요. 이 링크는 30분 뒤에 만료됩니다.\n\n"
+                "아래 주소에서 새 비밀번호를 정해 주세요. 이 링크는 1시간 뒤에 만료됩니다.\n\n"
                 + link
                 + "\n\n본인이 요청하지 않았다면 이 메일을 무시하세요.",
                 settings.DEFAULT_FROM_EMAIL,
@@ -699,16 +698,14 @@ def password_help_request(request):
     return JsonResponse({"ok": True, "message": HELP_SENT})
 
 
-@csrf_exempt
 @require_POST
 def password_reset_confirm(request):
     data = _json_body(request)
-    token = (data.get("token") or "").strip()
-    password = data.get("password") or ""
-    if not token:
-        return JsonResponse({"ok": False, "message": "재설정 링크가 올바르지 않습니다."}, status=400)
-    if password_error(password):
-        return JsonResponse({"ok": False, "message": PASSWORD_RULE}, status=400)
+    form = PasswordResetConfirmForm(data)
+    if not form.is_valid():
+        return JsonResponse({"ok": False, "message": first_form_error(form)}, status=400)
+    token = form.cleaned_data["token"].strip()
+    password = form.cleaned_data["password"]
     if not shared_enabled():
         return JsonResponse({"ok": False, "message": "회원 DB가 아직 준비되지 않았습니다."}, status=503)
     user_id = take_reset_token(token)

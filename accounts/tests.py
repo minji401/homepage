@@ -1,4 +1,7 @@
-from django.test import SimpleTestCase
+from django.contrib.auth.models import User
+from django.test import SimpleTestCase, TestCase
+
+from accounts.models import SeniorProfile
 
 from accounts.scrypt_compat import hash_password, verify_password
 from accounts.shared_users import (
@@ -15,11 +18,23 @@ class PasswordPolicyTests(SimpleTestCase):
         from accounts.password_policy import password_error
 
         self.assertTrue(password_error("short1A"))
-        self.assertTrue(password_error("lowercase1!"))
-        self.assertTrue(password_error("UPPERCASE1!"))
         self.assertTrue(password_error("NoDigits!!"))
         self.assertTrue(password_error("NoSpecial1A"))
+        self.assertTrue(password_error("toolongpassword1!xx"))
         self.assertEqual(password_error("GoodPass1!"), "")
+        self.assertEqual(password_error("hello12!"), "")
+        self.assertTrue(password_error("GoodPass1_"))
+
+    def test_signup_name_and_email_rules(self):
+        from accounts.password_policy import email_error, name_error, phone_error
+
+        self.assertEqual(name_error("홍길동"), "")
+        self.assertTrue(name_error("홍"))
+        self.assertTrue(name_error("홍길동1"))
+        self.assertEqual(email_error("user@example.com"), "")
+        self.assertTrue(email_error("not-an-email"))
+        self.assertEqual(phone_error("01012345678"), "")
+        self.assertTrue(phone_error("01112345678"))
 
     def test_names_match_ignores_spaces(self):
         from accounts.shared_users import names_match
@@ -167,3 +182,13 @@ class StagingGateTests(SimpleTestCase):
             request.META["HTTP_AUTHORIZATION"] = "Basic " + base64.b64encode(b"tester:secret").decode()
             opened = middleware(request)
         self.assertEqual(opened.status_code, 200)
+
+
+class SeniorProfileTests(TestCase):
+    def test_guardian_can_store_multiple_seniors(self):
+        user = User.objects.create_user(username="guard@example.com", email="guard@example.com", password="GoodPass1!")
+        one = SeniorProfile.objects.create(guardian=user, name="김순자", relationship="모", care_grade="3등급")
+        two = SeniorProfile.objects.create(guardian=user, name="김철수", relationship="부", care_grade="1등급")
+        self.assertEqual(user.patients.count(), 2)
+        self.assertEqual(one.as_card()["name"], "김순자")
+        self.assertEqual(two.relationship, "부")

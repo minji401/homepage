@@ -11,3 +11,9 @@ class AccountsConfig(AppConfig):
             from . import signals  # noqa: F401
         except Exception:
             pass
+        try:
+            from herium.audit import connect
+
+            connect()
+        except Exception:
+            pass

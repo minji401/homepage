@@ -8,6 +8,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const careForm = document.getElementById("careConsultForm");
     if (careForm) {
+        const patientSelect = document.getElementById("inq-patient");
+        const seniorInput = document.getElementById("inq-senior");
+        fetch("/accounts/me/", { credentials: "same-origin" })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (!data || data.authenticated === false) return;
+                const nameInput = careForm.querySelector('[name="applicant_name"]');
+                const phoneInput = careForm.querySelector('[name="applicant_phone"]');
+                if (nameInput && data.name) {
+                    nameInput.value = data.name;
+                    nameInput.readOnly = true;
+                }
+                if (phoneInput && data.phone) phoneInput.value = data.phone;
+            })
+            .catch(function () {});
+        if (patientSelect) {
+            fetch("/accounts/seniors/", { credentials: "same-origin" })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    (data.items || []).forEach(function (item) {
+                        const option = document.createElement("option");
+                        option.value = item.id;
+                        option.textContent = item.name + " (" + (item.relationship || "") + ")";
+                        option.setAttribute("data-name", item.name);
+                        patientSelect.appendChild(option);
+                    });
+                })
+                .catch(function () {});
+            patientSelect.addEventListener("change", function () {
+                const selected = patientSelect.options[patientSelect.selectedIndex];
+                if (seniorInput && selected && selected.getAttribute("data-name")) {
+                    seniorInput.value = selected.getAttribute("data-name");
+                }
+            });
+        }
         careForm.addEventListener("submit", function (e) {
             e.preventDefault();
             const payload = {};
@@ -41,6 +76,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     document.querySelectorAll(".js-demo-form").forEach(function (form) {
+        fetch("/accounts/me/", { credentials: "same-origin" })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (!data || data.authenticated === false) return;
+                const nameInput = form.querySelector('[name="name"]');
+                const phoneInput = form.querySelector('[name="phone"]');
+                if (nameInput && data.name) {
+                    nameInput.value = data.name;
+                    nameInput.readOnly = true;
+                }
+                if (phoneInput && data.phone) phoneInput.value = data.phone;
+            })
+            .catch(function () {});
         form.addEventListener("submit", function (e) {
             e.preventDefault();
             const kind = form.getAttribute("data-apply");

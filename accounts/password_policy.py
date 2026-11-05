@@ -1,21 +1,40 @@
 import re
 from datetime import datetime, timedelta, timezone
 
-PASSWORD_RULE = "비밀번호는 8자 이상이며 영문 대문자, 소문자, 숫자, 특수문자를 각각 하나 이상 포함해야 합니다."
+PASSWORD_RULE = "영문, 숫자, 특수문자를 포함하여 8~16자로 입력해 주세요."
+PASSWORD_SPECIAL = r'[!@#$%^&*(),.?":{}|<>]'
+PASSWORD_REGEX = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*' + PASSWORD_SPECIAL + r').{8,16}$'
+NAME_REGEX = re.compile(r"^[가-힣A-Za-z]{2,40}$")
+EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+PHONE_REGEX = re.compile(r"^010\d{8}$")
 LOCK_LIMIT = 5
 LOCK_MINUTES = 30
 
 
 def password_error(password):
     value = password or ""
-    if (
-        len(value) < 8
-        or not re.search(r"[a-z]", value)
-        or not re.search(r"[A-Z]", value)
-        or not re.search(r"\d", value)
-        or not re.search(r"[^A-Za-z0-9]", value)
-    ):
+    if not re.search(PASSWORD_REGEX, value):
         return PASSWORD_RULE
+    return ""
+
+
+def name_error(name):
+    compact = re.sub(r"\s+", "", name or "")
+    if not NAME_REGEX.match(compact):
+        return "이름은 한글 또는 영문 2자 이상으로 입력해 주세요."
+    return ""
+
+
+def email_error(email):
+    value = (email or "").strip()
+    if not EMAIL_REGEX.match(value):
+        return "이메일 형식을 확인해 주세요."
+    return ""
+
+
+def phone_error(digits):
+    if not PHONE_REGEX.match(digits or ""):
+        return "연락처는 010-0000-0000 형식으로 입력해 주세요."
     return ""
 
 

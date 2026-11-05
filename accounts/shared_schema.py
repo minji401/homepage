@@ -137,6 +137,9 @@ CONSULT_COLUMNS = [
     ("sms_sent_at", "TEXT"),
     ("sms_content", "TEXT"),
     ("admin_memo", "TEXT"),
+    ("patient_id", "TEXT"),
+    ("senior_name", "TEXT"),
+    ("consult_kind", "TEXT NOT NULL DEFAULT '입소 상담'"),
 ]
 
 

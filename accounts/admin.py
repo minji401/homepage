@@ -9,6 +9,7 @@ from .models import (
     OrderItem,
     Product,
     Profile,
+    SeniorProfile,
     SharedSiteContent,
     SharedUser,
     ShopProfile,
@@ -28,6 +29,7 @@ class UserAdmin(BaseUserAdmin):
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 admin.site.register(Profile)
+admin.site.register(SeniorProfile)
 
 
 @admin.register(SharedUser)

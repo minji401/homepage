@@ -110,9 +110,65 @@ if (galleryWrapper && galleryTotal) {
     if (dataEl) {
         try { days = JSON.parse(dataEl.textContent); } catch (err) { days = []; }
     }
+    function emptyHint() {
+        const hint = document.createElement("p");
+        hint.className = "meal-empty";
+        hint.textContent = "관리자가 식단을 등록하면 여기에 표시됩니다.";
+        return hint;
+    }
+
+    function mealsFromDay(day) {
+        if (day && Array.isArray(day.meals) && day.meals.length) return day.meals;
+        const parsed = [];
+        (day && day.items ? day.items : []).forEach(function (item) {
+            if (item && typeof item === "object" && !Array.isArray(item) && item.label) {
+                parsed.push({ label: item.label, text: item.text || "", tone: item.tone || "" });
+                return;
+            }
+            if (Array.isArray(item) && item.length >= 2) {
+                parsed.push({ label: item[0], text: item[1] });
+                return;
+            }
+            const value = String(item || "");
+            const match = value.match(/^(아침|점심|저녁|간식)\s+(.+)$/);
+            if (match) parsed.push({ label: match[1], text: match[2] });
+            else parsed.push({ label: "", text: value });
+        });
+        return parsed;
+    }
+
+    function badgeClass(meal) {
+        if (meal.tone === "highlight" || meal.label === "점심") return "meal-badge badge-highlight";
+        if (meal.tone === "snack" || meal.label === "간식") return "meal-badge badge-snack";
+        return "meal-badge";
+    }
+
+    function renderMeals(meals) {
+        menuList.innerHTML = "";
+        if (!meals.length) {
+            menuList.appendChild(emptyHint());
+            return;
+        }
+        meals.forEach(function (meal) {
+            const row = document.createElement("div");
+            row.className = "meal-row";
+            if (meal.label) {
+                const badge = document.createElement("span");
+                badge.className = badgeClass(meal);
+                badge.textContent = meal.label;
+                row.appendChild(badge);
+            }
+            const items = document.createElement("p");
+            items.className = "meal-items";
+            items.textContent = meal.text || "준비 중";
+            row.appendChild(items);
+            menuList.appendChild(row);
+        });
+    }
+
     if (!Array.isArray(days) || !days.length) {
         dateDisplay.textContent = "식단 준비 중";
-        menuList.innerHTML = "<li>관리자가 식단을 등록하면 여기에 표시됩니다.</li>";
+        renderMeals([]);
         if (prevBtn) prevBtn.disabled = true;
         if (nextBtn) nextBtn.disabled = true;
         return;
@@ -126,12 +182,7 @@ if (galleryWrapper && galleryTotal) {
     function renderDiet() {
         const day = days[index];
         dateDisplay.textContent = day.label || day.date;
-        menuList.innerHTML = "";
-        (day.items || ["식단 준비 중"]).forEach(function (item) {
-            const li = document.createElement("li");
-            li.textContent = item;
-            menuList.appendChild(li);
-        });
+        renderMeals(mealsFromDay(day));
         if (prevBtn) prevBtn.disabled = index <= 0;
         if (nextBtn) nextBtn.disabled = index >= days.length - 1;
     }

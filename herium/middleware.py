@@ -58,31 +58,40 @@ class StagingAuthMiddleware:
         return response
 
 
+def _host_allowed(host):
+    name = (host or "").split(":")[0].lower()
+    if not name:
+        return False
+    allowed = getattr(settings, "ALLOWED_HOSTS", []) or []
+    for rule in allowed:
+        rule = (rule or "").lower()
+        if rule == "*":
+            return True
+        if rule.startswith("."):
+            if name == rule[1:] or name.endswith(rule):
+                return True
+        elif name == rule:
+            return True
+    return False
+
+
 class TrustCsrfOriginMiddleware:
-    """구매한 도메인·프록시 환경에서도 CSRF Origin 검사를 통과시킵니다."""
+    """허용된 호스트의 자기 origin만 CSRF 신뢰 목록에 넣습니다."""
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        origins = list(getattr(settings, "CSRF_TRUSTED_ORIGINS", []) or [])
         host = request.get_host()
+        if not _host_allowed(host):
+            return self.get_response(request)
         proto = (request.META.get("HTTP_X_FORWARDED_PROTO") or "").split(",")[0].strip()
         if not proto:
             proto = "https" if request.is_secure() else "http"
-
-        extra = [
-            (request.META.get("HTTP_ORIGIN") or "").rstrip("/"),
-            f"{proto}://{host}",
-            f"https://{host}",
-            f"http://{host}",
-        ]
-        changed = False
-        for origin in extra:
-            if origin and origin not in origins:
-                origins.append(origin)
-                changed = True
-        if changed:
+        origin = f"{proto}://{host}"
+        origins = list(getattr(settings, "CSRF_TRUSTED_ORIGINS", []) or [])
+        if origin not in origins:
+            origins.append(origin)
             settings.CSRF_TRUSTED_ORIGINS = origins
         return self.get_response(request)
 
@@ -96,13 +105,13 @@ class SecurityHeadersMiddleware:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["X-XSS-Protection"] = "0"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Content-Security-Policy"] = "; ".join([
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
             "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
             "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:",
-            "img-src 'self' data:",
+            "img-src 'self' data: https://res.cloudinary.com https://*.cloudinary.com",
             "connect-src 'self'",
             "frame-ancestors 'none'",
             "base-uri 'self'",

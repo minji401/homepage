@@ -14,14 +14,15 @@ from django.db.models.functions import TruncDate, TruncMonth
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from accounts.models import Profile
 
 logger = logging.getLogger("herium")
 from .menu_import import parse_menu_table, rows_from_csv, rows_from_xlsx
+from .forms import ApplicationApiForm, SearchLogForm, first_form_error
 from .pii import clean_phone, clean_text, encrypt_text
+from .uploads import FILE_EXTS, IMAGE_EXTS, MAX_UPLOAD_BYTES, STAFF_SHEET_EXTS, upload_error
 from .models import (
     SITE_FIELD_GROUPS,
     SITE_FIELD_KEYS,
@@ -122,10 +123,6 @@ def _ensure_board(slug):
     return board
 
 
-IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
-FILE_EXTS = IMAGE_EXTS | {".pdf", ".doc", ".docx", ".hwp", ".hwpx", ".xls", ".xlsx", ".ppt", ".pptx", ".zip", ".txt"}
-
-
 def _cloudinary_configured():
     if getattr(settings, "CLOUDINARY_URL", ""):
         return True
@@ -161,12 +158,14 @@ def _upload_cloudinary(payload, folder, name, suffix):
 
 
 def _save_upload(upload, folder="posts", allowed=None):
-    suffix = Path(upload.name).suffix.lower()
-    if suffix not in (allowed or IMAGE_EXTS):
+    if upload_error(upload, allowed or IMAGE_EXTS):
         return ""
+    suffix = Path(upload.name).suffix.lower()
     safe = re.sub(r"[^A-Za-z0-9._-]", "_", Path(upload.name).name)
     name = f"{int(time.time())}_{safe}"[:180]
     payload = b"".join(chunk for chunk in upload.chunks())
+    if len(payload) > MAX_UPLOAD_BYTES:
+        return ""
     if _cloudinary_configured():
         try:
             url = _upload_cloudinary(payload, folder, name, suffix)
@@ -862,8 +861,9 @@ def meals(request):
                 messages.error(request, "표에서 날짜와 메뉴를 찾지 못했습니다. 엑셀에서 복사한 뒤 붙여 넣어 주세요.")
         elif action == "upload":
             upload = request.FILES.get("file")
-            if not upload:
-                messages.error(request, "엑셀 또는 CSV 파일을 선택해 주세요.")
+            bad = upload_error(upload, STAFF_SHEET_EXTS)
+            if bad:
+                messages.error(request, bad)
             else:
                 name = (upload.name or "").lower()
                 try:
@@ -950,9 +950,11 @@ def apply_api(request):
     if _too_many("apply", _client_ip(request)):
         return JsonResponse({"ok": False, "message": "잠시 후 다시 신청해 주세요."}, status=429)
     data = _json_body(request)
+    form = ApplicationApiForm(data)
+    if not form.is_valid():
+        return JsonResponse({"ok": False, "message": first_form_error(form)}, status=400)
+    data = form.cleaned_data
     kind = data.get("kind")
-    if kind not in dict(Application.KIND_CHOICES):
-        return JsonResponse({"ok": False, "message": "올바른 신청 구분이 아닙니다."}, status=400)
     try:
         name = clean_text(data.get("name"), 40)
         phone = clean_phone(data.get("phone"))
@@ -962,6 +964,8 @@ def apply_api(request):
         for key in ("type", "time", "date", "day", "item", "address"):
             if data.get(key):
                 extra[key] = clean_text(data.get(key), 200)
+        senior_name = clean_text(data.get("senior_name") or data.get("patient_name") or "", 50)
+        patient_id = clean_text(data.get("patient_id") or "", 80)
     except ValueError as exc:
         return JsonResponse({"ok": False, "message": str(exc)}, status=400)
     if not name:
@@ -970,6 +974,9 @@ def apply_api(request):
         extra["address"] = encrypt_text(extra["address"])
     Application.objects.create(
         kind=kind,
+        user=request.user if request.user.is_authenticated else None,
+        patient_id=patient_id,
+        senior_name=senior_name,
         name=encrypt_text(name),
         phone=encrypt_text(phone),
         title=title,
@@ -979,11 +986,13 @@ def apply_api(request):
     return JsonResponse({"ok": True, "message": "접수되었습니다. 담당자가 확인 후 연락드리겠습니다."})
 
 
-@csrf_exempt
 @require_POST
 def search_log_api(request):
     data = _json_body(request)
-    keyword = (data.get("q") or "").strip()
+    form = SearchLogForm(data)
+    if not form.is_valid():
+        return JsonResponse({"ok": True})
+    keyword = (form.cleaned_data.get("q") or "").strip()
     if keyword:
         term, _ = SearchTerm.objects.get_or_create(keyword=keyword)
         term.search_count += 1

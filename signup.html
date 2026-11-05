@@ -129,48 +129,43 @@
             <div class="auth-message" id="authMessage"></div>
             {% if registration_open is not False %}
             <form id="signupForm">
+                <p class="auth-help">보호자 정보만 등록합니다. 어르신 정보는 가입 후 마이페이지에서 관리하세요.</p>
                 <div class="auth-field">
-                    <label for="signupId">아이디</label>
+                    <label for="signupEmail">이메일 (로그인 ID)</label>
                     <div class="auth-input">
-                        <i class="fas fa-user field-icon"></i>
-                        <input type="text" id="signupId" name="id" placeholder="4자 이상 아이디">
+                        <i class="fas fa-envelope field-icon"></i>
+                        <input type="email" id="signupEmail" name="email" autocomplete="username" placeholder="email@example.com" required>
                     </div>
                 </div>
                 <div class="auth-field">
                     <label for="signupPw">비밀번호</label>
                     <div class="auth-input">
                         <i class="fas fa-lock field-icon"></i>
-                        <input type="password" id="signupPw" name="password" placeholder="대문자, 소문자, 숫자, 특수문자 포함 8자 이상">
+                        <input type="password" id="signupPw" name="password" placeholder="영문, 숫자, 특수문자 포함 8~16자" maxlength="16">
                         <button type="button" class="toggle-pw" aria-label="비밀번호 보기"><i class="fas fa-eye"></i></button>
                     </div>
+                    <small class="form-text text-muted">영문, 숫자, 특수문자 포함 8~16자로 입력해 주세요.</small>
                 </div>
                 <div class="auth-field">
                     <label for="signupPw2">비밀번호 확인</label>
                     <div class="auth-input">
                         <i class="fas fa-lock field-icon"></i>
-                        <input type="password" id="signupPw2" name="passwordConfirm" placeholder="비밀번호를 다시 입력해 주세요">
+                        <input type="password" id="signupPw2" name="passwordConfirm" placeholder="비밀번호를 다시 입력해 주세요" maxlength="16">
                         <button type="button" class="toggle-pw" aria-label="비밀번호 보기"><i class="fas fa-eye"></i></button>
                     </div>
                 </div>
                 <div class="auth-field">
-                    <label for="signupName">이름</label>
+                    <label for="signupName">신청인(보호자) 성명</label>
                     <div class="auth-input">
                         <i class="fas fa-id-card field-icon"></i>
-                        <input type="text" id="signupName" name="name" placeholder="보호자 성함">
+                        <input type="text" id="signupName" name="name" placeholder="한글 또는 영문 2자 이상" required>
                     </div>
                 </div>
                 <div class="auth-field">
-                    <label for="signupPhone">연락처</label>
+                    <label for="signupPhone">휴대폰 번호</label>
                     <div class="auth-input">
                         <i class="fas fa-phone field-icon"></i>
                         <input type="tel" id="signupPhone" name="phone" placeholder="010-0000-0000">
-                    </div>
-                </div>
-                <div class="auth-field">
-                    <label for="signupEmail">이메일 (선택)</label>
-                    <div class="auth-input">
-                        <i class="fas fa-envelope field-icon"></i>
-                        <input type="email" id="signupEmail" name="email" placeholder="email@example.com">
                     </div>
                 </div>
                 <div class="auth-check">

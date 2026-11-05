@@ -158,16 +158,36 @@
             <p class="page-lead">입소·주야간보호 상담을 신청하시면 담당자가 일정을 확정한 뒤 안내 문자를 보냅니다. {{ info.hours|default:"평일 09:00~18:00" }}, 대표전화 {{ info.phone|default:"054-334-9986" }}</p>
             <form class="page-form" id="careConsultForm">
                 <div>
-                    <label for="inq-name">신청자명</label>
-                    <input id="inq-name" name="applicant_name" type="text" required>
+                    <label for="inq-kind">상담 유형</label>
+                    <select id="inq-kind" name="consult_kind">
+                        <option value="입소 상담">입소 상담</option>
+                        <option value="주야간보호">주야간보호</option>
+                        <option value="방문요양">방문요양</option>
+                        <option value="견학 신청">견학 신청</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="inq-patient">등록된 어르신</label>
+                    <select id="inq-patient" name="patient_id">
+                        <option value="">직접 입력</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="inq-senior">입소 대상 어르신 성명</label>
+                    <input id="inq-senior" name="senior_name" type="text" required placeholder="상담·입소 대상 어르신">
+                </div>
+                <div>
+                    <label for="inq-name">보호자(신청인) 성명</label>
+                    <input id="inq-name" name="applicant_name" type="text" required placeholder="로그인한 회원 이름으로 채워집니다">
                 </div>
                 <div>
                     <label for="inq-phone">연락처</label>
                     <input id="inq-phone" name="applicant_phone" type="tel" required>
                 </div>
                 <div>
-                    <label for="inq-relation">어르신과의 관계</label>
+                    <label for="inq-relation">어르신과의 관계 (자녀 / 배우자 / 본인 / 기타)</label>
                     <select id="inq-relation" name="relation_type" required>
+                        <option value="">선택</option>
                         <option value="자녀">자녀</option>
                         <option value="배우자">배우자</option>
                         <option value="본인">본인</option>

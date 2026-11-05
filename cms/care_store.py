@@ -11,7 +11,13 @@ from accounts.shared_users import shared_enabled
 CARE_LEVELS = ("1_2등급", "3_5등급", "신청중_미인정")
 MOBILITY = ("자립보행", "부축필요", "와상")
 SLOTS = ("오전(10-12)", "오후(14-16)", "오후(16-18)", "시간무관")
-STATUSES = ("PENDING", "CONFIRMED", "CANCELLED")
+STATUSES = ("RECEIVED", "PENDING", "CONFIRMED", "CANCELLED")
+STATUS_LABELS = {
+    "RECEIVED": "접수완료",
+    "PENDING": "상담대기",
+    "CONFIRMED": "상담완료",
+    "CANCELLED": "취소",
+}
 CATEGORIES = ("상담", "봉사", "시설행사", "기타")
 
 
@@ -48,8 +54,8 @@ def create_consultation(data):
             INSERT INTO care_consultations (
               id, user_id, applicant_name, applicant_phone, relation_type, care_level,
               mobility_status, preferred_date, preferred_time_slot, privacy_agreed,
-              status, created_at
-            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'PENDING',%s)
+              status, created_at, patient_id, senior_name, consult_kind
+            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """,
             [
                 item_id,
@@ -62,7 +68,11 @@ def create_consultation(data):
                 data.get("preferred_date"),
                 data.get("preferred_time_slot"),
                 1 if data.get("privacy_agreed") else 0,
+                data.get("status") or "RECEIVED",
                 _now(),
+                str(data.get("patient_id") or "") or None,
+                data.get("senior_name") or "",
+                data.get("consult_kind") or "입소 상담",
             ],
         )
     return get_consultation(item_id)
@@ -89,6 +99,31 @@ def list_consultations(status=""):
             )
         else:
             cursor.execute("SELECT * FROM care_consultations ORDER BY created_at DESC")
+        return _rows(cursor)
+
+
+def list_consultations_for_user(user_id="", phone=""):
+    db = _db()
+    if db is None:
+        return []
+    clauses = []
+    values = []
+    if user_id:
+        clauses.append("user_id = %s")
+        values.append(user_id)
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    if digits:
+        clauses.append("applicant_phone = %s")
+        values.append(digits)
+    if not clauses:
+        return []
+    with db.cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM care_consultations WHERE "
+            + " OR ".join(clauses)
+            + " ORDER BY created_at DESC",
+            values,
+        )
         return _rows(cursor)
 
 

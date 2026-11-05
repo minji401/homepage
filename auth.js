@@ -25,8 +25,31 @@
     }
 
     function passwordRuleError(password) {
-        if (!password || password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
-            return "비밀번호는 8자 이상이며 영문 대문자, 소문자, 숫자, 특수문자를 각각 하나 이상 포함해야 합니다.";
+        if (!password || password.length < 8 || password.length > 16 || !/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            return "영문, 숫자, 특수문자를 포함하여 8~16자로 입력해 주세요.";
+        }
+        return "";
+    }
+
+    function nameRuleError(name) {
+        const compact = String(name || "").replace(/\s+/g, "");
+        if (!/^[가-힣A-Za-z]{2,40}$/.test(compact)) {
+            return "이름은 한글 또는 영문 2자 이상으로 입력해 주세요.";
+        }
+        return "";
+    }
+
+    function emailRuleError(email) {
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email || "").trim())) {
+            return "이메일 형식을 확인해 주세요.";
+        }
+        return "";
+    }
+
+    function phoneRuleError(phone) {
+        const digits = String(phone || "").replace(/\D/g, "");
+        if (!/^010\d{8}$/.test(digits)) {
+            return "연락처는 010-0000-0000 형식으로 입력해 주세요.";
         }
         return "";
     }
@@ -113,7 +136,7 @@
                     var who = data.needs_guardian ? "회원" : (data.name || "회원");
                     menu.innerHTML =
                         '<span class="user-name">' + who + "님</span>" + extra +
-                        '<a href="' + BASE + 'account.html">내 정보</a>' +
+                        '<a href="/mypage/">마이페이지</a>' +
                         '<a href="/accounts/logout/" id="logoutLink">로그아웃</a>';
                     const logout = document.getElementById("logoutLink");
                     logout.addEventListener("click", function (e) {
@@ -154,10 +177,11 @@
                     showMessage(message, "아이디와 비밀번호를 입력해 주세요.", "error");
                     return;
                 }
+                const next = new URLSearchParams(window.location.search).get("next") || "";
                 api("/accounts/login/", {
                     method: "POST",
                     headers: csrfHeaders(),
-                    body: JSON.stringify({ id: id, password: password })
+                    body: JSON.stringify({ id: id, password: password, next: next })
                 }).then(function (result) {
                     if (!result.ok) {
                         showMessage(message, result.data.message || "로그인에 실패했습니다.", "error");
@@ -193,23 +217,33 @@
             form.addEventListener("submit", function (e) {
                 e.preventDefault();
                 const data = {
-                    id: (form.querySelector('[name="id"]').value || "").trim(),
+                    email: (form.querySelector('[name="email"]').value || "").trim(),
                     password: form.querySelector('[name="password"]').value || "",
                     passwordConfirm: form.querySelector('[name="passwordConfirm"]').value || "",
                     name: (form.querySelector('[name="name"]').value || "").trim(),
                     phone: (form.querySelector('[name="phone"]').value || "").trim(),
-                    email: (form.querySelector('[name="email"]').value || "").trim(),
                     agree: form.querySelector('[name="agree"]').checked,
                     age14: form.querySelector('[name="age14"]') ? form.querySelector('[name="age14"]').checked : false,
                     marketing: form.querySelector('[name="marketing"]') ? form.querySelector('[name="marketing"]').checked : false
                 };
 
-                if (!data.id || !data.password || !data.name || !data.phone) {
-                    showMessage(message, "아이디, 비밀번호, 이름, 연락처는 필수입니다.", "error");
+                if (!data.email || !data.password || !data.name || !data.phone) {
+                    showMessage(message, "이메일, 비밀번호, 이름, 연락처는 필수입니다.", "error");
                     return;
                 }
-                if (data.id.length < 4) {
-                    showMessage(message, "아이디는 4자 이상 입력해 주세요.", "error");
+                const emailRule = emailRuleError(data.email);
+                if (emailRule) {
+                    showMessage(message, emailRule, "error");
+                    return;
+                }
+                const nameRule = nameRuleError(data.name);
+                if (nameRule) {
+                    showMessage(message, nameRule, "error");
+                    return;
+                }
+                const phoneRule = phoneRuleError(data.phone);
+                if (phoneRule) {
+                    showMessage(message, phoneRule, "error");
                     return;
                 }
                 const rule = passwordRuleError(data.password);
@@ -239,8 +273,10 @@
                         showMessage(message, result.data.message || "회원가입에 실패했습니다.", "error");
                         return;
                     }
-                    window.alert("회원가입이 완료되었습니다. 로그인해 주세요.");
-                    window.location.href = BASE + "login.html";
+                    if (result.data.user && result.data.user.token) {
+                        try { localStorage.setItem("sso_access_token", result.data.user.token); } catch (_e) {}
+                    }
+                    window.location.href = result.data.redirect || "/mypage/";
                 }).catch(function () {
                     showMessage(message, "서버에 연결할 수 없습니다. Django를 실행해 주세요.", "error");
                 });

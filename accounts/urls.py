@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import mypage_views, views
 
 urlpatterns = [
     path("login/", views.login_api, name="login_api"),
@@ -13,6 +13,10 @@ urlpatterns = [
     path("password-help/", views.password_help_request, name="password_help_request"),
     path("guardian/", views.guardian_api, name="guardian_api"),
     path("profile/", views.profile_api, name="profile_api"),
+    path("mypage/profile/", mypage_views.mypage_profile_api, name="mypage_profile_api"),
+    path("seniors/", mypage_views.seniors_api, name="seniors_api"),
+    path("seniors/<int:pk>/", mypage_views.senior_detail_api, name="senior_detail_api"),
+    path("consults/", mypage_views.my_consults_api, name="my_consults_api"),
     path("withdraw/", views.withdraw_api, name="withdraw_api"),
     path("public-config/", views.public_config, name="public_config"),
 ]

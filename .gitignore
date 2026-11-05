@@ -4,6 +4,9 @@ __pycache__/
 *.sqlite3
 db.sqlite3
 *.log
+logs/
+media/
+uploads/
 .DS_Store
 _nav2.py
 .neon

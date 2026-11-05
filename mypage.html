@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>마이페이지 | 헤리움 케어센터</title>
+    <link rel="stylesheet" href="/main.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="top-bar">
+    <div class="user-menu">
+        <a href="/login.html">로그인</a>
+        <a href="/signup.html">회원가입</a>
+    </div>
+</div>
+<div class="header-top-row">
+    <div class="header-top-inner">
+        <div class="logo">
+            <a href="/main.html"><img src="{{ site_logo }}" alt="홈페이지 로고"></a>
+        </div>
+    </div>
+</div>
+
+<main class="mypage-wrap">
+    <header class="mypage-hero">
+        <span class="eyebrow">마이페이지</span>
+        <h1>보호자 <span>{{ profile.name|default:request.user.first_name }}</span>님의 공간</h1>
+        <p>어르신 정보와 상담 내역을 한곳에서 관리하세요. 의료기 주문은 같은 계정으로 이어집니다.</p>
+    </header>
+
+    <section class="mypage-card" id="accountCard">
+        <h2>내 계정 정보</h2>
+        <p class="mypage-note">회원가입 시 등록한 보호자 정보입니다.</p>
+        <div class="auth-message" id="profileMessage"></div>
+        <form id="mypageProfileForm" class="mypage-form">
+            <div class="mypage-grid">
+                <label>신청인(보호자) 성명
+                    <input type="text" name="name" value="{{ profile.name|default:request.user.first_name }}" required>
+                </label>
+                <label>이메일
+                    <input type="email" name="email" value="{{ request.user.email }}" required>
+                </label>
+                <label>휴대폰 번호
+                    <input type="tel" name="phone" value="{{ profile.phone|default:'' }}" required>
+                </label>
+            </div>
+            <details class="pw-box">
+                <summary>비밀번호 변경</summary>
+                <label>현재 비밀번호
+                    <input type="password" name="currentPassword" autocomplete="current-password">
+                </label>
+                <label>새 비밀번호
+                    <input type="password" name="newPassword" maxlength="16" autocomplete="new-password" placeholder="영문, 숫자, 특수문자 포함 8~16자">
+                </label>
+                <small class="form-text text-muted">영문, 숫자, 특수문자 포함 8~16자로 입력해 주세요.</small>
+            </details>
+            <button type="submit" class="auth-submit">계정 정보 저장</button>
+        </form>
+    </section>
+
+    <section class="mypage-card" id="seniorCard">
+        <div class="mypage-card-head">
+            <h2>모시는 어르신</h2>
+            <button type="button" class="ghost-btn" id="openSeniorForm">새 어르신 등록</button>
+        </div>
+        <p class="mypage-note">여러 명을 등록할 수 있습니다. 상담 신청 때 선택할 수 있습니다.</p>
+        <div class="senior-grid" id="seniorGrid">
+            {% for senior in seniors %}
+            <article class="senior-item" data-id="{{ senior.id }}">
+                <h3>{{ senior.name }}</h3>
+                <p><strong>{{ senior.relationship }}</strong> · {{ senior.care_grade|default:"등급 미입력" }}</p>
+                {% if senior.birth_date %}<p>생년월일 {{ senior.birth_date|date:"Y.m.d" }}</p>{% endif %}
+                {% if senior.note %}<p class="senior-note">{{ senior.note|truncatechars:80 }}</p>{% endif %}
+                <div class="senior-actions">
+                    <button type="button" class="js-edit-senior" data-id="{{ senior.id }}">수정</button>
+                    <button type="button" class="js-del-senior danger" data-id="{{ senior.id }}">삭제</button>
+                </div>
+            </article>
+            {% empty %}
+            <p class="empty-hint" id="seniorEmpty">등록된 어르신이 없습니다.</p>
+            {% endfor %}
+        </div>
+        <form id="seniorForm" class="senior-form" hidden>
+            <input type="hidden" name="id" value="">
+            <h3 id="seniorFormTitle">새 어르신 등록</h3>
+            <label>성함 <input type="text" name="name" required></label>
+            <label>관계
+                <select name="relationship">
+                    {% for value, label in relations %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>생년월일 <input type="date" name="birth_date"></label>
+            <label>장기요양등급
+                <select name="care_grade">
+                    <option value="">선택</option>
+                    {% for value, label in grades %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>특이사항/지병 메모 <textarea name="note" rows="3"></textarea></label>
+            <div class="senior-actions">
+                <button type="submit" class="auth-submit">저장</button>
+                <button type="button" class="ghost-btn" id="cancelSeniorForm">닫기</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="mypage-card">
+        <h2>나의 상담/예약 신청 내역</h2>
+        <div class="consult-table-wrap">
+            <table class="consult-table">
+                <thead>
+                    <tr>
+                        <th>신청일</th>
+                        <th>대상 어르신</th>
+                        <th>상담 유형</th>
+                        <th>진행 상태</th>
+                        <th>상세</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in consults %}
+                    <tr>
+                        <td>{{ row.created_at }}</td>
+                        <td>{{ row.senior_name }}</td>
+                        <td>{{ row.kind }}</td>
+                        <td><span class="status-badge status-{{ row.status|lower }}">{{ row.status_label }}</span></td>
+                        <td>{{ row.detail|default:row.preferred|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="empty-hint">신청 내역이 없습니다.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="mypage-note"><a href="/community/inquiry.html">입소 상담 신청하기</a> · <a href="/admission/tour.html">시설 방문/견학 신청</a></p>
+    </section>
+
+    <section class="mypage-card shop-banner">
+        <h2>패밀리 서비스</h2>
+        <p>같은 보호자 계정으로 현대의료기 쇼핑몰에서 시니어 복지용구를 둘러보실 수 있습니다.</p>
+        <a class="auth-submit shop-link" href="{{ shop_url }}" target="_blank" rel="noopener">현대의료기 쇼핑몰에서 시니어 복지용구 둘러보기</a>
+    </section>
+</main>
+
+<script src="/auth.js"></script>
+<script src="/mypage.js"></script>
+</body>
+</html>

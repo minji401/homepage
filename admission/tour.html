@@ -178,8 +178,22 @@
             <h3 class="page-h3">온라인 신청 (임시)</h3>
             <form class="page-form js-demo-form" data-apply="tour" data-success="견학 신청이 접수되었습니다. 확인 후 연락드리겠습니다.">
                 <div>
-                    <label for="tour-name">신청자 이름</label>
-                    <input id="tour-name" name="name" type="text" required>
+                    <label for="tour-name">보호자(신청인) 성명</label>
+                    <input id="tour-name" name="name" type="text" required placeholder="로그인한 회원 이름으로 채워집니다">
+                </div>
+                <div>
+                    <label for="tour-senior">입소 대상 어르신 성명</label>
+                    <input id="tour-senior" name="senior_name" type="text" required placeholder="견학·입소 대상 어르신">
+                </div>
+                <div>
+                    <label for="tour-relation">어르신과의 관계 (자녀 / 배우자 / 본인 / 기타)</label>
+                    <select id="tour-relation" name="relation" required>
+                        <option value="">선택</option>
+                        <option value="자녀">자녀</option>
+                        <option value="배우자">배우자</option>
+                        <option value="본인">본인</option>
+                        <option value="기타">기타</option>
+                    </select>
                 </div>
                 <div>
                     <label for="tour-phone">연락처</label>

@@ -5,11 +5,13 @@ from django.db import models
 class Profile(models.Model):
     ROLE_MEMBER = "member"
     ROLE_GUARDIAN = "guardian"
+    ROLE_STAFF = "staff"
     ROLE_ADMIN = "admin"
     ROLE_CHOICES = [
-        (ROLE_MEMBER, "일반 회원"),
+        (ROLE_MEMBER, "MEMBER"),
         (ROLE_GUARDIAN, "보호자"),
-        (ROLE_ADMIN, "관리자"),
+        (ROLE_STAFF, "STAFF"),
+        (ROLE_ADMIN, "ADMIN"),
     ]
 
     STATUS_ACTIVE = "active"
@@ -43,6 +45,65 @@ class Profile(models.Model):
     @property
     def is_admin(self):
         return self.role == self.ROLE_ADMIN or self.user.is_staff
+
+    @property
+    def is_staff_role(self):
+        return self.role == self.ROLE_STAFF or self.user.is_staff
+
+
+class SeniorProfile(models.Model):
+    RELATION_CHOICES = [
+        ("부", "부"),
+        ("모", "모"),
+        ("조부모", "조부모"),
+        ("배우자", "배우자"),
+        ("자녀", "자녀"),
+        ("기타", "기타"),
+    ]
+    GRADE_CHOICES = [
+        ("1등급", "1등급"),
+        ("2등급", "2등급"),
+        ("3등급", "3등급"),
+        ("4등급", "4등급"),
+        ("5등급", "5등급"),
+        ("인지지원등급", "인지지원등급"),
+        ("등급외/신청중", "등급외/신청중"),
+        ("해당없음", "해당없음"),
+    ]
+
+    guardian = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="patients",
+        verbose_name="보호자",
+    )
+    shared_user_id = models.CharField("공유 회원 ID", max_length=80, blank=True)
+    name = models.CharField("어르신 성함", max_length=50)
+    relationship = models.CharField("보호자와의 관계", max_length=30, choices=RELATION_CHOICES, default="기타")
+    birth_date = models.DateField("생년월일", null=True, blank=True)
+    care_grade = models.CharField("장기요양등급", max_length=20, blank=True, choices=GRADE_CHOICES)
+    note = models.TextField("특이사항", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "senior_profiles"
+        ordering = ["-updated_at", "-id"]
+        verbose_name = "어르신 프로필"
+        verbose_name_plural = "어르신 프로필"
+
+    def __str__(self):
+        return f"{self.name} ({self.relationship})"
+
+    def as_card(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "relationship": self.relationship,
+            "birth_date": self.birth_date.isoformat() if self.birth_date else "",
+            "care_grade": self.care_grade,
+            "note": self.note,
+        }
 
 
 class SharedUser(models.Model):
@@ -110,14 +171,22 @@ class SharedSiteContent(models.Model):
 
 
 class CareConsultation(models.Model):
+    STATUS_RECEIVED = "RECEIVED"
     STATUS_PENDING = "PENDING"
     STATUS_CONFIRMED = "CONFIRMED"
     STATUS_CANCELLED = "CANCELLED"
     STATUS_CHOICES = [
-        (STATUS_PENDING, "대기"),
-        (STATUS_CONFIRMED, "확정"),
+        (STATUS_RECEIVED, "접수완료"),
+        (STATUS_PENDING, "상담대기"),
+        (STATUS_CONFIRMED, "상담완료"),
         (STATUS_CANCELLED, "취소"),
     ]
+    STATUS_BADGE = {
+        STATUS_RECEIVED: "접수완료",
+        STATUS_PENDING: "상담대기",
+        STATUS_CONFIRMED: "상담완료",
+        STATUS_CANCELLED: "취소",
+    }
     CARE_LEVELS = [
         ("1_2등급", "1~2등급"),
         ("3_5등급", "3~5등급"),
@@ -152,6 +221,9 @@ class CareConsultation(models.Model):
     sms_ok = models.IntegerField(null=True, blank=True)
     admin_memo = models.TextField(null=True, blank=True)
     created_at = models.TextField("신청일시")
+    patient_id = models.CharField("어르신 프로필 ID", max_length=80, null=True, blank=True)
+    senior_name = models.TextField("대상 어르신", null=True, blank=True)
+    consult_kind = models.TextField("상담 유형", default="입소 상담")
 
     class Meta:
         managed = False

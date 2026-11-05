@@ -31,7 +31,8 @@ _DEV_SECRET = "django-insecure-herium-local-dev-only-change-later"
 SECRET_KEY = os.environ.get("SECRET_KEY", "" if os.environ.get("RENDER") else _DEV_SECRET)
 if os.environ.get("RENDER") and (not SECRET_KEY or SECRET_KEY == _DEV_SECRET):
     raise RuntimeError("RENDER 환경에는 SECRET_KEY 환경변수가 필요합니다.")
-DEBUG = os.environ.get("DEBUG", "false" if os.environ.get("RENDER") else "true").lower() in ("1", "true", "yes")
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1")
+_running_tests = "test" in sys.argv
 
 
 def _normalize_host(value):
@@ -75,12 +76,24 @@ for _host in _REQUIRED_HOSTS + _split_host_values(os.getenv("ALLOWED_HOSTS") or 
 _render_host = _normalize_host(os.environ.get("RENDER_EXTERNAL_HOSTNAME", ""))
 if _render_host and _render_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_render_host)
-if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+if _running_tests:
+    for _host in ("testserver", "localhost", "127.0.0.1"):
+        if _host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(_host)
+
+ADMIN_URL_PATH = (os.getenv("ADMIN_URL_PATH") or "herium-control-99").strip().strip("/") or "herium-control-99"
+
+if not DEBUG and not _running_tests:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -90,13 +103,16 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
+    "corsheaders",
     "accounts.apps.AccountsConfig",
     "cms.apps.CmsConfig",
     "pages",
+    "axes",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "herium.middleware.StagingAuthMiddleware",
     "herium.middleware.SecurityHeadersMiddleware",
     "herium.middleware.TrustCsrfOriginMiddleware",
@@ -104,6 +120,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "axes.middleware.AxesMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "cms.middleware.VisitLogMiddleware",
@@ -154,7 +171,6 @@ def _postgres_from_url(url):
     }
 
 
-_running_tests = "test" in sys.argv
 _db_url = (os.environ.get("DATABASE_URL") or os.environ.get("SHARED_DATABASE_URL") or "").strip()
 _pg = _postgres_from_url(_db_url)
 
@@ -176,8 +192,19 @@ else:
     raise RuntimeError("DATABASE_URL이 필요합니다. SQLite는 쓰지 않고 Neon Postgres만 사용합니다.")
 
 AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {"NAME": "accounts.password_validators.SharedPasswordValidator"},
 ]
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+]
+PASSWORD_RESET_TIMEOUT = 3600
 
 LANGUAGE_CODE = "ko-kr"
 TIME_ZONE = "Asia/Seoul"
@@ -191,13 +218,27 @@ STATICFILES_DIRS = [BASE_DIR / "static_collected"] if (BASE_DIR / "static_collec
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "/login.html"
-LOGIN_REDIRECT_URL = "/main.html"
+LOGIN_REDIRECT_URL = "/mypage/"
 LOGOUT_REDIRECT_URL = "/main.html"
+
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "accounts.backends.EmailOrUsernameBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+AXES_ENABLED = not _running_tests
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 0.5
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_CALLABLE = "herium.axes_lockout.lockout_response"
+AXES_IPWARE_META_PRECEDENCE_ORDER = ("HTTP_X_FORWARDED_FOR", "REMOTE_ADDR")
+AXES_IPWARE_PROXY_COUNT = 1
 
 MEDIA_URL = "/uploads/"
 MEDIA_ROOT = BASE_DIR / "uploads"
-DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
-FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
 CLOUDINARY_CLOUD_NAME = (
     os.environ.get("CLOUDINARY_CLOUD_NAME")
@@ -212,7 +253,9 @@ CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
+SESSION_COOKIE_AGE = 60 * 60
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = True
 SITE_URL = os.environ.get("SITE_URL", "https://heriumcare.com").rstrip("/")
 JWT_SECRET = os.environ.get("JWT_SECRET") or os.environ.get("DATA_ENCRYPTION_KEY") or SECRET_KEY
 SMS_API_URL = os.environ.get("SMS_API_URL", "")
@@ -226,9 +269,19 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "true").lower() in ("1", "true", "yes")
 DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_FROM", "") or EMAIL_HOST_USER or "noreply@heriumcare.com"
 CSRF_FAILURE_VIEW = "herium.csrf.csrf_failure"
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "https://heriumcare.com",
+    "https://www.heriumcare.com",
+    "https://hyundaimedi.com",
+    "https://www.hyundaimedi.com",
+]
 CSRF_TRUSTED_ORIGINS = [
     "https://heriumcare.com",
     "https://www.heriumcare.com",
+    "https://hyundaimedi.com",
+    "https://www.hyundaimedi.com",
     "https://*.onrender.com",
     "https://*.ngrok-free.app",
     "https://*.ngrok.io",
@@ -242,5 +295,42 @@ for _origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(","):
     _origin = _origin.strip()
     if _origin and _origin not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(_origin)
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+if os.environ.get("RENDER") or (not DEBUG and not _running_tests):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "security": {
+            "format": "{asctime} {levelname} {name} {message}",
+            "style": "{",
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "security",
+        }
+    },
+    "loggers": {
+        "herium.security": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        }
+    },
+}
+_log_dir = BASE_DIR / "logs"
+try:
+    _log_dir.mkdir(exist_ok=True)
+    LOGGING["handlers"]["security_file"] = {
+        "class": "logging.FileHandler",
+        "filename": str(_log_dir / "security.log"),
+        "encoding": "utf-8",
+        "formatter": "security",
+    }
+    LOGGING["loggers"]["herium.security"]["handlers"].append("security_file")
+except OSError:
+    pass

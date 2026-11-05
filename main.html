@@ -163,7 +163,7 @@
 <div class="main-visual-row">
     <div class="box{% if hero_photo %} has-hero-photo{% endif %}"{% if hero_photo %} style="--hero-photo: url('{{ hero_photo }}?v={{ img_v }}')"{% endif %}>
         <div>
-            <h1>{% if cms.main_headline %}{{ cms.main_headline|safe }}{% else %}<span>따스한 손길</span>로 전하는 <span>사랑</span>, <br><span>헤리움 케어센터</span>가 함께합니다.{% endif %}</h1>
+            <h1>{% if cms.main_headline %}{{ cms.main_headline }}{% else %}<span>따스한 손길</span>로 전하는 <span>사랑</span>, <br><span>헤리움 케어센터</span>가 함께합니다.{% endif %}</h1>
         </div>
 
         <!-- 퀵 아이콘 이미지를 FontAwesome 아이콘으로 변경 -->
@@ -260,16 +260,14 @@
             </div>
         </div>
     
-        <div class="diet-card">
-            <div class="diet-header">
-                <button id="prev-day" class="date-btn">&lt;</button>
-                <span id="current-date">식단 준비 중</span>
-                <button id="next-day" class="date-btn">&gt;</button>
+        <div class="diet-card meal-card">
+            <div class="meal-header">
+                <button type="button" id="prev-day" class="nav-btn" aria-label="이전 날짜">&lt;</button>
+                <span id="current-date" class="meal-date">식단 준비 중</span>
+                <button type="button" id="next-day" class="nav-btn" aria-label="다음 날짜">&gt;</button>
             </div>
-            <div class="diet-menu">
-                <ul id="menu-list">
-                    <li>관리자가 식단을 등록하면 여기에 표시됩니다.</li>
-                </ul>
+            <div class="meal-body" id="menu-list">
+                <p class="meal-empty">관리자가 식단을 등록하면 여기에 표시됩니다.</p>
             </div>
         </div>
     </div>

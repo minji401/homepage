@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from accounts.jwt_auth import bearer_user_id
@@ -24,6 +23,7 @@ from .care_store import (
     update_consultation,
     upsert_schedule,
 )
+from .forms import ConsultCreateForm, first_form_error
 from .models import ensure_site_info
 from .sms import send_sms, sms_configured
 from .views import _json_body, staff_required
@@ -42,32 +42,42 @@ def _user_id(request):
     return bearer_user_id(request)
 
 
-@csrf_exempt
 @require_POST
 def consult_create(request):
     if not shared_enabled():
         return JsonResponse({"ok": False, "message": "공유 DB가 연결되지 않았습니다."}, status=503)
     data = _json_body(request)
-    name = (data.get("applicant_name") or data.get("name") or "").strip()
-    phone = normalize_phone(data.get("applicant_phone") or data.get("phone") or "")
-    relation = (data.get("relation_type") or "").strip()
-    care_level = data.get("care_level") or ""
-    mobility = data.get("mobility_status") or ""
-    slot = data.get("preferred_time_slot") or "시간무관"
-    date = (data.get("preferred_date") or "").strip() or None
-    privacy = data.get("privacy_agreed") in (True, "true", "on", "1", 1)
-    if not name or len(phone) < 10:
-        return JsonResponse({"ok": False, "message": "신청자명과 연락처를 입력해 주세요."}, status=400)
-    if not relation:
-        return JsonResponse({"ok": False, "message": "어르신과의 관계를 선택해 주세요."}, status=400)
-    if care_level not in CARE_LEVELS:
-        return JsonResponse({"ok": False, "message": "장기요양등급을 선택해 주세요."}, status=400)
-    if mobility not in MOBILITY:
-        return JsonResponse({"ok": False, "message": "보행상태를 선택해 주세요."}, status=400)
-    if slot not in SLOTS:
-        return JsonResponse({"ok": False, "message": "희망 시간대를 선택해 주세요."}, status=400)
-    if not privacy:
-        return JsonResponse({"ok": False, "message": "개인정보 수집 및 이용에 동의해 주세요."}, status=400)
+    form = ConsultCreateForm(data)
+    if not form.is_valid():
+        return JsonResponse({"ok": False, "message": first_form_error(form)}, status=400)
+    cleaned = form.cleaned_data
+    name = cleaned["applicant_name"]
+    phone = cleaned["applicant_phone"]
+    relation = (cleaned.get("relation_type") or "").strip()
+    care_level = cleaned.get("care_level") or ""
+    mobility = cleaned.get("mobility_status") or ""
+    slot = cleaned.get("preferred_time_slot") or "시간무관"
+    date = (cleaned.get("preferred_date") or "").strip() or None
+    senior_name = cleaned.get("senior_name") or ""
+    patient_id = cleaned.get("patient_id") or ""
+    if patient_id and request.user.is_authenticated:
+        from accounts.models import SeniorProfile
+
+        senior = SeniorProfile.objects.filter(pk=patient_id, guardian=request.user).first()
+        if senior:
+            senior_name = senior_name or senior.name
+            relation = relation or senior.relationship
+            if care_level not in CARE_LEVELS and senior.care_grade:
+                mapped = {
+                    "1등급": "1_2등급",
+                    "2등급": "1_2등급",
+                    "3등급": "3_5등급",
+                    "4등급": "3_5등급",
+                    "5등급": "3_5등급",
+                    "등급외/신청중": "신청중_미인정",
+                }.get(senior.care_grade)
+                if mapped:
+                    care_level = mapped
     item = create_consultation(
         {
             "user_id": _user_id(request),
@@ -79,6 +89,9 @@ def consult_create(request):
             "preferred_date": date,
             "preferred_time_slot": slot,
             "privacy_agreed": True,
+            "patient_id": patient_id,
+            "senior_name": senior_name,
+            "consult_kind": cleaned.get("consult_kind") or "입소 상담",
         }
     )
     return JsonResponse(
@@ -98,7 +111,7 @@ def calendar_page(request):
 @staff_required
 @require_GET
 def calendar_api(request):
-    pending = list_consultations("PENDING")
+    pending = list_consultations("RECEIVED") + list_consultations("PENDING")
     events = []
     for row in list_schedules():
         events.append(
