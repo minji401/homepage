@@ -361,14 +361,40 @@ div h2 { color: white; font-size: 3.5rem; z-index: 20; font-weight: bold; letter
 /* ==========================================================================
    7. 중간 콘텐츠 (Notice & Diet Table)
    ========================================================================== */
-.middle-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin: 50px auto; width: 1400px; }
-.notice-section { width: 910px; }
-.diet-section { width: 450px; flex-shrink: 0; }
+.middle-content {
+    --home-panel-h: 400px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 28px;
+    margin: 50px auto;
+    width: 1400px;
+}
+.notice-section,
+.diet-section,
+.service-grid-section {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+}
 
 .section-header { display: flex; justify-content: space-between; align-items: center; height: 50px; margin-bottom: 15px; font-size: 1.6rem; font-weight: bold; }
 .section-header h3 { font-size: 1.6rem; font-weight: bold; margin: 0; }
 
-.notice-container { width: 100%; height: 320px; background-color: white; border: 1px solid #eee; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.notice-container {
+    width: 100%;
+    height: var(--home-panel-h);
+    background-color: white;
+    border: 1px solid #eee;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.notice-list { flex: 1; min-height: 0; overflow-y: auto; }
 .notice-list ul { list-style: none; padding: 0; margin: 0; }
 .notice-list li { position: relative; padding-left: 15px; border-bottom: 1px solid #eee; list-style: none; }
 .notice-list li::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 6px; height: 6px; background-color: #333; border-radius: 50%; }
@@ -383,13 +409,18 @@ div h2 { color: white; font-size: 3.5rem; z-index: 20; font-weight: bold; letter
 .meal-card {
     text-align: left;
     width: 100%;
-    min-height: 320px;
+    height: var(--home-panel-h, 400px);
+    min-height: var(--home-panel-h, 400px);
+    max-height: var(--home-panel-h, 400px);
     background: #ffffff;
     border: 1px solid #f0f0f0;
     padding: 24px 20px;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 .meal-header {
     display: flex;
@@ -439,6 +470,9 @@ div h2 { color: white; font-size: 3.5rem; z-index: 20; font-weight: bold; letter
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 .meal-row {
     display: flex;
@@ -516,9 +550,16 @@ div h2 { color: white; font-size: 3.5rem; z-index: 20; font-weight: bold; letter
 /* ==========================================================================
    10. 서비스 그리드 섹션 (오늘의 식단 옆 칸 등)
    ========================================================================== */
-.service-grid-section { width: 450px; flex-shrink: 0; top: 65px; position: relative; }
-.grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; }
-.grid-item { background-color: white; border: 1px solid #eee; border-radius: 15px; height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: all 0.3s ease; text-decoration: none; color: inherit; }
+.service-grid-section { position: static; top: auto; }
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: 1fr 1fr;
+    gap: 16px;
+    width: 100%;
+    height: var(--home-panel-h, 400px);
+}
+.grid-item { background-color: white; border: 1px solid #eee; border-radius: 15px; height: auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: all 0.3s ease; text-decoration: none; color: inherit; }
 .grid-item:hover { border-color: #b38b4d; box-shadow: 0 6px 15px rgba(46, 125, 50, 0.1); transform: translateY(-3px); }
 .item-img-box { width: 55px; height: 55px; background-color: #f5f5f5; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: background-color 0.3s ease; }
 .grid-item:hover .item-img-box { background-color: #fffaf4; }
@@ -1463,7 +1504,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     .diet-section { width: 100%; position: static; top: auto; }
     .service-grid-section { display: none; }
     .notice-container,
-    .diet-card { height: auto; }
+    .diet-card,
+    .meal-card {
+        height: auto;
+        min-height: 0;
+        max-height: none;
+    }
+    .notice-list,
+    .meal-body { overflow: visible; }
     .section-header, .section-header h3 { font-size: 1.3rem; }
     .grid-item { height: 110px; }
 
