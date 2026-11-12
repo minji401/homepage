@@ -17,18 +17,18 @@ def robots_txt(_request):
     from django.conf import settings
 
     admin_path = (getattr(settings, "ADMIN_URL_PATH", None) or "herium-control-99").strip("/")
+    extra_admin = ""
+    if admin_path and admin_path != "herium-control-99":
+        extra_admin = f"Disallow: /{admin_path}/\n"
     body = (
         "User-agent: *\n"
         "Allow: /\n"
         "Disallow: /admin/\n"
-        f"Disallow: /{admin_path}/\n"
-        "Disallow: /staff/\n"
-        "\n"
-        "User-agent: Yeti\n"
-        "Allow: /\n"
-        "Disallow: /admin/\n"
-        f"Disallow: /{admin_path}/\n"
-        "Disallow: /staff/\n"
+        "Disallow: /herium-control-99/\n"
+        f"{extra_admin}"
+        "Disallow: /accounts/\n"
+        "Disallow: /mypage/\n"
+        "Disallow: /api/\n"
         "\n"
         "Sitemap: https://heriumcare.com/sitemap.xml\n"
     )
