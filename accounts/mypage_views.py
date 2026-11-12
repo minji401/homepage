@@ -53,12 +53,20 @@ def _consult_rows(user):
     profile = _get_profile(user)
     phone = normalize_phone(getattr(profile, "phone", "") or "")
     rows = []
+    apps = list(Application.objects.filter(user=user).order_by("-created_at"))
+    linked_ids = {(item.extra_data.get("consultation_id") or "") for item in apps}
     try:
         for item in list_consultations_for_user(_shared_id(user), phone):
+            cid = item.get("id") or ""
+            if cid and cid in linked_ids:
+                continue
             status = item.get("status") or "RECEIVED"
+            cancelled = (status or "").upper() == "CANCELLED"
+            locked = status in ("CONFIRMED", "COMPLETED", "done")
             rows.append(
                 {
-                    "id": item.get("id"),
+                    "id": cid,
+                    "application_id": "",
                     "source": "care",
                     "created_at": (item.get("created_at") or "")[:16].replace("T", " "),
                     "senior_name": item.get("senior_name") or "-",
@@ -69,17 +77,23 @@ def _consult_rows(user):
                     "preferred": " ".join(
                         part for part in (item.get("preferred_date") or "", item.get("preferred_time_slot") or "") if part
                     ),
+                    "can_cancel": False,
+                    "show_center_hint": locked and not cancelled,
                 }
             )
     except Exception:
         pass
-    apps = Application.objects.filter(user=user).order_by("-created_at")
     for item in apps:
         status = item.status
         label = dict(Application.STATUS_CHOICES).get(status, status)
+        locked = (not item.is_cancellable) and (not item.is_cancelled) and item.kind in (
+            Application.KIND_CONSULT,
+            Application.KIND_TOUR,
+        )
         rows.append(
             {
                 "id": f"app-{item.id}",
+                "application_id": item.id,
                 "source": "application",
                 "created_at": item.created_at.strftime("%Y-%m-%d %H:%M"),
                 "senior_name": item.senior_name or "-",
@@ -87,7 +101,9 @@ def _consult_rows(user):
                 "status": status,
                 "status_label": label,
                 "detail": item.body_plain or item.title,
-                "preferred": "",
+                "preferred": item.preferred_display,
+                "can_cancel": item.is_cancellable,
+                "show_center_hint": locked,
             }
         )
     rows.sort(key=lambda row: row["created_at"], reverse=True)

@@ -267,6 +267,17 @@ a { color: #b38b4d; text-decoration: none; }
 
 .cal-layout { display: grid; grid-template-columns: 280px 1fr; gap: 18px; }
 .cal-pending { background: #fff; border: 1px solid #eee8dc; border-radius: 14px; padding: 16px; }
+.staff-table tr.is-cancelled { opacity: 0.72; background: #f4f4f4; }
+.staff-table .cancel-meta { margin-top: 4px; font-size: 0.78rem; color: #777; }
+.staff-table .status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: #eef1ef;
+}
+.staff-table .status-badge.status-cancelled { background: #ececec; color: #6b6b6b; }
 .pending-card { display: grid; gap: 4px; padding: 10px; border: 1px dashed #e4d7bf; border-radius: 10px; margin-bottom: 8px; cursor: grab; }
 .pending-card span { color: #666; font-size: 0.86rem; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 80; }

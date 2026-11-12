@@ -91,13 +91,27 @@ class Application(models.Model):
     STATUS_DONE = "done"
     STATUS_APPROVED = "approved"
     STATUS_REJECTED = "rejected"
+    STATUS_CANCELLED = "CANCELLED"
     STATUS_CHOICES = [
         (STATUS_RECEIVED, "접수완료"),
         (STATUS_WAITING, "상담대기"),
         (STATUS_DONE, "상담완료"),
         (STATUS_APPROVED, "승인"),
         (STATUS_REJECTED, "반려"),
+        (STATUS_CANCELLED, "취소됨"),
     ]
+    CANCELLABLE_STATUSES = {STATUS_RECEIVED, STATUS_WAITING, "PENDING", "RECEIVED", "pending"}
+    LOCKED_STATUSES = {
+        STATUS_DONE,
+        STATUS_APPROVED,
+        STATUS_REJECTED,
+        STATUS_CANCELLED,
+        "cancelled",
+        "CONFIRMED",
+        "COMPLETED",
+        "confirmed",
+        "completed",
+    }
 
     kind = models.CharField("구분", max_length=20, choices=KIND_CHOICES)
     status = models.CharField("상태", max_length=20, choices=STATUS_CHOICES, default=STATUS_RECEIVED)
@@ -116,6 +130,8 @@ class Application(models.Model):
     title = models.CharField("제목", max_length=200, blank=True)
     body = models.TextField("내용", blank=True)
     extra = models.JSONField("부가정보", default=dict, blank=True)
+    cancel_reason = models.TextField("취소 사유", blank=True, null=True)
+    cancelled_at = models.DateTimeField("취소 일시", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -135,6 +151,52 @@ class Application(models.Model):
     def body_plain(self):
         from .pii import decrypt_text
         return decrypt_text(self.body)
+
+    @property
+    def extra_data(self):
+        return self.extra if isinstance(self.extra, dict) else {}
+
+    @property
+    def relationship(self):
+        extra = self.extra_data
+        return extra.get("relationship") or extra.get("relation_type") or extra.get("relation") or ""
+
+    @property
+    def preferred_display(self):
+        extra = self.extra_data
+        date = extra.get("preferred_date") or extra.get("date") or extra.get("day") or ""
+        slot = extra.get("preferred_time_slot") or extra.get("time") or ""
+        return " ".join(part for part in (date, slot) if part)
+
+    @property
+    def preferred_date_value(self):
+        extra = self.extra_data
+        return extra.get("preferred_date") or extra.get("date") or extra.get("day") or ""
+
+    @classmethod
+    def kind_from_label(cls, label):
+        text = label or ""
+        if "견학" in text:
+            return cls.KIND_TOUR
+        return cls.KIND_CONSULT
+
+    @property
+    def is_cancelled(self):
+        return (self.status or "").upper() == "CANCELLED"
+
+    @property
+    def is_cancellable(self):
+        if self.kind not in (self.KIND_CONSULT, self.KIND_TOUR):
+            return False
+        if self.is_cancelled or self.status in self.LOCKED_STATUSES:
+            return False
+        return self.status in self.CANCELLABLE_STATUSES
+
+    @property
+    def status_admin_label(self):
+        if self.is_cancelled:
+            return "취소됨(회원 취소)"
+        return self.get_status_display()
 
 
 class AuditLog(models.Model):

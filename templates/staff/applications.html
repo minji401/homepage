@@ -11,17 +11,26 @@
 </nav>
 <div class="table-wrap">
 <table class="staff-table">
-    <thead><tr><th>구분</th><th>이름</th><th>연락처</th><th>내용</th><th>상태</th><th>접수일</th><th>처리</th></tr></thead>
+    <thead><tr><th>구분</th><th>신청인(보호자)</th><th>입소 대상 어르신</th><th>관계</th><th>희망 일시</th><th>연락처</th><th>상태</th><th>취소 사유</th><th>접수일</th><th>처리</th></tr></thead>
     <tbody>
     {% for item in items %}
-    <tr>
+    <tr class="{% if item.is_cancelled %}is-cancelled{% endif %}">
         <td>{{ item.get_kind_display }}</td>
         <td>{{ item.name_plain }}</td>
+        <td>{{ item.senior_name|default:"-" }}</td>
+        <td>{{ item.relationship|default:"-" }}</td>
+        <td>{{ item.preferred_display|default:"-" }}</td>
         <td>{{ item.phone_plain }}</td>
-        <td>{{ item.title }} {{ item.body_plain|truncatechars:40 }}</td>
-        <td>{{ item.get_status_display }}</td>
+        <td>
+            <span class="status-badge status-{{ item.status|lower }}">{{ item.status_admin_label }}</span>
+            {% if item.cancelled_at %}<div class="cancel-meta">{{ item.cancelled_at|date:"Y-m-d H:i" }}</div>{% endif %}
+        </td>
+        <td>{{ item.cancel_reason|default:"-" }}</td>
         <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
         <td>
+            {% if item.is_cancelled %}
+            -
+            {% else %}
             <form method="post" action="/staff/applications/{{ item.id }}/">{% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 {% if item.kind == 'volunteer' or item.kind == 'donate' %}
@@ -32,10 +41,11 @@
                 <button name="status" value="done">상담 완료</button>
                 {% endif %}
             </form>
+            {% endif %}
         </td>
     </tr>
     {% empty %}
-    <tr><td colspan="7">신청 내역이 없습니다.</td></tr>
+    <tr><td colspan="10">신청 내역이 없습니다.</td></tr>
     {% endfor %}
     </tbody>
 </table>

@@ -175,11 +175,12 @@
                     <p>{{ info.phone|default:"054-334-9986" }}</p>
                 </div>
             </div>
-            <h3 class="page-h3">온라인 신청 (임시)</h3>
-            <form class="page-form js-demo-form" data-apply="tour" data-success="견학 신청이 접수되었습니다. 확인 후 연락드리겠습니다.">
+            <h3 class="page-h3">온라인 신청</h3>
+            <form class="page-form" id="careConsultForm">
+                <input type="hidden" name="consult_kind" value="견학 신청">
                 <div>
                     <label for="tour-name">보호자(신청인) 성명</label>
-                    <input id="tour-name" name="name" type="text" required placeholder="로그인한 회원 이름으로 채워집니다">
+                    <input id="tour-name" name="applicant_name" type="text" required placeholder="로그인한 회원 이름으로 채워집니다">
                 </div>
                 <div>
                     <label for="tour-senior">입소 대상 어르신 성명</label>
@@ -187,7 +188,7 @@
                 </div>
                 <div>
                     <label for="tour-relation">어르신과의 관계 (자녀 / 배우자 / 본인 / 기타)</label>
-                    <select id="tour-relation" name="relation" required>
+                    <select id="tour-relation" name="relationship" required>
                         <option value="">선택</option>
                         <option value="자녀">자녀</option>
                         <option value="배우자">배우자</option>
@@ -197,17 +198,17 @@
                 </div>
                 <div>
                     <label for="tour-phone">연락처</label>
-                    <input id="tour-phone" name="phone" type="tel" placeholder="010-0000-0000" required>
+                    <input id="tour-phone" name="applicant_phone" type="tel" placeholder="010-0000-0000" required>
                 </div>
                 <div>
                     <label for="tour-date">희망 날짜</label>
-                    <input id="tour-date" name="date" type="date" required>
+                    <input id="tour-date" name="preferred_date" type="date" required>
                 </div>
                 <div>
                     <label for="tour-time">희망 시간</label>
-                    <select id="tour-time" name="time">
-                        <option>10:00</option>
-                        <option>14:00</option>
+                    <select id="tour-time" name="preferred_time_slot">
+                        <option value="오전(10-12)">10:00</option>
+                        <option value="오후(14-16)">14:00</option>
                     </select>
                 </div>
                 <div class="full">
@@ -215,8 +216,8 @@
                     <textarea id="tour-memo" name="memo" placeholder="입소 상담, 주야간보호 견학 등"></textarea>
                 </div>
                 <div class="full check">
-                    <input id="tour-agree" type="checkbox" required>
-                    <label for="tour-agree">개인정보 수집·이용에 동의합니다. (상담 목적, 임시)</label>
+                    <input id="tour-agree" name="privacy_agreed" type="checkbox" required>
+                    <label for="tour-agree">개인정보 수집·이용에 동의합니다. (상담 목적)</label>
                 </div>
                 <div class="full"><button type="submit" class="btn-gold">견학 신청하기</button></div>
             </form>

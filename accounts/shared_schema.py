@@ -140,6 +140,8 @@ CONSULT_COLUMNS = [
     ("patient_id", "TEXT"),
     ("senior_name", "TEXT"),
     ("consult_kind", "TEXT NOT NULL DEFAULT '입소 상담'"),
+    ("cancel_reason", "TEXT"),
+    ("cancelled_at", "TEXT"),
 ]
 
 

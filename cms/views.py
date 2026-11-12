@@ -8,6 +8,7 @@ import time
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.db.models.functions import TruncDate, TruncMonth
@@ -810,6 +811,60 @@ def application_action(request, app_id):
     return redirect(request.POST.get("next") or "/staff/applications/")
 
 
+CANCEL_LOCKED_MESSAGE = "이미 확정된 일정은 온라인 취소가 불가합니다. 센터(054-334-9986)로 문의해 주세요."
+
+
+@login_required
+@require_POST
+def application_cancel_api(request, pk):
+    item = get_object_or_404(Application, pk=pk)
+    if not item.user_id or item.user_id != request.user.id:
+        return JsonResponse({"ok": False, "message": "본인 신청만 취소할 수 있습니다."}, status=403)
+    if item.kind not in (Application.KIND_CONSULT, Application.KIND_TOUR):
+        return JsonResponse({"ok": False, "message": "이 신청은 온라인 취소 대상이 아닙니다."}, status=400)
+    if item.is_cancelled or item.status in Application.LOCKED_STATUSES or not item.is_cancellable:
+        return JsonResponse({"ok": False, "message": CANCEL_LOCKED_MESSAGE}, status=400)
+    data = _json_body(request)
+    try:
+        reason = clean_text(data.get("cancel_reason") or "", 200)
+    except ValueError as exc:
+        return JsonResponse({"ok": False, "message": str(exc)}, status=400)
+    now = timezone.now()
+    item.status = Application.STATUS_CANCELLED
+    item.cancel_reason = reason
+    item.cancelled_at = now
+    extra = dict(item.extra_data)
+    extra["cancel_reason"] = reason
+    extra["cancelled_at"] = now.isoformat()
+    item.extra = extra
+    item.save(update_fields=["status", "cancel_reason", "cancelled_at", "extra"])
+    consult_id = extra.get("consultation_id")
+    if consult_id:
+        try:
+            from .care_store import update_consultation
+
+            update_consultation(
+                consult_id,
+                {
+                    "status": "CANCELLED",
+                    "cancel_reason": reason,
+                    "cancelled_at": now.isoformat(),
+                    "admin_memo": reason,
+                },
+            )
+        except Exception:
+            logger.exception("care consultation cancel sync failed")
+    _audit(request, "application_cancel", f"{item.id}")
+    return JsonResponse(
+        {
+            "ok": True,
+            "status": Application.STATUS_CANCELLED,
+            "status_label": "취소됨",
+            "message": "신청이 취소되었습니다.",
+        }
+    )
+
+
 def _save_menu_rows(rows):
     count = 0
     for row in rows:
@@ -966,14 +1021,49 @@ def apply_api(request):
                 extra[key] = clean_text(data.get(key), 200)
         senior_name = clean_text(data.get("senior_name") or data.get("patient_name") or "", 50)
         patient_id = clean_text(data.get("patient_id") or "", 80)
+        relationship = clean_text(data.get("relationship") or "", 30)
+        preferred_date = clean_text(data.get("preferred_date") or extra.get("date") or "", 20)
+        preferred_slot = clean_text(data.get("preferred_time_slot") or extra.get("time") or "", 40)
     except ValueError as exc:
         return JsonResponse({"ok": False, "message": str(exc)}, status=400)
     if not name:
         return JsonResponse({"ok": False, "message": "이름과 연락처를 입력해 주세요."}, status=400)
+    extra["relationship"] = relationship
+    extra["relation_type"] = relationship
+    extra["preferred_date"] = preferred_date
+    extra["preferred_time_slot"] = preferred_slot
+    extra["senior_name"] = senior_name
     if extra.get("address"):
         extra["address"] = encrypt_text(extra["address"])
+    consult_id = ""
+    if kind in (Application.KIND_CONSULT, Application.KIND_TOUR):
+        try:
+            from .care_store import create_consultation
+
+            saved = create_consultation(
+                {
+                    "user_id": None,
+                    "applicant_name": name,
+                    "applicant_phone": phone,
+                    "relation_type": relationship,
+                    "care_level": "",
+                    "mobility_status": "",
+                    "preferred_date": preferred_date or None,
+                    "preferred_time_slot": preferred_slot or "시간무관",
+                    "privacy_agreed": True,
+                    "patient_id": patient_id,
+                    "senior_name": senior_name,
+                    "consult_kind": "견학 신청" if kind == Application.KIND_TOUR else "입소 상담",
+                    "status": "RECEIVED",
+                }
+            )
+            consult_id = (saved or {}).get("id") or ""
+            extra["consultation_id"] = consult_id
+        except Exception:
+            logger.exception("care consultation sync failed")
     Application.objects.create(
         kind=kind,
+        status=Application.STATUS_RECEIVED,
         user=request.user if request.user.is_authenticated else None,
         patient_id=patient_id,
         senior_name=senior_name,
@@ -983,7 +1073,15 @@ def apply_api(request):
         body=encrypt_text(body),
         extra=extra,
     )
-    return JsonResponse({"ok": True, "message": "접수되었습니다. 담당자가 확인 후 연락드리겠습니다."})
+    return JsonResponse({
+        "ok": True,
+        "applicant_name": name,
+        "senior_name": senior_name,
+        "preferred_date": preferred_date,
+        "preferred_time_slot": preferred_slot,
+        "redirect": "/mypage.html",
+        "message": "접수되었습니다. 담당자가 확인 후 연락드리겠습니다.",
+    })
 
 
 @require_POST

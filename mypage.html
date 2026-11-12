@@ -123,19 +123,29 @@
                         <th>상담 유형</th>
                         <th>진행 상태</th>
                         <th>상세</th>
+                        <th>관리</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in consults %}
-                    <tr>
+                    <tr data-app-id="{{ row.application_id }}">
                         <td>{{ row.created_at }}</td>
                         <td>{{ row.senior_name }}</td>
                         <td>{{ row.kind }}</td>
-                        <td><span class="status-badge status-{{ row.status|lower }}">{{ row.status_label }}</span></td>
+                        <td><span class="status-badge status-{{ row.status|lower }} js-status-badge">{{ row.status_label }}</span></td>
                         <td>{{ row.detail|default:row.preferred|default:"-" }}</td>
+                        <td class="consult-actions">
+                            {% if row.can_cancel %}
+                            <button type="button" class="ghost-btn js-cancel-app" data-id="{{ row.application_id }}">신청 취소</button>
+                            {% elif row.show_center_hint %}
+                            <p class="cancel-hint">일정 변경·취소는 센터(054-334-9986)로 연락해 주세요</p>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="empty-hint">신청 내역이 없습니다.</td></tr>
+                    <tr><td colspan="6" class="empty-hint">신청 내역이 없습니다.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -152,5 +162,22 @@
 
 <script src="/auth.js"></script>
 <script src="/mypage.js"></script>
+<div class="consult-done-overlay" id="cancelAppModal" hidden>
+    <div class="consult-done-box" role="dialog" aria-modal="true" aria-labelledby="cancelAppTitle">
+        <h2 id="cancelAppTitle">상담/견학 신청을 취소하시겠습니까?</h2>
+        <label class="cancel-reason-label" for="cancelReasonSelect">취소 사유</label>
+        <select id="cancelReasonSelect">
+            <option value="일정 변경">일정 변경</option>
+            <option value="타 시설 이용">타 시설 이용</option>
+            <option value="단순 문의 해결">단순 문의 해결</option>
+            <option value="기타">기타 직접 입력</option>
+        </select>
+        <input id="cancelReasonOther" type="text" maxlength="200" placeholder="기타 사유를 입력해 주세요" hidden>
+        <div class="consult-done-actions">
+            <button type="button" class="ghost-btn" id="cancelAppClose">닫기</button>
+            <button type="button" class="btn-gold" id="cancelAppConfirm">취소 확정</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

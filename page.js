@@ -9,7 +9,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const careForm = document.getElementById("careConsultForm");
     if (careForm) {
         const patientSelect = document.getElementById("inq-patient");
-        const seniorInput = document.getElementById("inq-senior");
+        const seniorInput = careForm.querySelector('[name="senior_name"]');
+        const submitBtn = careForm.querySelector('button[type="submit"]');
         fetch("/accounts/me/", { credentials: "same-origin" })
             .then(function (res) { return res.json(); })
             .then(function (data) {
@@ -43,34 +44,87 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
         }
+        function consultDoneModal(data, payload) {
+            let overlay = document.getElementById("consultDoneModal");
+            if (!overlay) {
+                overlay = document.createElement("div");
+                overlay.id = "consultDoneModal";
+                overlay.className = "consult-done-overlay";
+                overlay.innerHTML =
+                    '<div class="consult-done-box" role="dialog" aria-modal="true" aria-labelledby="consultDoneTitle">' +
+                    '<h2 id="consultDoneTitle">상담 신청이 완료되었습니다</h2>' +
+                    "<p>접수해 주신 내용을 확인 후 담당자가 순차적으로 연락드리겠습니다.</p>" +
+                    '<div class="consult-done-summary" id="consultDoneSummary"></div>' +
+                    '<button type="button" class="btn-gold consult-done-ok">확인</button>' +
+                    "</div>";
+                document.body.appendChild(overlay);
+            }
+            const applicant = (data && data.applicant_name) || payload.applicant_name || "";
+            const senior = (data && data.senior_name) || payload.senior_name || "";
+            const when = [
+                (data && data.preferred_date) || payload.preferred_date || "",
+                (data && data.preferred_time_slot) || payload.preferred_time_slot || ""
+            ].filter(Boolean).join(" ");
+            const summary = document.getElementById("consultDoneSummary");
+            if (summary) {
+                summary.innerHTML =
+                    "<div>신청인: " + applicant + "</div>" +
+                    "<div>어르신: " + senior + "</div>" +
+                    "<div>희망 일시: " + (when || "미지정") + "</div>";
+            }
+            overlay.hidden = false;
+            const ok = overlay.querySelector(".consult-done-ok");
+            if (ok) {
+                ok.onclick = function () {
+                    window.location.href = (data && data.redirect) || "/mypage.html";
+                };
+            }
+        }
         careForm.addEventListener("submit", function (e) {
             e.preventDefault();
             const payload = {};
             careForm.querySelectorAll("input, select, textarea").forEach(function (el) {
                 if (!el.name) return;
-                payload[el.name] = el.type === "checkbox" ? el.checked : el.value;
+                payload[el.name] = el.type === "checkbox" ? el.checked : (typeof el.value === "string" ? el.value.trim() : el.value);
             });
+            if (payload.relationship && !payload.relation_type) payload.relation_type = payload.relationship;
+            if (!(payload.senior_name || "").trim()) {
+                alert("입소 대상 어르신 성명을 입력해 주세요.");
+                if (seniorInput) seniorInput.focus();
+                return;
+            }
+            payload.senior_name = payload.senior_name.trim();
             const csrf = (document.cookie.match(/(?:^|; )csrftoken=([^;]+)/) || [])[1] || "";
             const headers = { "Content-Type": "application/json", "X-CSRFToken": decodeURIComponent(csrf) };
             try {
                 const token = localStorage.getItem("sso_access_token");
                 if (token) headers.Authorization = "Bearer " + token;
             } catch (_err) {}
+            const originalLabel = submitBtn ? submitBtn.textContent : "";
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "처리 중...";
+            }
             fetch("/api/care/consultations/", {
                 method: "POST",
                 credentials: "same-origin",
                 headers: headers,
                 body: JSON.stringify(payload)
-            }).then(function (res) { return res.json(); }).then(function (data) {
-                const done = document.getElementById("careConsultDone") || document.getElementById("careDone");
-                if (data.ok && done) {
-                    careForm.hidden = true;
-                    done.hidden = false;
+            }).then(function (res) {
+                return res.json().then(function (data) { return data; });
+            }).then(function (data) {
+                if (data && data.ok) {
+                    consultDoneModal(data, payload);
                     return;
                 }
-                alert(data.message || "신청을 접수하지 못했습니다.");
+                alert((data && data.message) || "신청을 접수하지 못했습니다.");
             }).catch(function () {
                 alert("서버에 연결할 수 없습니다.");
+            }).finally(function () {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalLabel;
+                }
             });
         });
     }
@@ -208,41 +262,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 map.classList.toggle("is-active", map.getAttribute("data-floor") === floor);
             });
             if (floorCaption) floorCaption.textContent = floorLabels[floor] || "";
-        });
-    });
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("careConsultForm");
-    if (!form) return;
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const payload = {
-            applicant_name: form.applicant_name.value,
-            applicant_phone: form.applicant_phone.value,
-            relation_type: form.relation_type.value,
-            care_level: form.care_level.value,
-            mobility_status: form.mobility_status.value,
-            preferred_date: form.preferred_date.value,
-            preferred_time_slot: form.preferred_time_slot.value,
-            privacy_agreed: form.privacy_agreed.checked
-        };
-        const csrf = (document.cookie.match(/(?:^|; )csrftoken=([^;]+)/) || [])[1] || "";
-        fetch("/api/care/consultations/", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json", "X-CSRFToken": decodeURIComponent(csrf) },
-            body: JSON.stringify(payload)
-        }).then(function (res) { return res.json(); }).then(function (data) {
-            const done = document.getElementById("careDone");
-            if (data.ok) {
-                form.hidden = true;
-                if (done) { done.hidden = false; done.style.fontSize = "1.35rem"; done.style.fontWeight = "700"; done.style.lineHeight = "1.7"; }
-            } else {
-                alert(data.message || "신청에 실패했습니다.");
-            }
-        }).catch(function () {
-            alert("서버에 연결할 수 없습니다.");
         });
     });
 });

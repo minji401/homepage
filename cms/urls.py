@@ -31,6 +31,7 @@ urlpatterns = [
     path("staff/applications/<int:app_id>/", views.application_action, name="staff_application_action"),
     path("staff/insights/", views.insights, name="staff_insights"),
     path("api/apply/", views.apply_api, name="apply_api"),
+    path("api/applications/<int:pk>/cancel/", views.application_cancel_api, name="application_cancel_api"),
     path("api/search/log/", views.search_log_api, name="search_log_api"),
     path("api/search/keywords/", views.search_keywords_api, name="search_keywords_api"),
     path("api/waitlist/", views.waitlist_api, name="waitlist_api"),

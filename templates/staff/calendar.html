@@ -97,7 +97,8 @@
     function renderPending(items) {
         pendingEl.innerHTML = items.length ? items.map(function (row) {
             return '<div class="pending-card" draggable="true" data-id="' + row.id + '"><strong>' + (row.applicant_name || "") +
-                '</strong><span>' + (row.care_level || "") + ' · ' + (row.mobility_status || "") + '</span><span>' +
+                '</strong><span>어르신 ' + (row.senior_name || "-") + ' · ' + (row.relation_type || "") + '</span><span>' +
+                (row.care_level || "") + ' · ' + (row.mobility_status || "") + '</span><span>' +
                 (row.preferred_date || "날짜 미정") + ' ' + (row.preferred_time_slot || "") +
                 '</span><button type="button" data-sms="' + row.id + '">확정 문자 발송</button></div>';
         }).join("") : '<p class="empty">대기 건이 없습니다.</p>';

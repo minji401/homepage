@@ -24,7 +24,8 @@ from .care_store import (
     upsert_schedule,
 )
 from .forms import ConsultCreateForm, first_form_error
-from .models import ensure_site_info
+from .models import Application, ensure_site_info
+from .pii import encrypt_text
 from .sms import send_sms, sms_configured
 from .views import _json_body, staff_required
 
@@ -66,7 +67,6 @@ def consult_create(request):
         senior = SeniorProfile.objects.filter(pk=patient_id, guardian=request.user).first()
         if senior:
             senior_name = senior_name or senior.name
-            relation = relation or senior.relationship
             if care_level not in CARE_LEVELS and senior.care_grade:
                 mapped = {
                     "1등급": "1_2등급",
@@ -78,6 +78,7 @@ def consult_create(request):
                 }.get(senior.care_grade)
                 if mapped:
                     care_level = mapped
+    consult_kind = cleaned.get("consult_kind") or "입소 상담"
     item = create_consultation(
         {
             "user_id": _user_id(request),
@@ -91,13 +92,41 @@ def consult_create(request):
             "privacy_agreed": True,
             "patient_id": patient_id,
             "senior_name": senior_name,
-            "consult_kind": cleaned.get("consult_kind") or "입소 상담",
+            "consult_kind": consult_kind,
+            "status": "RECEIVED",
         }
+    )
+    extra = {
+        "consultation_id": item["id"],
+        "relationship": relation,
+        "relation_type": relation,
+        "preferred_date": date or "",
+        "preferred_time_slot": slot,
+        "consult_kind": consult_kind,
+        "care_level": care_level,
+        "mobility_status": mobility,
+    }
+    Application.objects.create(
+        kind=Application.kind_from_label(consult_kind),
+        status=Application.STATUS_RECEIVED,
+        user=request.user if request.user.is_authenticated else None,
+        patient_id=str(patient_id or ""),
+        senior_name=senior_name,
+        name=encrypt_text(name),
+        phone=encrypt_text(phone),
+        title=consult_kind,
+        body=encrypt_text(cleaned.get("memo") or ""),
+        extra=extra,
     )
     return JsonResponse(
         {
             "ok": True,
             "id": item["id"],
+            "applicant_name": name,
+            "senior_name": senior_name,
+            "preferred_date": date or "",
+            "preferred_time_slot": slot,
+            "redirect": "/mypage.html",
             "message": "신청이 정상 접수되었습니다. 담당자 확인 후 일정 확정 안내 문자를 발송해 드립니다.",
         }
     )
@@ -108,12 +137,31 @@ def calendar_page(request):
     return render(request, "staff/calendar.html", {"sms_ready": sms_configured()})
 
 
+def _consult_event_start(row):
+    preferred = (row.get("preferred_date") or "").strip()
+    if preferred:
+        return preferred[:10]
+    created = (row.get("created_at") or "")[:10]
+    return created or None
+
+
 @staff_required
 @require_GET
 def calendar_api(request):
     pending = list_consultations("RECEIVED") + list_consultations("PENDING")
+    cancelled_ids = {
+        str(row.get("id") or "")
+        for row in list_consultations("CANCELLED") + list_consultations("cancelled")
+        if row.get("id")
+    }
     events = []
+    scheduled_ids = set()
     for row in list_schedules():
+        cid = row.get("consultation_id") or ""
+        if cid and str(cid) in cancelled_ids:
+            continue
+        if cid:
+            scheduled_ids.add(str(cid))
         events.append(
             {
                 "id": row["id"],
@@ -122,8 +170,63 @@ def calendar_api(request):
                 "end": row["end_datetime"],
                 "extendedProps": {
                     "category": row["category"],
-                    "consultation_id": row.get("consultation_id") or "",
+                    "consultation_id": cid,
                     "memo": row.get("memo") or "",
+                },
+            }
+        )
+    for row in list_consultations():
+        cid = str(row.get("id") or "")
+        status = (row.get("status") or "").upper()
+        if not cid or cid in scheduled_ids or status == "CANCELLED":
+            continue
+        start = _consult_event_start(row)
+        if not start:
+            continue
+        kind = row.get("consult_kind") or "상담"
+        senior = row.get("senior_name") or ""
+        title = f"{kind} · {row.get('applicant_name') or ''}"
+        if senior:
+            title += f" / {senior}"
+        events.append(
+            {
+                "id": "consult-" + cid,
+                "title": title.strip(" ·"),
+                "start": start,
+                "allDay": True,
+                "backgroundColor": "#c4a574",
+                "borderColor": "#b38b4d",
+                "extendedProps": {
+                    "category": "상담",
+                    "consultation_id": cid,
+                    "memo": (row.get("preferred_time_slot") or "") + " " + (row.get("relation_type") or ""),
+                },
+            }
+        )
+        scheduled_ids.add(cid)
+    for item in Application.objects.filter(kind__in=[Application.KIND_CONSULT, Application.KIND_TOUR]):
+        if item.is_cancelled:
+            continue
+        extra = item.extra_data
+        linked = str(extra.get("consultation_id") or "")
+        if linked and linked in scheduled_ids:
+            continue
+        start = (item.preferred_date_value or "").strip()[:10] or item.created_at.date().isoformat()
+        title = f"{item.get_kind_display()} · {item.name_plain}"
+        if item.senior_name:
+            title += f" / {item.senior_name}"
+        events.append(
+            {
+                "id": f"app-{item.id}",
+                "title": title,
+                "start": start,
+                "allDay": True,
+                "backgroundColor": "#c4a574",
+                "borderColor": "#b38b4d",
+                "extendedProps": {
+                    "category": "상담",
+                    "consultation_id": linked,
+                    "memo": item.preferred_display or item.relationship,
                 },
             }
         )

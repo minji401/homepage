@@ -135,4 +135,82 @@
             }
         });
     }
+
+    const cancelModal = document.getElementById("cancelAppModal");
+    const reasonSelect = document.getElementById("cancelReasonSelect");
+    const reasonOther = document.getElementById("cancelReasonOther");
+    const confirmBtn = document.getElementById("cancelAppConfirm");
+    const closeBtn = document.getElementById("cancelAppClose");
+    let cancelTarget = null;
+
+    function closeCancelModal() {
+        if (cancelModal) cancelModal.hidden = true;
+        cancelTarget = null;
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = "취소 확정";
+        }
+    }
+
+    if (reasonSelect && reasonOther) {
+        reasonSelect.addEventListener("change", function () {
+            const other = reasonSelect.value === "기타";
+            reasonOther.hidden = !other;
+            if (other) reasonOther.focus();
+        });
+    }
+    if (closeBtn) closeBtn.addEventListener("click", closeCancelModal);
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && cancelModal && !cancelModal.hidden) closeCancelModal();
+    });
+
+    document.querySelectorAll(".js-cancel-app").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            cancelTarget = btn;
+            if (cancelModal) cancelModal.hidden = false;
+        });
+    });
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", function () {
+            if (!cancelTarget) return;
+            const id = cancelTarget.getAttribute("data-id");
+            if (!id) return;
+            let reason = (reasonSelect && reasonSelect.value) || "기타";
+            if (reason === "기타") {
+                reason = ((reasonOther && reasonOther.value) || "").trim() || "기타";
+            }
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = "처리 중...";
+            fetch("/api/applications/" + id + "/cancel/", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: headers(),
+                body: JSON.stringify({ cancel_reason: reason })
+            }).then(function (res) { return res.json().then(function (data) { return { status: res.status, data: data }; }); }).then(function (result) {
+                const data = result.data || {};
+                if (!data.ok) {
+                    window.alert(data.message || "취소하지 못했습니다.");
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = "취소 확정";
+                    return;
+                }
+                const row = cancelTarget.closest("tr");
+                if (row) {
+                    const badge = row.querySelector(".js-status-badge");
+                    if (badge) {
+                        badge.textContent = data.status_label || "취소됨";
+                        badge.className = "status-badge status-cancelled js-status-badge";
+                    }
+                    const actions = row.querySelector(".consult-actions");
+                    if (actions) actions.textContent = "-";
+                }
+                closeCancelModal();
+            }).catch(function () {
+                window.alert("서버에 연결할 수 없습니다.");
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = "취소 확정";
+            });
+        });
+    }
 })();

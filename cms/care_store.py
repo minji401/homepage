@@ -16,7 +16,8 @@ STATUS_LABELS = {
     "RECEIVED": "접수완료",
     "PENDING": "상담대기",
     "CONFIRMED": "상담완료",
-    "CANCELLED": "취소",
+    "CANCELLED": "취소됨",
+    "cancelled": "취소됨",
 }
 CATEGORIES = ("상담", "봉사", "시설행사", "기타")
 
@@ -62,9 +63,9 @@ def create_consultation(data):
                 data.get("user_id"),
                 data["applicant_name"],
                 data["applicant_phone"],
-                data.get("relation_type") or "",
-                data["care_level"],
-                data["mobility_status"],
+                data.get("relation_type") or data.get("relationship") or "",
+                data.get("care_level") or "",
+                data.get("mobility_status") or "",
                 data.get("preferred_date"),
                 data.get("preferred_time_slot"),
                 1 if data.get("privacy_agreed") else 0,
@@ -137,6 +138,8 @@ def update_consultation(item_id, fields):
         "sms_ok",
         "preferred_date",
         "preferred_time_slot",
+        "cancel_reason",
+        "cancelled_at",
     }
     sets = []
     values = []

@@ -502,6 +502,51 @@
     cursor: pointer;
 }
 .btn-gold:hover { background: #9a753c; }
+.btn-gold:disabled { opacity: 0.65; cursor: wait; }
+
+.consult-done-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(40, 32, 22, 0.45);
+    display: grid;
+    place-items: center;
+    z-index: 200;
+    padding: 16px;
+}
+.consult-done-overlay[hidden] { display: none; }
+.consult-done-box {
+    width: min(440px, 100%);
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px 22px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+    text-align: center;
+}
+.consult-done-box h2 {
+    margin: 0 0 12px;
+    font-size: 1.25rem;
+    color: #3f3426;
+    line-height: 1.4;
+}
+.consult-done-box p {
+    margin: 0 0 10px;
+    color: #5c5246;
+    line-height: 1.65;
+    word-break: keep-all;
+}
+.consult-done-summary {
+    margin: 16px 0 20px;
+    padding: 12px 14px;
+    background: #faf8f2;
+    border-radius: 10px;
+    text-align: left;
+    color: #4a4034;
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+.consult-done-ok {
+    min-width: 120px;
+}
 
 .faq-list { margin-top: 4px; }
 .faq-list details {
