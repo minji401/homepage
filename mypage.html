@@ -26,6 +26,7 @@
 </div>
 
 <main class="mypage-wrap">
+    {% csrf_token %}
     <header class="mypage-hero">
         <span class="eyebrow">마이페이지</span>
         <h1>보호자 <span>{{ profile.name|default:request.user.first_name }}</span>님의 공간</h1>

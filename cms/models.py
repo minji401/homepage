@@ -100,18 +100,36 @@ class Application(models.Model):
         (STATUS_REJECTED, "반려"),
         (STATUS_CANCELLED, "취소됨"),
     ]
-    CANCELLABLE_STATUSES = {STATUS_RECEIVED, STATUS_WAITING, "PENDING", "RECEIVED", "pending"}
-    LOCKED_STATUSES = {
-        STATUS_DONE,
-        STATUS_APPROVED,
-        STATUS_REJECTED,
-        STATUS_CANCELLED,
-        "cancelled",
-        "CONFIRMED",
-        "COMPLETED",
-        "confirmed",
-        "completed",
+    STATUS_NORMALIZE = {
+        "received": "received",
+        "RECEIVED": "received",
+        "접수완료": "received",
+        "waiting": "waiting",
+        "PENDING": "waiting",
+        "pending": "waiting",
+        "상담대기": "waiting",
+        "대기중": "waiting",
+        "대기": "waiting",
+        "done": "done",
+        "상담완료": "done",
+        "상담 완료": "done",
+        "확정": "done",
+        "CONFIRMED": "done",
+        "confirmed": "done",
+        "COMPLETED": "done",
+        "completed": "done",
+        "approved": "approved",
+        "승인": "approved",
+        "rejected": "rejected",
+        "반려": "rejected",
+        "CANCELLED": "cancelled",
+        "cancelled": "cancelled",
+        "취소됨": "cancelled",
+        "취소": "cancelled",
+        "회원 취소": "cancelled",
     }
+    CANCELLABLE_STATUSES = {"received", "waiting", "pending"}
+    LOCKED_STATUSES = {"done", "approved", "rejected", "cancelled"}
 
     kind = models.CharField("구분", max_length=20, choices=KIND_CHOICES)
     status = models.CharField("상태", max_length=20, choices=STATUS_CHOICES, default=STATUS_RECEIVED)
@@ -180,23 +198,42 @@ class Application(models.Model):
             return cls.KIND_TOUR
         return cls.KIND_CONSULT
 
+    @classmethod
+    def normalize_status(cls, value):
+        raw = (value or "").strip()
+        if raw in cls.STATUS_NORMALIZE:
+            return cls.STATUS_NORMALIZE[raw]
+        return cls.STATUS_NORMALIZE.get(raw.upper(), raw.lower())
+
+    @property
+    def status_key(self):
+        return self.normalize_status(self.status)
+
     @property
     def is_cancelled(self):
-        return (self.status or "").upper() == "CANCELLED"
+        return self.status_key == "cancelled"
 
     @property
     def is_cancellable(self):
         if self.kind not in (self.KIND_CONSULT, self.KIND_TOUR):
             return False
-        if self.is_cancelled or self.status in self.LOCKED_STATUSES:
+        if self.status_key in self.LOCKED_STATUSES:
             return False
-        return self.status in self.CANCELLABLE_STATUSES
+        return True
 
     @property
     def status_admin_label(self):
         if self.is_cancelled:
             return "취소됨(회원 취소)"
-        return self.get_status_display()
+        mapped = {
+            "received": "접수완료",
+            "waiting": "상담대기",
+            "done": "상담완료",
+            "approved": "승인",
+            "rejected": "반려",
+            "cancelled": "취소됨",
+        }
+        return mapped.get(self.status_key) or self.get_status_display()
 
 
 class AuditLog(models.Model):

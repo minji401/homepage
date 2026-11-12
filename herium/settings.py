@@ -218,6 +218,16 @@ STATICFILES_DIRS = [BASE_DIR / "static_collected"] if (BASE_DIR / "static_collec
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "/login.html"
+
+# SecurityHeadersMiddleware CSP extras (FullCalendar 등)
+CSP_EXTRA_SCRIPT_SRC = (
+    "https://cdn.jsdelivr.net",
+    "https://unpkg.com",
+)
+CSP_EXTRA_STYLE_SRC = (
+    "https://cdn.jsdelivr.net",
+    "https://unpkg.com",
+)
 LOGIN_REDIRECT_URL = "/mypage/"
 LOGOUT_REDIRECT_URL = "/main.html"
 

@@ -3,6 +3,7 @@
 {% block heading %}상담·일정 캘린더{% endblock %}
 {% block content %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
+<style>#careCalendar { min-height: 640px; background: #fff; border: 1px solid #eee8dc; border-radius: 14px; padding: 8px; }</style>
 <div class="cal-layout">
     <aside class="cal-pending">
         <h2>대기/미확정</h2>
@@ -49,19 +50,49 @@
     document.addEventListener("keydown", function (e) {
         if (e.key === "Escape" && !modal.hidden) closeModal();
     });
-    function load() {
-        return fetch("/staff/calendar/data/", { credentials: "same-origin" }).then(function (r) { return r.json(); });
+    function safeDate(value) {
+        const text = String(value || "");
+        if (/^20\d{2}-\d{2}-\d{2}T/.test(text)) return text;
+        const match = text.match(/(20\d{2}-\d{2}-\d{2})/);
+        return match ? match[1] : "";
     }
-    const calendar = new FullCalendar.Calendar(document.getElementById("careCalendar"), {
+    function safeEvents(items) {
+        return (items || []).map(function (row) {
+            const start = safeDate(row.start) || row.start;
+            const copy = Object.assign({}, row, { start: start });
+            if (row.end) copy.end = safeDate(row.end) || row.end;
+            if (copy.start && String(copy.start).indexOf("T") < 0) copy.allDay = true;
+            return copy;
+        }).filter(function (row) { return !!row.start; });
+    }
+    function load() {
+        return fetch("/staff/calendar/data/", { credentials: "same-origin" }).then(function (r) { return r.json(); }).catch(function () {
+            return { pending: [], events: [] };
+        });
+    }
+    function bindCalendar(calendar) {
+        load().then(function (data) {
+            renderPending(data.pending || []);
+            if (calendar) calendar.removeAllEvents();
+            if (calendar) calendar.addEventSource(safeEvents(data.events || []));
+        });
+    }
+    let calendar = null;
+    if (window.FullCalendar && document.getElementById("careCalendar")) {
+        calendar = new FullCalendar.Calendar(document.getElementById("careCalendar"), {
         initialView: "dayGridMonth",
         locale: "ko",
         headerToolbar: { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" },
         editable: true,
         droppable: true,
-        events: function (info, success) {
+        events: function (info, success, failure) {
             load().then(function (data) {
                 renderPending(data.pending || []);
-                success(data.events || []);
+                success(safeEvents(data.events || []));
+            }).catch(function (err) {
+                renderPending([]);
+                if (failure) failure(err);
+                else success([]);
             });
         },
         eventDrop: function (info) {
@@ -92,14 +123,19 @@
                     openModal();
                 });
         }
-    });
-    calendar.render();
+        });
+        calendar.render();
+    } else {
+        load().then(function (data) { renderPending(data.pending || []); });
+        const box = document.getElementById("careCalendar");
+        if (box) box.innerHTML = '<p class="staff-help">캘린더 스크립트를 불러오지 못했습니다. 페이지를 새로고침해 주세요.</p>';
+    }
     function renderPending(items) {
         pendingEl.innerHTML = items.length ? items.map(function (row) {
-            return '<div class="pending-card" draggable="true" data-id="' + row.id + '"><strong>' + (row.applicant_name || "") +
-                '</strong><span>어르신 ' + (row.senior_name || "-") + ' · ' + (row.relation_type || "") + '</span><span>' +
-                (row.care_level || "") + ' · ' + (row.mobility_status || "") + '</span><span>' +
-                (row.preferred_date || "날짜 미정") + ' ' + (row.preferred_time_slot || "") +
+            const when = row.preferred_label || [row.preferred_date, row.preferred_time_slot].filter(Boolean).join(" ") || "날짜 미정";
+            const names = [row.applicant_name || "", row.senior_name || ""].filter(Boolean).join(" / ");
+            return '<div class="pending-card" draggable="true" data-id="' + row.id + '"><strong>' + names +
+                '</strong><span>(' + when + ')</span><span>' + (row.relation_type || "") +
                 '</span><button type="button" data-sms="' + row.id + '">확정 문자 발송</button></div>';
         }).join("") : '<p class="empty">대기 건이 없습니다.</p>';
         pendingEl.querySelectorAll(".pending-card").forEach(function (card) {
@@ -131,7 +167,7 @@
             credentials: "same-origin",
             headers: headers(),
             body: JSON.stringify({ start: start })
-        }).then(function () { calendar.refetchEvents(); });
+        }).then(function () { if (calendar) calendar.refetchEvents(); else bindCalendar(null); });
     });
     document.getElementById("smsSend").onclick = function () {
         if (!smsId) return;

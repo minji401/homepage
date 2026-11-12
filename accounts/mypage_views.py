@@ -61,23 +61,35 @@ def _consult_rows(user):
             if cid and cid in linked_ids:
                 continue
             status = item.get("status") or "RECEIVED"
-            cancelled = (status or "").upper() == "CANCELLED"
-            locked = status in ("CONFIRMED", "COMPLETED", "done")
+            status_key = Application.normalize_status(status)
+            cancelled = status_key == "cancelled"
+            locked = status_key == "done"
+            linked_app = None
+            if cid:
+                try:
+                    linked_app = Application.objects.filter(extra__consultation_id=cid).first()
+                except Exception:
+                    linked_app = next((row for row in apps if row.extra_data.get("consultation_id") == cid), None)
             rows.append(
                 {
                     "id": cid,
-                    "application_id": "",
+                    "application_id": linked_app.id if linked_app else "",
                     "source": "care",
                     "created_at": (item.get("created_at") or "")[:16].replace("T", " "),
                     "senior_name": item.get("senior_name") or "-",
                     "kind": item.get("consult_kind") or "입소 상담",
                     "status": status,
-                    "status_label": STATUS_LABELS.get(status, status),
+                    "status_label": STATUS_LABELS.get(status) or {
+                        "received": "접수완료",
+                        "waiting": "상담대기",
+                        "done": "상담완료",
+                        "cancelled": "취소됨",
+                    }.get(status_key, status),
                     "detail": item.get("admin_memo") or item.get("sms_content") or "",
                     "preferred": " ".join(
                         part for part in (item.get("preferred_date") or "", item.get("preferred_time_slot") or "") if part
                     ),
-                    "can_cancel": False,
+                    "can_cancel": bool(linked_app and linked_app.is_cancellable),
                     "show_center_hint": locked and not cancelled,
                 }
             )
@@ -85,7 +97,7 @@ def _consult_rows(user):
         pass
     for item in apps:
         status = item.status
-        label = dict(Application.STATUS_CHOICES).get(status, status)
+        label = item.status_admin_label if item.is_cancelled else dict(Application.STATUS_CHOICES).get(status, item.status_admin_label)
         locked = (not item.is_cancellable) and (not item.is_cancelled) and item.kind in (
             Application.KIND_CONSULT,
             Application.KIND_TOUR,

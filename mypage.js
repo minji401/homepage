@@ -12,8 +12,14 @@
         return "";
     }
 
+    function csrfToken() {
+        const input = document.querySelector("[name=csrfmiddlewaretoken]");
+        if (input && input.value) return input.value;
+        return getCookie("csrftoken") || getCookie("CSRF-TOKEN");
+    }
+
     function headers() {
-        return { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") };
+        return { "Content-Type": "application/json", "X-CSRFToken": csrfToken() };
     }
 
     function showMessage(el, text, ok) {
@@ -174,20 +180,29 @@
     if (confirmBtn) {
         confirmBtn.addEventListener("click", function () {
             if (!cancelTarget) return;
-            const id = cancelTarget.getAttribute("data-id");
-            if (!id) return;
+            const id = (cancelTarget.getAttribute("data-id") || "").trim();
+            if (!id) {
+                window.alert("취소할 신청을 찾지 못했습니다. 페이지를 새로고침해 주세요.");
+                return;
+            }
             let reason = (reasonSelect && reasonSelect.value) || "기타";
             if (reason === "기타") {
                 reason = ((reasonOther && reasonOther.value) || "").trim() || "기타";
             }
             confirmBtn.disabled = true;
             confirmBtn.textContent = "처리 중...";
-            fetch("/api/applications/" + id + "/cancel/", {
+            fetch("/api/applications/" + encodeURIComponent(id) + "/cancel/", {
                 method: "POST",
                 credentials: "same-origin",
                 headers: headers(),
                 body: JSON.stringify({ cancel_reason: reason })
-            }).then(function (res) { return res.json().then(function (data) { return { status: res.status, data: data }; }); }).then(function (result) {
+            }).then(function (res) {
+                return res.text().then(function (text) {
+                    let data = {};
+                    try { data = text ? JSON.parse(text) : {}; } catch (_err) { data = {}; }
+                    return { okHttp: res.ok, data: data };
+                });
+            }).then(function (result) {
                 const data = result.data || {};
                 if (!data.ok) {
                     window.alert(data.message || "취소하지 못했습니다.");
@@ -206,6 +221,7 @@
                     if (actions) actions.textContent = "-";
                 }
                 closeCancelModal();
+                window.location.reload();
             }).catch(function () {
                 window.alert("서버에 연결할 수 없습니다.");
                 confirmBtn.disabled = false;

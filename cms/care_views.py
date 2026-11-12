@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import re
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -137,48 +138,158 @@ def calendar_page(request):
     return render(request, "staff/calendar.html", {"sms_ready": sms_configured()})
 
 
+_DATE_RE = re.compile(r"(20\d{2}-\d{2}-\d{2})")
+_ISO_RE = re.compile(r"^20\d{2}-\d{2}-\d{2}T")
+_CANCELLED_KEYS = {"cancelled", "취소됨", "취소", "CANCELLED"}
+_DONE_KEYS = {"done", "상담완료", "상담 완료", "확정", "CONFIRMED", "COMPLETED", "completed", "confirmed"}
+_PENDING_KEYS = {
+    "received",
+    "RECEIVED",
+    "접수완료",
+    "waiting",
+    "PENDING",
+    "pending",
+    "상담대기",
+    "대기중",
+    "대기",
+}
+
+
+def _iso_date(*values):
+    for value in values:
+        found = _DATE_RE.search(str(value or ""))
+        if found:
+            return found.group(1)
+    return ""
+
+
+def _time_label(*values):
+    date = _iso_date(*values)
+    text = " ".join(str(value).strip() for value in values if value)
+    if date:
+        text = text.replace(date, " ")
+    return re.sub(r"\s+", " ", text).strip(" /-")
+
+
+def _status_key(value):
+    return Application.normalize_status(value)
+
+
+def _is_cancelled_status(value):
+    return _status_key(value) == "cancelled" or (value or "").strip() in _CANCELLED_KEYS
+
+
+def _is_pending_status(value):
+    raw = (value or "").strip()
+    return _status_key(value) in Application.CANCELLABLE_STATUSES or raw in _PENDING_KEYS
+
+
+def _event_start(*values):
+    for value in values:
+        text = str(value or "").strip()
+        if _ISO_RE.match(text):
+            return text
+    return _iso_date(*values) or None
+
+
 def _consult_event_start(row):
-    preferred = (row.get("preferred_date") or "").strip()
-    if preferred:
-        return preferred[:10]
-    created = (row.get("created_at") or "")[:10]
-    return created or None
+    return _event_start(row.get("preferred_date"), row.get("created_at"))
+
+
+def _pending_from_care(row):
+    date = _iso_date(row.get("preferred_date"), row.get("created_at"))
+    slot = (row.get("preferred_time_slot") or "").strip() or _time_label(row.get("preferred_date"))
+    return {
+        "id": row.get("id"),
+        "applicant_name": row.get("applicant_name") or "",
+        "senior_name": row.get("senior_name") or "",
+        "relation_type": row.get("relation_type") or "",
+        "care_level": row.get("care_level") or "",
+        "mobility_status": row.get("mobility_status") or "",
+        "preferred_date": date,
+        "preferred_time_slot": slot,
+        "preferred_label": " ".join(part for part in (date, slot) if part) or "날짜 미정",
+        "status": row.get("status") or "",
+    }
+
+
+def _pending_from_application(item):
+    extra = item.extra_data
+    date = _iso_date(item.preferred_date_value, extra.get("preferred_date"), extra.get("date"), item.created_at.date().isoformat())
+    slot = (extra.get("preferred_time_slot") or extra.get("time") or "").strip() or _time_label(item.preferred_display)
+    return {
+        "id": extra.get("consultation_id") or f"app-{item.id}",
+        "application_id": item.id,
+        "applicant_name": item.name_plain,
+        "senior_name": item.senior_name or "",
+        "relation_type": item.relationship,
+        "care_level": extra.get("care_level") or "",
+        "mobility_status": extra.get("mobility_status") or "",
+        "preferred_date": date,
+        "preferred_time_slot": slot,
+        "preferred_label": " ".join(part for part in (date, slot) if part) or "날짜 미정",
+        "status": item.status,
+    }
 
 
 @staff_required
 @require_GET
 def calendar_api(request):
-    pending = list_consultations("RECEIVED") + list_consultations("PENDING")
-    cancelled_ids = {
-        str(row.get("id") or "")
-        for row in list_consultations("CANCELLED") + list_consultations("cancelled")
-        if row.get("id")
-    }
+    pending = []
+    seen_pending = set()
+    cancelled_ids = set()
+    for row in list_consultations():
+        cid = str(row.get("id") or "")
+        if _is_cancelled_status(row.get("status")):
+            if cid:
+                cancelled_ids.add(cid)
+            continue
+        if cid and _is_pending_status(row.get("status")):
+            payload = _pending_from_care(row)
+            pending.append(payload)
+            seen_pending.add(cid)
+    for item in Application.objects.filter(kind__in=[Application.KIND_CONSULT, Application.KIND_TOUR]):
+        if item.is_cancelled:
+            linked = str(item.extra_data.get("consultation_id") or "")
+            if linked:
+                cancelled_ids.add(linked)
+            continue
+        if not item.is_cancellable:
+            continue
+        linked = str(item.extra_data.get("consultation_id") or "")
+        if linked and linked in seen_pending:
+            continue
+        payload = _pending_from_application(item)
+        pending.append(payload)
+        seen_pending.add(str(payload.get("id") or f"app-{item.id}"))
     events = []
     scheduled_ids = set()
     for row in list_schedules():
-        cid = row.get("consultation_id") or ""
-        if cid and str(cid) in cancelled_ids:
+        cid = str(row.get("consultation_id") or "")
+        if cid and cid in cancelled_ids:
+            continue
+        start = _event_start(row.get("start_datetime"), row.get("end_datetime"))
+        if not start:
             continue
         if cid:
-            scheduled_ids.add(str(cid))
+            scheduled_ids.add(cid)
         events.append(
             {
                 "id": row["id"],
                 "title": row["title"],
-                "start": row["start_datetime"],
-                "end": row["end_datetime"],
+                "start": start,
+                "end": _event_start(row.get("end_datetime")) or start,
                 "extendedProps": {
                     "category": row["category"],
                     "consultation_id": cid,
                     "memo": row.get("memo") or "",
+                    "time_slot": _time_label(row.get("start_datetime")),
                 },
             }
         )
     for row in list_consultations():
         cid = str(row.get("id") or "")
-        status = (row.get("status") or "").upper()
-        if not cid or cid in scheduled_ids or status == "CANCELLED":
+        if not cid or cid in scheduled_ids or _is_cancelled_status(row.get("status")):
             continue
         start = _consult_event_start(row)
         if not start:
@@ -200,6 +311,7 @@ def calendar_api(request):
                     "category": "상담",
                     "consultation_id": cid,
                     "memo": (row.get("preferred_time_slot") or "") + " " + (row.get("relation_type") or ""),
+                    "time_slot": row.get("preferred_time_slot") or "",
                 },
             }
         )
@@ -211,7 +323,9 @@ def calendar_api(request):
         linked = str(extra.get("consultation_id") or "")
         if linked and linked in scheduled_ids:
             continue
-        start = (item.preferred_date_value or "").strip()[:10] or item.created_at.date().isoformat()
+        start = _event_start(item.preferred_date_value, extra.get("date"), item.created_at.date().isoformat())
+        if not start:
+            continue
         title = f"{item.get_kind_display()} · {item.name_plain}"
         if item.senior_name:
             title += f" / {item.senior_name}"
@@ -227,6 +341,7 @@ def calendar_api(request):
                     "category": "상담",
                     "consultation_id": linked,
                     "memo": item.preferred_display or item.relationship,
+                    "time_slot": extra.get("preferred_time_slot") or extra.get("time") or "",
                 },
             }
         )

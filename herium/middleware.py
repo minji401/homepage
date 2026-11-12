@@ -106,10 +106,14 @@ class SecurityHeadersMiddleware:
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["X-XSS-Protection"] = "1; mode=block"
+        extra_scripts = " ".join(getattr(settings, "CSP_EXTRA_SCRIPT_SRC", ()) or ())
+        extra_styles = " ".join(getattr(settings, "CSP_EXTRA_STYLE_SRC", ()) or ())
         response.headers["Content-Security-Policy"] = "; ".join([
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://dapi.kakao.com https://t1.daumcdn.net https://oapi.map.naver.com https://maps.googleapis.com",
-            "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://dapi.kakao.com https://t1.daumcdn.net https://oapi.map.naver.com https://maps.googleapis.com"
+            + (f" {extra_scripts}" if extra_scripts else ""),
+            "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com"
+            + (f" {extra_styles}" if extra_styles else ""),
             "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:",
             "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://*.googleapis.com https://*.gstatic.com https://maps.gstatic.com https://*.ggpht.com https://*.kakao.com https://*.kakaocdn.net https://*.daumcdn.net https://*.pstatic.net https://*.naver.com",
             "connect-src 'self' https://dapi.kakao.com https://*.kakao.com https://oapi.map.naver.com https://*.naver.com https://maps.googleapis.com",

@@ -814,15 +814,32 @@ def application_action(request, app_id):
 CANCEL_LOCKED_MESSAGE = "이미 확정된 일정은 온라인 취소가 불가합니다. 센터(054-334-9986)로 문의해 주세요."
 
 
+def _owns_application(request, item):
+    if not request.user.is_authenticated:
+        return False
+    if item.user_id:
+        return item.user_id == request.user.id
+    try:
+        from accounts.shared_users import normalize_phone
+        from accounts.views import _get_profile
+
+        profile = _get_profile(request.user)
+        mine = "".join(ch for ch in normalize_phone(getattr(profile, "phone", "") or "") if ch.isdigit())
+        theirs = "".join(ch for ch in (item.phone_plain or "") if ch.isdigit())
+        return bool(mine and theirs and mine == theirs)
+    except Exception:
+        return False
+
+
 @login_required
 @require_POST
 def application_cancel_api(request, pk):
     item = get_object_or_404(Application, pk=pk)
-    if not item.user_id or item.user_id != request.user.id:
+    if not _owns_application(request, item):
         return JsonResponse({"ok": False, "message": "본인 신청만 취소할 수 있습니다."}, status=403)
     if item.kind not in (Application.KIND_CONSULT, Application.KIND_TOUR):
         return JsonResponse({"ok": False, "message": "이 신청은 온라인 취소 대상이 아닙니다."}, status=400)
-    if item.is_cancelled or item.status in Application.LOCKED_STATUSES or not item.is_cancellable:
+    if item.is_cancelled or not item.is_cancellable:
         return JsonResponse({"ok": False, "message": CANCEL_LOCKED_MESSAGE}, status=400)
     data = _json_body(request)
     try:
