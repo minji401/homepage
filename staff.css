@@ -278,6 +278,15 @@ a { color: #b38b4d; text-decoration: none; }
     background: #eef1ef;
 }
 .staff-table .status-badge.status-cancelled { background: #ececec; color: #6b6b6b; }
+.staff-table .danger-outline {
+    background: #fff;
+    color: #9b2c2c;
+    border: 1px solid #c53030;
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font: inherit;
+}
 .pending-card { display: grid; gap: 4px; padding: 10px; border: 1px dashed #e4d7bf; border-radius: 10px; margin-bottom: 8px; cursor: grab; }
 .pending-card span { color: #666; font-size: 0.86rem; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 80; }

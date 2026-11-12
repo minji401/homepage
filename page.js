@@ -265,3 +265,140 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+(function () {
+    function getCookie(name) {
+        const cookies = document.cookie ? document.cookie.split(";") : [];
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.indexOf(name + "=") === 0) {
+                return decodeURIComponent(cookie.slice(name.length + 1));
+            }
+        }
+        return "";
+    }
+    function csrfToken() {
+        const input = document.querySelector("[name=csrfmiddlewaretoken]");
+        if (input && input.value) return input.value;
+        return getCookie("csrftoken") || getCookie("CSRF-TOKEN");
+    }
+    function ensureModal() {
+        let overlay = document.getElementById("cancelAppModal");
+        if (overlay) return overlay;
+        overlay = document.createElement("div");
+        overlay.id = "cancelAppModal";
+        overlay.className = "consult-done-overlay";
+        overlay.innerHTML =
+            '<div class="consult-done-box" role="dialog" aria-modal="true">' +
+            "<h2>상담/견학 신청을 취소하시겠습니까?</h2>" +
+            '<label class="cancel-reason-label" for="cancelReasonSelect">취소 사유</label>' +
+            '<select id="cancelReasonSelect">' +
+            '<option value="일정 변경">일정 변경</option>' +
+            '<option value="타 시설 이용">타 시설 이용</option>' +
+            '<option value="단순 문의 해결">단순 문의 해결</option>' +
+            '<option value="기타">기타 직접 입력</option>' +
+            "</select>" +
+            '<input id="cancelReasonOther" type="text" maxlength="200" placeholder="기타 사유를 입력해 주세요" hidden>' +
+            '<div class="consult-done-actions">' +
+            '<button type="button" class="ghost-btn" id="cancelAppClose">닫기</button>' +
+            '<button type="button" class="btn-gold" id="cancelAppConfirm">취소 확정</button>' +
+            "</div></div>";
+        document.body.appendChild(overlay);
+        return overlay;
+    }
+    function openModal(overlay) {
+        overlay.hidden = false;
+        overlay.classList.add("is-open");
+        overlay.style.display = "flex";
+        overlay.style.zIndex = "9999";
+    }
+    function closeModal(overlay) {
+        if (!overlay) return;
+        overlay.classList.remove("is-open");
+        overlay.hidden = true;
+        overlay.style.display = "none";
+        const confirmBtn = overlay.querySelector("#cancelAppConfirm");
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = "취소 확정";
+        }
+    }
+    let cancelTarget = null;
+    document.addEventListener("click", function (e) {
+        const closeBtn = e.target.closest("#cancelAppClose");
+        if (closeBtn) {
+            closeModal(document.getElementById("cancelAppModal"));
+            cancelTarget = null;
+            return;
+        }
+        const confirmBtn = e.target.closest("#cancelAppConfirm");
+        if (confirmBtn) {
+            e.preventDefault();
+            const overlay = document.getElementById("cancelAppModal");
+            const id = cancelTarget && (cancelTarget.getAttribute("data-id") || "").trim();
+            if (!id) {
+                window.alert("취소할 신청을 찾지 못했습니다. 페이지를 새로고침해 주세요.");
+                return;
+            }
+            const select = document.getElementById("cancelReasonSelect");
+            const other = document.getElementById("cancelReasonOther");
+            let reason = (select && select.value) || "기타";
+            if (reason === "기타") reason = ((other && other.value) || "").trim() || "기타";
+            const token = csrfToken();
+            if (!token) {
+                window.alert("보안 토큰을 읽지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.");
+                return;
+            }
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = "처리 중...";
+            fetch("/api/applications/" + encodeURIComponent(id) + "/cancel/", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": token },
+                body: JSON.stringify({ cancel_reason: reason })
+            }).then(function (res) {
+                return res.text().then(function (text) {
+                    let data = {};
+                    try { data = text ? JSON.parse(text) : {}; } catch (_err) { data = { message: text.slice(0, 180) }; }
+                    return { status: res.status, data: data };
+                });
+            }).then(function (result) {
+                const data = result.data || {};
+                if (!data.ok) {
+                    window.alert(data.message || ("취소하지 못했습니다. (HTTP " + result.status + ")"));
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = "취소 확정";
+                    return;
+                }
+                window.alert("상담 신청이 취소되었습니다.");
+                closeModal(overlay);
+                window.location.reload();
+            }).catch(function (err) {
+                window.alert("서버에 연결할 수 없습니다. " + (err && err.message ? err.message : ""));
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = "취소 확정";
+            });
+            return;
+        }
+        const btn = e.target.closest(".js-cancel-app, .js-consult-cancel");
+        if (!btn) return;
+        e.preventDefault();
+        cancelTarget = btn;
+        const overlay = ensureModal();
+        const other = overlay.querySelector("#cancelReasonOther");
+        const select = overlay.querySelector("#cancelReasonSelect");
+        if (select && other) {
+            other.hidden = select.value !== "기타";
+        }
+        openModal(overlay);
+    });
+    document.addEventListener("change", function (e) {
+        if (e.target && e.target.id === "cancelReasonSelect") {
+            const other = document.getElementById("cancelReasonOther");
+            if (other) other.hidden = e.target.value !== "기타";
+        }
+    });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeModal(document.getElementById("cancelAppModal"));
+    });
+})();

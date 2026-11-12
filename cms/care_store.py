@@ -222,6 +222,16 @@ def delete_schedule(item_id):
     return True
 
 
+def delete_consultation(item_id):
+    db = _db()
+    if db is None or not item_id:
+        return False
+    with db.cursor() as cursor:
+        cursor.execute("DELETE FROM care_schedules WHERE consultation_id = %s", [item_id])
+        cursor.execute("DELETE FROM care_consultations WHERE id = %s", [item_id])
+    return True
+
+
 def confirm_on_calendar(consultation_id, start, end):
     item = get_consultation(consultation_id)
     if not item:

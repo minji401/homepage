@@ -39,6 +39,7 @@
                 {% else %}
                 <button name="status" value="waiting">상담 대기</button>
                 <button name="status" value="done">상담 완료</button>
+                <button type="button" class="danger-outline js-staff-cancel" data-id="{{ item.id }}">취소</button>
                 {% endif %}
             </form>
             {% endif %}

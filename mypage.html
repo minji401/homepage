@@ -137,7 +137,7 @@
                         <td>{{ row.detail|default:row.preferred|default:"-" }}</td>
                         <td class="consult-actions">
                             {% if row.can_cancel %}
-                            <button type="button" class="ghost-btn js-cancel-app" data-id="{{ row.application_id }}">신청 취소</button>
+                            <button type="button" class="ghost-btn js-cancel-app js-consult-cancel" data-id="{{ row.application_id }}">신청 취소</button>
                             {% elif row.show_center_hint %}
                             <p class="cancel-hint">일정 변경·취소는 센터(054-334-9986)로 연락해 주세요</p>
                             {% else %}
@@ -161,8 +161,6 @@
     </section>
 </main>
 
-<script src="/auth.js"></script>
-<script src="/mypage.js"></script>
 <div class="consult-done-overlay" id="cancelAppModal" hidden>
     <div class="consult-done-box" role="dialog" aria-modal="true" aria-labelledby="cancelAppTitle">
         <h2 id="cancelAppTitle">상담/견학 신청을 취소하시겠습니까?</h2>
@@ -180,5 +178,8 @@
         </div>
     </div>
 </div>
+<script src="/auth.js"></script>
+<script src="/page.js"></script>
+<script src="/mypage.js"></script>
 </body>
 </html>

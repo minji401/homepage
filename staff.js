@@ -49,6 +49,47 @@
         });
     });
 
+    function csrfToken() {
+        const input = document.querySelector("[name=csrfmiddlewaretoken]");
+        if (input && input.value) return input.value;
+        const cookies = document.cookie ? document.cookie.split(";") : [];
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.indexOf("csrftoken=") === 0) {
+                return decodeURIComponent(cookie.slice("csrftoken=".length));
+            }
+        }
+        return "";
+    }
+
+    document.addEventListener("click", function (e) {
+        const btn = e.target.closest(".js-staff-cancel");
+        if (!btn) return;
+        e.preventDefault();
+        const id = btn.getAttribute("data-id");
+        if (!id) return;
+        const reason = window.prompt("취소 사유를 입력해 주세요:", "관리자 직권 취소");
+        if (reason === null) return;
+        const form = document.createElement("form");
+        form.method = "post";
+        form.action = "/staff/applications/" + id + "/";
+        const fields = {
+            csrfmiddlewaretoken: csrfToken(),
+            status: "CANCELLED",
+            cancel_reason: reason || "관리자 직권 취소",
+            next: window.location.pathname + window.location.search
+        };
+        Object.keys(fields).forEach(function (key) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = key;
+            input.value = fields[key];
+            form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
+    });
+
     document.querySelectorAll(".js-image-input").forEach(function (input) {
         input.addEventListener("change", function () {
             const file = input.files && input.files[0];

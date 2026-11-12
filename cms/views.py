@@ -798,11 +798,50 @@ def applications(request):
     return render(request, "staff/applications.html", {"items": items, "kind": kind})
 
 
+def _apply_application_cancel(item, reason, by_admin=False):
+    note = (reason or "").strip() or ("관리자 직권 취소" if by_admin else "취소")
+    if by_admin and not note.startswith("[관리자]"):
+        note = f"[관리자] {note}"
+    now = timezone.now()
+    item.status = Application.STATUS_CANCELLED
+    item.cancel_reason = note
+    item.cancelled_at = now
+    extra = dict(item.extra_data)
+    extra["cancel_reason"] = note
+    extra["cancelled_at"] = now.isoformat()
+    extra["cancelled_by"] = "admin" if by_admin else "member"
+    item.extra = extra
+    item.save(update_fields=["status", "cancel_reason", "cancelled_at", "extra"])
+    consult_id = extra.get("consultation_id")
+    if consult_id:
+        try:
+            from .care_store import update_consultation
+
+            update_consultation(
+                consult_id,
+                {
+                    "status": "CANCELLED",
+                    "cancel_reason": note,
+                    "cancelled_at": now.isoformat(),
+                    "admin_memo": note,
+                },
+            )
+        except Exception:
+            logger.exception("care consultation cancel sync failed")
+    return note
+
+
 @staff_required
 @require_POST
 def application_action(request, app_id):
     item = get_object_or_404(Application, pk=app_id)
     status = request.POST.get("status")
+    if status in ("CANCELLED", "cancelled"):
+        reason = request.POST.get("cancel_reason") or "관리자 직권 취소"
+        _apply_application_cancel(item, reason, by_admin=True)
+        _audit(request, "application_admin_cancel", f"{item.id}")
+        messages.success(request, "신청을 취소했습니다.")
+        return redirect(request.POST.get("next") or "/staff/applications/")
     if status in dict(Application.STATUS_CHOICES):
         item.status = status
         item.save(update_fields=["status"])
@@ -846,38 +885,14 @@ def application_cancel_api(request, pk):
         reason = clean_text(data.get("cancel_reason") or "", 200)
     except ValueError as exc:
         return JsonResponse({"ok": False, "message": str(exc)}, status=400)
-    now = timezone.now()
-    item.status = Application.STATUS_CANCELLED
-    item.cancel_reason = reason
-    item.cancelled_at = now
-    extra = dict(item.extra_data)
-    extra["cancel_reason"] = reason
-    extra["cancelled_at"] = now.isoformat()
-    item.extra = extra
-    item.save(update_fields=["status", "cancel_reason", "cancelled_at", "extra"])
-    consult_id = extra.get("consultation_id")
-    if consult_id:
-        try:
-            from .care_store import update_consultation
-
-            update_consultation(
-                consult_id,
-                {
-                    "status": "CANCELLED",
-                    "cancel_reason": reason,
-                    "cancelled_at": now.isoformat(),
-                    "admin_memo": reason,
-                },
-            )
-        except Exception:
-            logger.exception("care consultation cancel sync failed")
+    _apply_application_cancel(item, reason, by_admin=False)
     _audit(request, "application_cancel", f"{item.id}")
     return JsonResponse(
         {
             "ok": True,
             "status": Application.STATUS_CANCELLED,
             "status_label": "취소됨",
-            "message": "신청이 취소되었습니다.",
+            "message": "상담 신청이 취소되었습니다.",
         }
     )
 

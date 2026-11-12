@@ -1685,12 +1685,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     position: fixed;
     inset: 0;
     background: rgba(40, 32, 22, 0.45);
-    display: grid;
-    place-items: center;
-    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
     padding: 16px;
 }
-.consult-done-overlay[hidden] { display: none; }
+.consult-done-overlay[hidden] { display: none !important; }
+.consult-done-overlay.is-open {
+    display: flex !important;
+    z-index: 9999;
+}
 .consult-done-box {
     width: min(440px, 100%);
     background: #fff;
